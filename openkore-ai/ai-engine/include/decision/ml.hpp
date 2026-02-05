@@ -24,8 +24,8 @@ private:
     nlohmann::json state_to_json(const GameState& state) const;
     void load_onnx_model();  // Load ONNX model if available
     
-    // Stub helper
-    Action decide_stub(const GameState& state);
+    // Fallback helper
+    Action decide_fallback(const GameState& state);
 };
 
 } // namespace decision
