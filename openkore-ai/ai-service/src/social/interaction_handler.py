@@ -144,6 +144,87 @@ class InteractionHandler:
             
         return {"action": "decline_duel", "reason": "Only duel friends"}
         
+    async def handle_friend_request(self, character_name: str, player_name: str,
+                                    context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Category 6: Friend list interactions"""
+        reputation = await self.reputation.get_reputation(character_name, player_name)
+        
+        # Only accept friend requests from acquaintances or better
+        if reputation >= 25:
+            await self.reputation.update_reputation(character_name, player_name, 10, "became friends")
+            return {
+                "action": "accept_friend",
+                "message": "Sure, let's be friends!"
+            }
+            
+        # Check personality - friendly characters more likely to accept
+        if self.personality.traits['friendliness'] > 0.7 and reputation >= 0:
+            await self.reputation.update_reputation(character_name, player_name, 5, "accepted friend request")
+            return {"action": "accept_friend"}
+            
+        return {"action": "decline_friend", "reason": "Don't know you well enough"}
+        
+    async def handle_marriage_proposal(self, character_name: str, player_name: str,
+                                       context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Category 7: Marriage interactions (rare)"""
+        reputation = await self.reputation.get_reputation(character_name, player_name)
+        
+        # Only marry best friends or soulmates
+        if reputation >= 200:
+            return {
+                "action": "accept_marriage",
+                "message": "Yes! I've been waiting for this!"
+            }
+            
+        # Politely decline otherwise
+        return {
+            "action": "decline_marriage",
+            "message": "I'm not ready for that commitment yet.",
+            "reason": "Reputation too low for marriage"
+        }
+        
+    async def handle_pvp_invite(self, character_name: str, player_name: str,
+                                context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Category 4 Extended: PvP/WoE invitations"""
+        reputation = await self.reputation.get_reputation(character_name, player_name)
+        my_level = context.get('my_level', 1)
+        
+        # Check if cautious
+        if self.personality.traits['caution'] > 0.7:
+            return {"action": "decline_pvp", "reason": "Not interested in PvP content"}
+            
+        # Only accept from friends or guildmates
+        is_guildmate = context.get('is_guild_member', False)
+        if reputation >= 75 or is_guildmate:
+            return {
+                "action": "accept_pvp",
+                "message": "Count me in!"
+            }
+            
+        return {"action": "decline_pvp", "reason": "Only PvP with friends"}
+        
+    async def handle_guild_invite(self, character_name: str, player_name: str,
+                                  context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Category 5 Extended: Guild interactions"""
+        reputation = await self.reputation.get_reputation(character_name, player_name)
+        
+        # Check if already in guild
+        if context.get('in_guild', False):
+            return {"action": "decline_guild", "reason": "Already in a guild"}
+            
+        # Only join guilds from trusted players
+        if reputation >= 100:
+            return {
+                "action": "accept_guild",
+                "message": "I'd be honored to join!"
+            }
+            
+        # Or if highly social personality
+        if self.personality.traits['friendliness'] > 0.8 and reputation >= 50:
+            return {"action": "accept_guild"}
+            
+        return {"action": "decline_guild", "reason": "Need to know the guild better"}
+        
     def _get_available_buffs(self, job_class: str) -> list:
         """Get buffs available for job class"""
         buff_map = {

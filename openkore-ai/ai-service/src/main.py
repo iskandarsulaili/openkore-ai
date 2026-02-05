@@ -588,6 +588,30 @@ async def handle_trade(character_name: str, player_name: str, trade_offer: dict)
     result = await interaction_handler.handle_trade_request(character_name, player_name, trade_offer)
     return result
 
+@app.post("/api/v1/social/friend_request")
+async def handle_friend_request(character_name: str, player_name: str, context: dict = {}):
+    """Handle friend request"""
+    result = await interaction_handler.handle_friend_request(character_name, player_name, context)
+    return result if result else {"action": "decline_friend"}
+
+@app.post("/api/v1/social/marriage_proposal")
+async def handle_marriage_proposal(character_name: str, player_name: str, context: dict = {}):
+    """Handle marriage proposal"""
+    result = await interaction_handler.handle_marriage_proposal(character_name, player_name, context)
+    return result if result else {"action": "decline_marriage"}
+
+@app.post("/api/v1/social/pvp_invite")
+async def handle_pvp_invite(character_name: str, player_name: str, context: dict = {}):
+    """Handle PvP invitation"""
+    result = await interaction_handler.handle_pvp_invite(character_name, player_name, context)
+    return result if result else {"action": "decline_pvp"}
+
+@app.post("/api/v1/social/guild_invite")
+async def handle_guild_invite(character_name: str, player_name: str, context: dict = {}):
+    """Handle guild invitation"""
+    result = await interaction_handler.handle_guild_invite(character_name, player_name, context)
+    return result if result else {"action": "decline_guild"}
+
 @app.get("/api/v1/social/personality")
 async def get_personality():
     """Get current personality traits"""

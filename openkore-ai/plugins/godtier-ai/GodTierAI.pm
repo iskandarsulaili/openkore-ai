@@ -14,6 +14,7 @@ Plugins::register('GodTierAI', 'Advanced AI system with LLM integration', \&on_u
 
 my $hooks;
 my $ai_engine_url = "http://127.0.0.1:9901";
+my $ai_service_url = "http://127.0.0.1:9902";
 my $ua = LWP::UserAgent->new(timeout => 30);
 my $request_counter = 0;
 
@@ -26,10 +27,16 @@ sub on_unload {
 $hooks = Plugins::addHooks(
     ['AI_pre', \&on_ai_pre, undef],
     ['packet_mapChange', \&on_map_change, undef],
+    ['packet/private_message', \&on_private_message, undef],
+    ['packet/public_chat', \&on_public_chat, undef],
+    ['packet/party_invite', \&on_party_invite, undef],
+    ['packet/party_chat', \&on_party_chat, undef],
+    ['packet/guild_chat', \&on_guild_chat, undef],
 );
 
-message "[GodTierAI] Loaded successfully\n", "success";
+message "[GodTierAI] Loaded successfully (Phase 8 - Social Integration)\n", "success";
 message "[GodTierAI] AI Engine URL: $ai_engine_url\n", "info";
+message "[GodTierAI] AI Service URL: $ai_service_url\n", "info";
 
 # Check if AI Engine is available
 sub check_engine_health {
@@ -43,7 +50,7 @@ sub check_engine_health {
     return 0;
 }
 
-# Collect game state
+# Collect game state (enhanced with equipment, quests, guild info)
 sub collect_game_state {
     my %state = (
         character => {
@@ -65,6 +72,16 @@ sub collect_game_state {
             zeny => $char->{zeny} || 0,
             job_class => $jobs_lut{$char->{jobId}} || 'Unknown',
             status_effects => [],
+            # Enhanced: Equipment info
+            equipment => collect_equipment(),
+            # Enhanced: Guild info
+            guild => {
+                name => $char->{guild}{name} || '',
+                id => $char->{guild}{ID} || '',
+                position => $char->{guild}{title} || '',
+            },
+            # Enhanced: Active quests (simplified)
+            active_quests => scalar(keys %questList) || 0,
         },
         monsters => [],
         inventory => [],
@@ -99,7 +116,7 @@ sub collect_game_state {
         };
     }
     
-    # Collect nearby players
+    # Collect nearby players (enhanced)
     foreach my $player (@{$playersList->getItems()}) {
         next unless $player;
         push @{$state{nearby_players}}, {
@@ -108,10 +125,27 @@ sub collect_game_state {
             guild => $player->{guild}{name} || '',
             distance => int(distance($char->{pos_to}, $player->{pos_to})),
             is_party_member => exists $char->{party}{users}{$player->{ID}} ? JSON::true : JSON::false,
+            job_class => $jobs_lut{$player->{jobId}} || 'Unknown',
         };
     }
     
     return \%state;
+}
+
+# Enhanced: Collect equipment info
+sub collect_equipment {
+    my @equipment_list;
+    
+    foreach my $item (@{$char->inventory->getItems()}) {
+        next unless $item && $item->{equipped};
+        push @equipment_list, {
+            slot => $item->{type_equip} || 'unknown',
+            name => $item->{name} || 'Unknown',
+            id => $item->{nameID},
+        };
+    }
+    
+    return \@equipment_list;
 }
 
 # Request decision from AI Engine
@@ -144,7 +178,7 @@ sub request_decision {
     }
 }
 
-# Execute action
+# Enhanced: Execute action with social support
 sub execute_action {
     my ($action_data) = @_;
     
@@ -169,12 +203,179 @@ sub execute_action {
         my $item_name = $params->{item};
         message "[GodTierAI] Action: Use item '$item_name'\n", "info";
         Commands::run("is $item_name");
-    } elsif ($type eq 'none') {
+    }
+    # Enhanced: Social actions
+    elsif ($type eq 'chat_response') {
+        my $target = $params->{target};
+        my $message = $params->{message} || $params->{response_text};
+        my $msg_type = $params->{message_type} || 'pm';
+        
+        if ($msg_type eq 'whisper' || $msg_type eq 'pm') {
+            Commands::run("pm \"$target\" $message");
+            message "[GodTierAI] Sent PM to $target: $message\n", "info";
+        } elsif ($msg_type eq 'public') {
+            Commands::run("c $message");
+            message "[GodTierAI] Public chat: $message\n", "info";
+        } elsif ($msg_type eq 'party') {
+            Commands::run("p $message");
+            message "[GodTierAI] Party chat: $message\n", "info";
+        }
+    }
+    elsif ($type eq 'give_buff') {
+        my $skill = $params->{skill};
+        my $target = $params->{target};
+        Commands::run("sl $skill $target");
+        message "[GodTierAI] Buffing $target with $skill\n", "info";
+    }
+    elsif ($type eq 'accept_party') {
+        Commands::run("party join 1");
+        message "[GodTierAI] Accepted party invite\n", "info";
+        
+        # Send optional message
+        if ($params->{message}) {
+            Commands::run("p $params->{message}");
+        }
+    }
+    elsif ($type eq 'decline_party') {
+        Commands::run("party join 0");
+        debug "[GodTierAI] Declined party invite\n", "ai";
+    }
+    elsif ($type eq 'accept_trade') {
+        Commands::run("deal");
+        message "[GodTierAI] Accepted trade\n", "info";
+    }
+    elsif ($type eq 'decline_trade') {
+        Commands::run("deal no");
+        debug "[GodTierAI] Declined trade: $reason\n", "ai";
+    }
+    elsif ($type eq 'accept_duel') {
+        # Duel acceptance (if supported by server)
+        message "[GodTierAI] Accepted duel request\n", "info";
+    }
+    elsif ($type eq 'decline_duel') {
+        debug "[GodTierAI] Declined duel: $reason\n", "ai";
+    }
+    elsif ($type eq 'none') {
         # No action needed
         debug "[GodTierAI] Action: None ($reason)\n", "ai";
     } else {
         warning "[GodTierAI] Unknown action type: $type\n";
     }
+}
+
+# Enhanced: Handle player chat messages
+sub handle_player_chat {
+    my ($player_name, $message, $type) = @_;
+    
+    # Build context
+    my %request = (
+        character_name => $char->{name},
+        player_name => $player_name,
+        message => $message,
+        message_type => $type,
+        my_level => $char->{lv},
+        my_job => $jobs_lut{$char->{jobId}} || 'Unknown',
+    );
+    
+    my $json_request = encode_json(\%request);
+    my $response = $ua->post(
+        "$ai_service_url/api/v1/social/chat",
+        Content_Type => 'application/json',
+        Content => $json_request
+    );
+    
+    if ($response->is_success) {
+        my $data = decode_json($response->decoded_content);
+        execute_action({ action => $data });
+    } else {
+        debug "[GodTierAI] Social service request failed: " . $response->status_line . "\n", "ai";
+    }
+}
+
+# Hook: Private message
+sub on_private_message {
+    my (undef, $args) = @_;
+    return unless $args->{privMsgUser};
+    
+    my $player_name = $args->{privMsgUser};
+    my $message = $args->{privMsg};
+    
+    debug "[GodTierAI] Private message from $player_name: $message\n", "ai";
+    handle_player_chat($player_name, $message, 'whisper');
+}
+
+# Hook: Public chat
+sub on_public_chat {
+    my (undef, $args) = @_;
+    return unless $args->{MsgUser};
+    
+    my $player_name = $args->{MsgUser};
+    my $message = $args->{Msg};
+    
+    # Only respond if mentioned
+    return unless $message =~ /\@$char->{name}/ || $message =~ /\b$char->{name}\b/i;
+    
+    debug "[GodTierAI] Public mention from $player_name: $message\n", "ai";
+    handle_player_chat($player_name, $message, 'public');
+}
+
+# Hook: Party invite
+sub on_party_invite {
+    my (undef, $args) = @_;
+    return unless $args->{name};
+    
+    my $player_name = $args->{name};
+    
+    message "[GodTierAI] Party invite from $player_name\n", "info";
+    
+    # Query social service
+    my %request = (
+        character_name => $char->{name},
+        player_name => $player_name,
+        my_level => $char->{lv},
+    );
+    
+    my $json_request = encode_json(\%request);
+    my $response = $ua->post(
+        "$ai_service_url/api/v1/social/party_invite",
+        Content_Type => 'application/json',
+        Content => $json_request
+    );
+    
+    if ($response->is_success) {
+        my $data = decode_json($response->decoded_content);
+        execute_action({ action => $data });
+    }
+}
+
+# Hook: Party chat
+sub on_party_chat {
+    my (undef, $args) = @_;
+    return unless $args->{MsgUser};
+    
+    my $player_name = $args->{MsgUser};
+    my $message = $args->{Msg};
+    
+    # Only respond if mentioned
+    return unless $message =~ /\@$char->{name}/ || $message =~ /\b$char->{name}\b/i;
+    
+    debug "[GodTierAI] Party chat from $player_name: $message\n", "ai";
+    handle_player_chat($player_name, $message, 'party');
+}
+
+# Hook: Guild chat
+sub on_guild_chat {
+    my (undef, $args) = @_;
+    return unless $args->{MsgUser};
+    
+    my $player_name = $args->{MsgUser};
+    my $message = $args->{Msg};
+    
+    # Only respond if mentioned
+    return unless $message =~ /\@$char->{name}/ || $message =~ /\b$char->{name}\b/i;
+    
+    debug "[GodTierAI] Guild chat from $player_name: $message\n", "ai";
+    handle_player_chat($player_name, $message, 'guild');
 }
 
 # AI_pre hook - called every AI cycle
