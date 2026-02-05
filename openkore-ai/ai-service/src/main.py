@@ -1,8 +1,13 @@
 """
-OpenKore AI Service - Python HTTP Server (Phase 3 Complete)
+OpenKore AI Service - Python HTTP Server (Phase 8 Complete)
 Port: 9902
-Provides: LLM integration, Memory system, Database access, CrewAI agents
+Provides: LLM integration, Memory system, Database access, CrewAI agents, ML Pipeline, Game Lifecycle Autonomy, Social Interaction System
 """
+
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -18,6 +23,25 @@ from database import db
 from memory.openmemory_manager import OpenMemoryManager
 from agents.crew_manager import crew_manager
 from llm.provider_chain import llm_chain
+
+# Import Phase 4 PDCA components
+from pdca import planner, executor, checker, actor
+
+# Import Phase 6 ML components
+from ml.cold_start import cold_start_manager, ColdStartPhase
+from ml.data_collector import data_collector, DataCollector, FeatureExtractor
+from ml.model_trainer import model_trainer
+from ml.online_learner import online_learner, OnlineLearner
+
+# Import Phase 7 Lifecycle components
+from lifecycle import character_creator, goal_generator, quest_automation
+from lifecycle.progression_manager import ProgressionManager
+
+# Import Phase 8 Social components
+from social import personality_engine, ReputationManager, ChatGenerator, InteractionHandler
+from social import reputation_manager as rep_mgr_module
+from social import chat_generator as chat_gen_module
+from social import interaction_handler as int_handler_module
 
 # Lifespan context manager for startup/shutdown
 @asynccontextmanager
@@ -36,6 +60,26 @@ async def lifespan(app: FastAPI):
     # Initialize LLM provider chain
     await llm_chain.initialize()
     
+    # Initialize ML systems (Phase 6)
+    global data_collector, online_learner
+    data_collector = DataCollector(db)
+    online_learner = OnlineLearner(model_trainer, data_collector)
+    await cold_start_manager.initialize(db)
+    logger.info(f"ML Cold-Start initialized: Phase {cold_start_manager.current_phase}")
+    
+    # Initialize lifecycle systems (Phase 7)
+    global progression_manager
+    from lifecycle.progression_manager import progression_manager as pm_module
+    progression_manager = ProgressionManager(db)
+    logger.info("Game Lifecycle Autonomy initialized")
+    
+    # Initialize social systems (Phase 8)
+    global reputation_manager, chat_generator, interaction_handler
+    reputation_manager = ReputationManager(db)
+    chat_generator = ChatGenerator(personality_engine)
+    interaction_handler = InteractionHandler(personality_engine, reputation_manager, chat_generator)
+    logger.info("Social Interaction System initialized")
+    
     logger.success("All systems initialized successfully")
     
     yield
@@ -47,7 +91,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="OpenKore AI Service",
-    version="1.0.0-phase3",
+    version="1.0.0-phase8",
     lifespan=lifespan
 )
 
@@ -103,7 +147,12 @@ async def health_check():
             "crewai": True
         },
         "uptime_seconds": uptime_seconds,
-        "version": "1.0.0-phase3"
+        "version": "1.0.0-phase8",
+        "ml": {
+            "cold_start_phase": cold_start_manager.current_phase if cold_start_manager.start_date else 0,
+            "model_trained": cold_start_manager.model_trained,
+            "training_samples": cold_start_manager.training_samples_collected
+        }
     }
 
 @app.post("/api/v1/llm/query")
@@ -241,33 +290,370 @@ async def crew_analyze(character_level: int, job_class: str, monsters_count: int
         logger.error(f"Crew analyze error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/v1/pdca/plan")
+async def pdca_plan(session_id: str, character_state: dict):
+    """PDCA Plan Phase: Analyze and generate strategy"""
+    try:
+        # Analyze performance
+        performance = await planner.analyze_performance(session_id)
+        
+        # Generate strategy using LLM
+        strategy = await planner.generate_strategy(session_id, character_state, performance)
+        
+        # Generate macros
+        macros = await planner.generate_macros(strategy, character_state)
+        
+        return {
+            "performance": performance,
+            "strategy": strategy,
+            "macros_generated": len(macros),
+            "macro_files": [m[0] for m in macros]
+        }
+    except Exception as e:
+        logger.error(f"PDCA plan error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/pdca/do")
+async def pdca_do(session_id: str, macro_files: List[tuple]):
+    """PDCA Do Phase: Write and execute macros"""
+    try:
+        success = await executor.write_macros(macro_files)
+        if success:
+            await executor.start_execution(session_id)
+            
+        return {
+            "status": "success" if success else "failed",
+            "macros_written": len(macro_files) if success else 0
+        }
+    except Exception as e:
+        logger.error(f"PDCA do error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/pdca/check")
+async def pdca_check(session_id: str, game_state: dict):
+    """PDCA Check Phase: Evaluate performance"""
+    try:
+        metrics = await checker.collect_metrics(session_id, game_state)
+        evaluation = await checker.evaluate_performance(session_id, metrics)
+        
+        return {
+            "current_metrics": metrics,
+            "evaluation": evaluation
+        }
+    except Exception as e:
+        logger.error(f"PDCA check error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/pdca/act")
+async def pdca_act(session_id: str, new_macros: List[tuple]):
+    """PDCA Act Phase: Hot-reload improved macros"""
+    try:
+        success = await actor.apply_new_macros(new_macros)
+        if success:
+            result = await actor.notify_reload(session_id)
+            return result
+        else:
+            return {"status": "failed", "message": "Macro reload failed"}
+    except Exception as e:
+        logger.error(f"PDCA act error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/pdca/cycle")
+async def pdca_full_cycle(session_id: str, character_state: dict):
+    """Execute complete PDCA cycle"""
+    try:
+        logger.info(f"Starting full PDCA cycle for session {session_id}")
+        
+        # Plan
+        performance = await planner.analyze_performance(session_id)
+        strategy = await planner.generate_strategy(session_id, character_state, performance)
+        macros = await planner.generate_macros(strategy, character_state)
+        
+        # Do
+        await executor.write_macros(macros)
+        await executor.start_execution(session_id)
+        
+        # Act (immediate reload)
+        await actor.apply_new_macros(macros)
+        await actor.notify_reload(session_id)
+        
+        # Check will happen continuously during execution
+        
+        return {
+            "status": "cycle_complete",
+            "performance": performance,
+            "strategy_provider": strategy.get('provider', 'unknown'),
+            "macros_generated": len(macros),
+            "timestamp": int(time.time())
+        }
+    except Exception as e:
+        logger.error(f"PDCA cycle error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/ml/predict")
+async def ml_predict(game_state: dict, request_type: str = "ml_prediction"):
+    """ML prediction endpoint - Phase 6"""
+    try:
+        # Check cold-start phase
+        if cold_start_manager.should_use_llm():
+            # Use LLM during cold-start
+            return {
+                "action": {
+                    "type": "defer_to_llm",
+                    "reason": f"Cold-start phase {cold_start_manager.current_phase}: Using LLM",
+                    "confidence": 0.7
+                },
+                "phase": cold_start_manager.current_phase,
+                "model_available": False
+            }
+            
+        # Extract features
+        features = FeatureExtractor.extract_features(game_state, int(time.time()))
+        
+        # Make prediction
+        prediction, confidence = await model_trainer.predict(features)
+        
+        # Convert prediction to action
+        action_map = {0: 'attack', 1: 'skill', 2: 'move', 3: 'item', 4: 'none'}
+        action_type = action_map.get(prediction, 'none')
+        
+        return {
+            "action": {
+                "type": action_type,
+                "parameters": {},
+                "reason": f"ML prediction (confidence: {confidence:.2f})",
+                "confidence": confidence
+            },
+            "phase": cold_start_manager.current_phase,
+            "model_available": model_trainer.model is not None
+        }
+        
+    except Exception as e:
+        logger.error(f"ML prediction error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/ml/train")
+async def ml_train(session_id: str, min_samples: int = 100):
+    """Trigger model training - Phase 6"""
+    try:
+        X, y = await data_collector.collect_training_dataset(session_id, min_samples)
+        
+        if X is None:
+            return {"status": "insufficient_data", "samples_available": 0}
+            
+        results = await model_trainer.train_model(X, y)
+        await model_trainer.export_to_onnx()
+        
+        cold_start_manager.model_trained = True
+        
+        return {
+            "status": "success",
+            "results": results
+        }
+    except Exception as e:
+        logger.error(f"ML training error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/ml/status")
+async def ml_status():
+    """Get ML system status - Phase 6"""
+    return {
+        "cold_start_phase": cold_start_manager.current_phase,
+        "start_date": cold_start_manager.start_date.isoformat() if cold_start_manager.start_date else None,
+        "training_samples": cold_start_manager.training_samples_collected,
+        "model_trained": cold_start_manager.model_trained,
+        "should_use_llm": cold_start_manager.should_use_llm(),
+        "phase_names": {
+            1: "Pure LLM (Days 1-7)",
+            2: "Simple Models (Days 8-14)",
+            3: "Hybrid (Days 15-21)",
+            4: "ML Primary (Days 22-30)"
+        }
+    }
+
+@app.post("/api/v1/lifecycle/create_character")
+async def create_character(playstyle: str = "random"):
+    """Generate character creation plan"""
+    try:
+        job_path = await character_creator.select_job_path(playstyle)
+        plan = await character_creator.generate_character_plan(job_path)
+        return plan
+    except Exception as e:
+        logger.error(f"Character creation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/lifecycle/update_state")
+async def update_lifecycle_state(session_id: str, character_state: dict):
+    """Update character lifecycle state"""
+    try:
+        await progression_manager.update_lifecycle_state(session_id, character_state)
+        milestone = await progression_manager.get_next_milestone(character_state.get('level', 1))
+        
+        return {
+            "stage": progression_manager.current_stage,
+            "goal": progression_manager.current_goal,
+            "next_milestone": milestone
+        }
+    except Exception as e:
+        logger.error(f"Lifecycle update error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/lifecycle/generate_goals")
+async def generate_goals(character_state: dict, goal_type: str = "short"):
+    """Generate autonomous goals"""
+    try:
+        if goal_type == "short":
+            goals = await goal_generator.generate_short_term_goals(
+                character_state,
+                progression_manager.current_stage
+            )
+        else:
+            goals = await goal_generator.generate_long_term_goals(character_state)
+            
+        return {"goals": goals, "count": len(goals)}
+    except Exception as e:
+        logger.error(f"Goal generation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/lifecycle/quests")
+async def get_available_quests(character_level: int, job_class: str):
+    """Get available quests for character"""
+    try:
+        character_state = {"level": character_level, "job_class": job_class}
+        quests = await quest_automation.detect_available_quests(character_state)
+        
+        return {
+            "available_quests": [{"id": q.quest_id, "name": q.name, "steps": len(q.steps)} for q in quests],
+            "count": len(quests)
+        }
+    except Exception as e:
+        logger.error(f"Quest detection error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/social/chat")
+async def social_chat(character_name: str, player_name: str, message: str,
+                     message_type: str, my_level: int = 50, player_level: int = 50,
+                     my_job: str = "Knight"):
+    """Handle chat interaction"""
+    try:
+        context = {
+            'my_level': my_level,
+            'my_job': my_job,
+            'player_level': player_level,
+            'player_name': player_name,
+            'message_type': message_type,
+            'is_whisper': message_type == 'whisper',
+            'is_party_member': message_type == 'party',
+            'is_guild_member': message_type == 'guild'
+        }
+        
+        result = await interaction_handler.handle_chat(character_name, player_name, message, message_type, context)
+        return result if result else {"action": "no_response", "reason": "Personality check or reputation"}
+    except Exception as e:
+        logger.error(f"Chat handling error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/social/reputation")
+async def get_reputation(character_name: str, player_name: str):
+    """Get player reputation"""
+    reputation = await reputation_manager.get_reputation(character_name, player_name)
+    tier = reputation_manager.get_tier_name(reputation)
+    
+    return {
+        "player_name": player_name,
+        "reputation": reputation,
+        "tier": tier
+    }
+
+@app.post("/api/v1/social/reputation/update")
+async def update_reputation(character_name: str, player_name: str, change: int, reason: str):
+    """Update player reputation"""
+    new_rep = await reputation_manager.update_reputation(character_name, player_name, change, reason)
+    return {
+        "player_name": player_name,
+        "new_reputation": new_rep,
+        "tier": reputation_manager.get_tier_name(new_rep)
+    }
+
+@app.post("/api/v1/social/party_invite")
+async def handle_party_invite(character_name: str, player_name: str, my_level: int = 50):
+    """Handle party invitation"""
+    context = {'my_level': my_level}
+    result = await interaction_handler.handle_party_invite(character_name, player_name, context)
+    return result if result else {"action": "decline_party"}
+
+@app.post("/api/v1/social/trade")
+async def handle_trade(character_name: str, player_name: str, trade_offer: dict):
+    """Handle trade request"""
+    result = await interaction_handler.handle_trade_request(character_name, player_name, trade_offer)
+    return result
+
+@app.get("/api/v1/social/personality")
+async def get_personality():
+    """Get current personality traits"""
+    return {
+        "traits": personality_engine.traits,
+        "conversation_style": personality_engine.get_conversation_style(),
+        "emoji_usage_rate": personality_engine.get_emoji_usage_rate()
+    }
+
 @app.get("/")
 async def root():
     """Root endpoint with service info"""
     return {
         "service": "OpenKore AI Service",
-        "version": "1.0.0-phase3",
+        "version": "1.0.0-phase8",
         "status": "online",
-        "phase": "3 - Python AI Service Foundation Complete",
+        "phase": "8 - Social Interaction System Complete",
         "features": [
             "SQLite Database (8 tables)",
             "OpenMemory SDK (synthetic embeddings)",
             "CrewAI Multi-Agent (4 agents)",
-            "LLM Provider Chain (DeepSeek→OpenAI→Anthropic)"
+            "LLM Provider Chain (DeepSeek→OpenAI→Anthropic)",
+            "PDCA Cycle (Plan-Do-Check-Act)",
+            "ML Pipeline (4-phase cold-start)",
+            "Online Learning System",
+            "ONNX Model Export",
+            "Character Creation Automation",
+            "Progression Management",
+            "Autonomous Goal Generation",
+            "Quest Automation Framework",
+            "Personality Engine (8 traits)",
+            "Player Reputation System (7 tiers)",
+            "Human-Like Chat Generation",
+            "Social Interaction Handler (7 categories)"
         ],
         "endpoints": [
             "/api/v1/health",
             "/api/v1/llm/query",
             "/api/v1/memory/query",
             "/api/v1/memory/add",
-            "/api/v1/crew/analyze"
+            "/api/v1/crew/analyze",
+            "/api/v1/pdca/plan",
+            "/api/v1/pdca/do",
+            "/api/v1/pdca/check",
+            "/api/v1/pdca/act",
+            "/api/v1/pdca/cycle",
+            "/api/v1/ml/predict",
+            "/api/v1/ml/train",
+            "/api/v1/ml/status",
+            "/api/v1/lifecycle/create_character",
+            "/api/v1/lifecycle/update_state",
+            "/api/v1/lifecycle/generate_goals",
+            "/api/v1/lifecycle/quests",
+            "/api/v1/social/chat",
+            "/api/v1/social/reputation",
+            "/api/v1/social/reputation/update",
+            "/api/v1/social/party_invite",
+            "/api/v1/social/trade",
+            "/api/v1/social/personality"
         ]
     }
 
 if __name__ == "__main__":
-    logger.info("OpenKore AI Service v1.0.0-phase3")
+    logger.info("OpenKore AI Service v1.0.0-phase8")
     logger.info("Starting HTTP server on http://127.0.0.1:9902")
-    logger.info("Phase 3: Python AI Service Foundation Complete")
+    logger.info("Phase 8: Social Interaction System Complete")
     
     uvicorn.run(
         app,

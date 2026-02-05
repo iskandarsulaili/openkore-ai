@@ -364,11 +364,33 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\combat_coordinator.cpp" />
+    <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\consumables_coordinator.cpp" />
+    <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\coordinator_base.cpp" />
+    <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\coordinator_manager.cpp" />
+    <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\economy_coordinator.cpp" />
+    <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\navigation_coordinator.cpp" />
+    <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\npc_coordinator.cpp" />
+    <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\planning_coordinator.cpp" />
+    <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\progression_coordinator.cpp" />
+    <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\social_coordinator.cpp" />
+    <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\stub_coordinators.cpp" />
     <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\decision\llm.cpp" />
     <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\decision\ml.cpp" />
     <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\decision\reflex.cpp" />
     <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\decision\rules.cpp" />
     <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\main.cpp" />
+    <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\coordinators\combat_coordinator.hpp" />
+    <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\coordinators\consumables_coordinator.hpp" />
+    <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\coordinators\coordinator_base.hpp" />
+    <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\coordinators\coordinator_manager.hpp" />
+    <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\coordinators\economy_coordinator.hpp" />
+    <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\coordinators\navigation_coordinator.hpp" />
+    <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\coordinators\npc_coordinator.hpp" />
+    <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\coordinators\planning_coordinator.hpp" />
+    <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\coordinators\progression_coordinator.hpp" />
+    <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\coordinators\social_coordinator.hpp" />
+    <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\coordinators\stub_coordinators.hpp" />
     <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\decision\llm.hpp" />
     <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\decision\ml.hpp" />
     <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\decision\reflex.hpp" />

@@ -50,6 +50,7 @@ FetchContent_MakeAvailable(json)
 file(GLOB_RECURSE SOURCES
     "src/main.cpp"
     "src/decision/*.cpp"
+    "src/coordinators/*.cpp"
 )
 file(GLOB_RECURSE HEADERS "include/*.hpp")
 

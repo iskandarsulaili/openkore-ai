@@ -10,6 +10,7 @@
 #include "decision/rules.hpp"
 #include "decision/ml.hpp"
 #include "decision/llm.hpp"
+#include "coordinators/coordinator_manager.hpp"
 
 using json = nlohmann::json;
 using namespace openkore_ai;
@@ -22,6 +23,9 @@ std::unique_ptr<decision::ReflexTier> reflex_tier;
 std::unique_ptr<decision::RulesTier> rules_tier;
 std::unique_ptr<decision::MLTier> ml_tier;
 std::unique_ptr<decision::LLMTier> llm_tier;
+
+// Global coordinator manager (Phase 5)
+std::unique_ptr<coordinators::CoordinatorManager> coordinator_manager;
 
 // Statistics
 struct DecisionStats {
@@ -144,6 +148,19 @@ DecisionResponse make_decision(const GameState& state, const std::string& reques
         goto done;
     }
     
+    // Phase 5: Consult coordinator system (operates at tactical/rules level)
+    {
+        Action coordinator_action = coordinator_manager->get_coordinator_decision(state);
+        if (coordinator_action.type != "none") {
+            response.action = coordinator_action;
+            response.tier_used = DecisionTier::RULES;  // Coordinators operate at tactical level
+            std::lock_guard<std::mutex> lock(stats.stats_mutex);
+            stats.rules_count++;
+            stats.total_count++;
+            goto done;
+        }
+    }
+    
     // Tier 2: Rules (<10ms)
     if (rules_tier->should_handle(state)) {
         response.action = rules_tier->decide(state);
@@ -200,7 +217,7 @@ done:
 int main() {
     httplib::Server server;
     
-    std::cout << "OpenKore AI Engine v1.0.0 (Phase 2)" << std::endl;
+    std::cout << "OpenKore AI Engine v1.0.0 (Phase 5)" << std::endl;
     std::cout << "Starting HTTP server on http://127.0.0.1:9901" << std::endl;
     
     // Initialize decision tiers
@@ -210,6 +227,12 @@ int main() {
     ml_tier = std::make_unique<decision::MLTier>();
     llm_tier = std::make_unique<decision::LLMTier>("http://127.0.0.1:9902");
     std::cout << "All decision tiers initialized successfully" << std::endl;
+    
+    // Initialize coordinator framework (Phase 5)
+    std::cout << "\nInitializing coordinator framework (Phase 5)..." << std::endl;
+    coordinator_manager = std::make_unique<coordinators::CoordinatorManager>();
+    coordinator_manager->initialize();
+    std::cout << "Coordinator framework initialized successfully\n" << std::endl;
     
     // POST /api/v1/decide - Main decision endpoint
     server.Post("/api/v1/decide", [](const httplib::Request& req, httplib::Response& res) {
@@ -260,8 +283,9 @@ int main() {
         health_json["components"]["rules_tier"] = true;
         health_json["components"]["ml_tier"] = false;     // Stub only
         health_json["components"]["llm_tier"] = true;
+        health_json["components"]["coordinator_framework"] = true;  // Phase 5
         health_json["uptime_seconds"] = uptime_seconds;
-        health_json["version"] = "1.0.0-phase2";
+        health_json["version"] = "1.0.0-phase5";
         
         res.set_content(health_json.dump(), "application/json");
         res.status = 200;

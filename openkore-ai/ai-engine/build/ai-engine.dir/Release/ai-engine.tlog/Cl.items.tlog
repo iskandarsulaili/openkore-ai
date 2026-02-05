@@ -1,3 +1,14 @@
+D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\combat_coordinator.cpp;D:\RO\bot\renew\openkore-ai\ai-engine\build\ai-engine.dir\Release\combat_coordinator.obj
+D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\consumables_coordinator.cpp;D:\RO\bot\renew\openkore-ai\ai-engine\build\ai-engine.dir\Release\consumables_coordinator.obj
+D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\coordinator_base.cpp;D:\RO\bot\renew\openkore-ai\ai-engine\build\ai-engine.dir\Release\coordinator_base.obj
+D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\coordinator_manager.cpp;D:\RO\bot\renew\openkore-ai\ai-engine\build\ai-engine.dir\Release\coordinator_manager.obj
+D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\economy_coordinator.cpp;D:\RO\bot\renew\openkore-ai\ai-engine\build\ai-engine.dir\Release\economy_coordinator.obj
+D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\navigation_coordinator.cpp;D:\RO\bot\renew\openkore-ai\ai-engine\build\ai-engine.dir\Release\navigation_coordinator.obj
+D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\npc_coordinator.cpp;D:\RO\bot\renew\openkore-ai\ai-engine\build\ai-engine.dir\Release\npc_coordinator.obj
+D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\planning_coordinator.cpp;D:\RO\bot\renew\openkore-ai\ai-engine\build\ai-engine.dir\Release\planning_coordinator.obj
+D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\progression_coordinator.cpp;D:\RO\bot\renew\openkore-ai\ai-engine\build\ai-engine.dir\Release\progression_coordinator.obj
+D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\social_coordinator.cpp;D:\RO\bot\renew\openkore-ai\ai-engine\build\ai-engine.dir\Release\social_coordinator.obj
+D:\RO\bot\renew\openkore-ai\ai-engine\src\coordinators\stub_coordinators.cpp;D:\RO\bot\renew\openkore-ai\ai-engine\build\ai-engine.dir\Release\stub_coordinators.obj
 D:\RO\bot\renew\openkore-ai\ai-engine\src\decision\llm.cpp;D:\RO\bot\renew\openkore-ai\ai-engine\build\ai-engine.dir\Release\llm.obj
 D:\RO\bot\renew\openkore-ai\ai-engine\src\decision\ml.cpp;D:\RO\bot\renew\openkore-ai\ai-engine\build\ai-engine.dir\Release\ml.obj
 D:\RO\bot\renew\openkore-ai\ai-engine\src\decision\reflex.cpp;D:\RO\bot\renew\openkore-ai\ai-engine\build\ai-engine.dir\Release\reflex.obj

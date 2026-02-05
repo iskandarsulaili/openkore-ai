@@ -31,6 +31,7 @@ class DeepSeekProvider(LLMProvider):
         super().__init__("DeepSeek", priority=1)
         self.api_key = os.getenv("DEEPSEEK_API_KEY", "")
         self.endpoint = "https://api.deepseek.com/v1/chat/completions"
+        # Latest DeepSeek model - using deepseek-chat (latest stable version)
         self.model = "deepseek-chat"
         
     async def check_availability(self) -> bool:
@@ -45,7 +46,7 @@ class DeepSeekProvider(LLMProvider):
             return None
             
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.post(
                     self.endpoint,
                     headers={
@@ -58,7 +59,7 @@ class DeepSeekProvider(LLMProvider):
                             {"role": "system", "content": "You are an AI assistant for Ragnarok Online gameplay."},
                             {"role": "user", "content": prompt}
                         ],
-                        "max_tokens": 1024,
+                        "max_tokens": 8192,  # Increased token limit for deepseek-v3
                         "temperature": 0.7
                     }
                 )
