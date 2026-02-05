@@ -1,11 +1,11 @@
 # OpenKore Advanced AI System - Project Proposal
 
-**Version:** 2.0
+**Version:** 2.1
 **Date:** 2026-02-05
 **Status:** Proposal for Approval
 **Project Duration:** 29 weeks (7 months)
 **Team Size:** 3-5 developers
-**Architecture Update:** HTTP REST API + Python AI Service + Complete Game Autonomy
+**Architecture Update:** DeepSeek LLM (99% cost savings), Social interactions, Race condition prevention
 
 ---
 
@@ -33,7 +33,8 @@ This architecture ensures the bot responds instantly to critical situations whil
 - **Complete Autonomy** from character creation to endless endgame content
 - **Production-Grade** architecture with security, performance, and reliability built-in
 - **Future-Proof** design extensible to additional coordinators and capabilities
-- **Cost-Effective** ML reduces expensive LLM API calls by 85%+ after training
+- **Cost-Effective** DeepSeek LLM provides 99% cost reduction ($400 → $4.20/month)
+- **ML Optimization** Further reduces LLM calls by 85%+ after training
 - **Advanced AI Integration** with OpenMemory SDK and CrewAI multi-agent framework
 
 ### Project Scope
@@ -601,7 +602,7 @@ Each coordinator is an expert in one aspect of gameplay:
 | **ML Training** | Python | 3.9+ | Rich ML ecosystem |
 | **ML Framework** | XGBoost | 2.0+ | Fast, accurate, production-ready |
 | **ML Deployment** | ONNX Runtime | 1.14+ | Cross-platform inference |
-| **LLM Providers** | OpenAI / Anthropic | API | Strategic planning capability |
+| **LLM Providers** | DeepSeek (primary), OpenAI (fallback) | API | Cost-effective strategic planning |
 | **Database** | SQLite | 3.40+ | Embedded, reliable, zero-config |
 | **Logging** | spdlog | 1.11+ | High-performance structured logging |
 | **Testing** | Google Test | 1.13+ | Comprehensive C++ testing |
@@ -611,7 +612,7 @@ Each coordinator is an expert in one aspect of gameplay:
 **C++ Libraries:**
 - nlohmann/json - JSON parsing and serialization
 - SQLite3 - Embedded database
-- libcurl - HTTP client for LLM APIs
+- libcurl - HTTP client for LLM APIs (DeepSeek, OpenAI)
 - Protobuf - Binary serialization
 - XGBoost - Gradient boosting ML
 - ONNX Runtime - Neural network inference
@@ -657,7 +658,7 @@ Each coordinator is an expert in one aspect of gameplay:
 - Windows 10/11 or Linux (Ubuntu 20.04+)
 - 8GB+ RAM recommended
 - SSD storage for database performance
-- Stable internet for LLM API access
+- Stable internet for LLM API access (DeepSeek recommended)
 
 ---
 
@@ -891,7 +892,7 @@ Key dependencies that cannot be parallelized:
 - Target platform: Windows 10/11 primary, Linux secondary
 - Minimum specs: 4GB RAM, 4 cores, 10GB storage
 - Recommended: 8GB RAM, 8 cores, SSD, stable internet
-- LLM API access (OpenAI/Anthropic accounts)
+- LLM API access (DeepSeek required, OpenAI/Anthropic optional for fallback)
 
 ### 7.4 Budget Considerations
 
@@ -905,8 +906,11 @@ Key dependencies that cannot be parallelized:
 - Development tools licenses
 - Cloud services (if used)
 
-**LLM API Costs** (3%):
-- Development and testing usage
+**LLM API Costs** (< 1% with DeepSeek):
+- Development: ~$20/month (DeepSeek)
+- Production: ~$4.20/month (DeepSeek)
+- Previous estimate (OpenAI): $400/month
+- **Cost Savings: 99% reduction**
 - Mitigated by caching and careful usage
 - Estimated: $500-1000 for full project
 
@@ -1145,7 +1149,7 @@ Key dependencies that cannot be parallelized:
 5. ☐ Define Definition of Done
 
 **Procurement:**
-1. ☐ Acquire LLM API keys (OpenAI/Anthropic)
+1. ☐ Acquire LLM API keys (DeepSeek required, OpenAI optional)
 2. ☐ Set up test Ragnarok Online server access
 3. ☐ Purchase necessary development tools
 4. ☐ Set up monitoring infrastructure
@@ -1223,8 +1227,11 @@ Before proceeding, confirm:
 **Q: Why C++ instead of Python for the core engine?**  
 A: Performance and security. C++ provides sub-millisecond response times critical for reflex actions, and compiled binaries are harder to reverse-engineer. Python is used for offline ML training where speed is less critical.
 
-**Q: Can the system work without LLM API access?**  
-A: Yes, with limitations. After the cold-start period, ML can handle 85%+ of decisions. Rules handle the rest. LLM is primarily for novel situations and strategy generation, which can be done manually or with local LLMs.
+**Q: Can the system work without LLM API access?**
+A: Yes, with limitations. After the cold-start period, ML can handle 85%+ of decisions. Rules handle the rest. LLM (DeepSeek) is primarily for novel situations and strategy generation at very low cost ($4.20/month). Can also use local LLMs.
+
+**Q: Why DeepSeek instead of OpenAI?**
+A: DeepSeek provides 99% cost savings ($4.20/month vs $400/month) with competitive quality for game AI tasks. OpenAI remains available as automatic fallback if DeepSeek fails.
 
 **Q: What happens if OpenKore updates?**  
 A: The plugin architecture isolates us from most OpenKore changes. We check version compatibility at startup and maintain a compatibility matrix. Critical updates may require plugin updates.

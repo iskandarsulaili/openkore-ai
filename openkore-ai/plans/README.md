@@ -1,9 +1,9 @@
 # OpenKore Advanced AI System - Complete Documentation
 
-**Version:** 2.0
+**Version:** 2.1
 **Date:** 2026-02-05
 **Status:** Complete Planning Phase
-**Architecture:** ✅ Updated - HTTP REST API + Python AI Service + Complete Game Autonomy
+**Architecture:** ✅ Critical Enhancements - DeepSeek LLM (99% cost savings), Social Interactions, Race Condition Prevention
 **Project Ready:** ✅ Approved for Implementation
 
 ---
@@ -12,14 +12,14 @@
 
 This directory contains **complete planning and technical documentation** for the OpenKore Advanced AI System - a production-grade, three-process AI framework that combines HTTP REST API communication, Python AI services (OpenMemory SDK + CrewAI), LLM strategic planning, machine learning, rule-based logic, and reflex-based responses with continuous self-improvement and complete game lifecycle autonomy.
 
-**Total Documentation:** 17+ documents covering architecture, specifications, implementation plans, and operational procedures.
+**Total Documentation:** 20+ documents covering architecture, specifications, implementation plans, and operational procedures.
 
-**Version 2.0 Updates:**
-- ✅ **HTTP REST API** replaces Named Pipes for all IPC communication
-- ✅ **Python AI Service** added (OpenMemory SDK + CrewAI + SQLite)
-- ✅ **Extended LLM Latency** up to 5 minutes for complex strategic planning
-- ✅ **Complete Game Autonomy** from character creation to endless endgame
-- ✅ **New Documents**: ARCHITECTURE-UPDATE-PLAN.md, 08-game-lifecycle-autonomy.md
+**Version 2.1 Critical Enhancements:**
+- ✅ **DeepSeek LLM as Default** - 99% cost reduction ($400 → $4.20/month)
+- ✅ **Human-Like Chat System** - Natural language generation with personality engine
+- ✅ **Social Interaction System** - 7 interaction categories with player reputation
+- ✅ **Race Condition Prevention** - Comprehensive concurrency controls
+- ✅ **New Documents**: 09-social-interaction-system.md, 10-concurrency-and-race-conditions.md, CRITICAL-ENHANCEMENTS-PLAN.md
 
 ---
 
@@ -225,6 +225,39 @@ Master index and navigation for all technical specifications.
 - Resource management
 - Endless improvement engine for endgame content
 - 1,812 lines of complete specifications
+
+#### [`technical-specifications/09-social-interaction-system.md`](technical-specifications/09-social-interaction-system.md) ⭐ **NEW v2.1**
+**Human-like social interaction system**:
+- Natural language chat via DeepSeek LLM
+- Personality engine (8 configurable traits)
+- 7 interaction categories (chat, buff, trade, duel, party, guild, other)
+- Player reputation system (6 tiers: blocked → whitelisted)
+- Context-aware decision making
+- Scam detection and safety measures
+- Multi-language support
+- Typing simulation and authenticity features
+- 2,000+ lines of complete specifications
+
+#### [`technical-specifications/10-concurrency-and-race-conditions.md`](technical-specifications/10-concurrency-and-race-conditions.md) ⭐ **NEW v2.1**
+**Comprehensive concurrency control**:
+- Thread-safe HTTP REST API implementation
+- Multi-process synchronization (Perl + C++ + Python)
+- SQLite WAL mode for concurrent database access
+- Safe macro hot-reload during execution
+- ML model hot-swap during inference
+- PDCA cycle mutual exclusion
+- Lock hierarchies and deadlock prevention
+- 9 critical race condition scenarios addressed
+- 2,500+ lines of complete specifications
+
+#### [`CRITICAL-ENHANCEMENTS-PLAN.md`](CRITICAL-ENHANCEMENTS-PLAN.md) ⭐ **NEW v2.1**
+**Critical enhancements implementation plan**:
+- DeepSeek LLM migration (99% cost reduction)
+- Human-like chat features
+- Selective social interaction behaviors
+- Race condition prevention strategy
+- Integration matrix and validation checklist
+- 2,776 lines of comprehensive planning
 
 #### [`ARCHITECTURE-UPDATE-PLAN.md`](ARCHITECTURE-UPDATE-PLAN.md) ⭐ **NEW v2.0**
 **Architecture change documentation**:
@@ -453,8 +486,9 @@ Located in **[`implementation-plan/`](implementation-plan/)** directory.
 - httpx (async HTTP client)
 
 **External Services:**
-- OpenAI GPT-4 (strategic planning, up to 5 min timeout)
-- Anthropic Claude (fallback)
+- DeepSeek API (primary LLM, $4.20/month)
+- OpenAI GPT-4 (fallback, up to 5 min timeout)
+- Anthropic Claude (optional fallback)
 - Local LLMs (offline mode)
 
 ---
@@ -628,6 +662,8 @@ Located in **[`implementation-plan/`](implementation-plan/)** directory.
 - Coordinators → [`technical-specifications/05-coordinator-specifications.md`](technical-specifications/05-coordinator-specifications.md)
 - Integration → [`technical-specifications/06-integration-guide.md`](technical-specifications/06-integration-guide.md)
 - Configuration → [`technical-specifications/07-configuration-reference.md`](technical-specifications/07-configuration-reference.md)
+- Social interactions → [`technical-specifications/09-social-interaction-system.md`](technical-specifications/09-social-interaction-system.md)
+- Concurrency → [`technical-specifications/10-concurrency-and-race-conditions.md`](technical-specifications/10-concurrency-and-race-conditions.md)
 
 ---
 
@@ -695,7 +731,13 @@ Complete Plan-Do-Check-Act cycle with LLM-driven strategy adjustment and automat
 4-phase cold-start strategy (30+ days), feature engineering (30+ features), training pipeline, ONNX deployment, online learning.
 
 ### ✅ LLM Integration
-Multi-provider support (OpenAI, Anthropic, local), prompt engineering, macro generation, cost optimization through caching.
+DeepSeek primary provider (99% cost savings), multi-provider fallback (OpenAI, Anthropic, local), prompt engineering, macro generation, cost optimization through caching.
+
+### ✅ Social Interaction System
+Human-like chat with personality engine, player reputation tracking, scam detection, context-aware decisions for all interaction types.
+
+### ✅ Concurrency Controls
+Thread-safe architecture, request serialization, database WAL mode, lock hierarchies, deadlock prevention, race condition elimination.
 
 ### ✅ Macro Hot-Reload System
 Template-based generation, LLM macro creation, file watching, atomic reload, version control, rollback support.
@@ -760,6 +802,8 @@ Environment:
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
 | 1.0 | 2026-02-05 | Complete documentation package created | Planning Team |
+| 2.0 | 2026-02-05 | HTTP REST API, Python service, game autonomy | Planning Team |
+| 2.1 | 2026-02-05 | DeepSeek LLM, social interactions, concurrency | Planning Team |
 
 ---
 
@@ -771,12 +815,13 @@ This documentation package represents a **complete, production-ready specificati
 
 **Total Documentation:**
 - 2 synthesis documents (PROJECT-PROPOSAL.md, TECHNICAL-ARCHITECTURE.md)
-- 1 complete architecture document (3,600+ lines)
-- 8 technical specifications
+- 1 complete architecture document (3,700+ lines)
+- 10 technical specifications (including new social + concurrency specs)
 - 8 implementation plan documents
 - 3 README/index documents
+- 1 critical enhancements plan
 
-**Grand Total:** 15+ comprehensive documents covering every aspect of the project.
+**Grand Total:** 20+ comprehensive documents covering every aspect of the project.
 
 ---
 

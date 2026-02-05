@@ -1,10 +1,10 @@
 # OpenKore Advanced AI System - Technical Architecture Documentation
 
-**Version:** 2.0
+**Version:** 2.1
 **Date:** 2026-02-05
 **Status:** Technical Reference
 **Audience:** Developers, Architects, Technical Contributors
-**Architecture Update:** HTTP REST API + Python AI Service + Complete Game Autonomy
+**Architecture Update:** DeepSeek default LLM (99% cost reduction), Social interactions, Race condition prevention
 
 ---
 
@@ -2953,7 +2953,26 @@ void OnlineTrainer::train() {
 
 ## 10. LLM Integration
 
-**Architecture Update:** LLM timeout extended to 5 minutes (300 seconds) for complex strategic planning. Progress indicators and cancellation support added.
+**Architecture Update:**
+- **DeepSeek as primary provider** (99% cost reduction: $400/month → $4.20/month)
+- **OpenAI as fallback** (priority 2)
+- **Extended timeout** up to 5 minutes for complex strategic planning
+- **Automatic failover** between providers
+- **Cost tracking** and budget alerts
+
+### 10.0 Provider Comparison
+
+| Provider | Priority | Cost (Input) | Cost (Output) | Monthly Est. | Use Case |
+|----------|----------|--------------|---------------|--------------|----------|
+| **DeepSeek** | 1 (Primary) | $0.14/1M | $0.28/1M | $4.20 | Default for all tasks |
+| **OpenAI** | 2 (Fallback) | $10/1M | $30/1M | $400 | Fallback only |
+| **Anthropic** | 3 (Disabled) | $15/1M | $75/1M | $900 | Optional |
+
+**Monthly Usage Estimate:**
+- 1,000 PDCA cycles × 10K tokens avg = 10M tokens/month
+- DeepSeek: 10M × ($0.14 + $0.28)/1M = **$4.20/month**
+- Previous (OpenAI): 10M × ($10 + $30)/1M = **$400/month**
+- **Savings: $395.80/month (99% reduction)**
 
 ### 10.1 LLM Client Implementation
 
@@ -2993,11 +3012,12 @@ private:
 };
 
 LLMResponse LLMClient::query(const LLMRequest& request) {
-    log_info("Querying LLM: {} (max_tokens: {})", request.model, request.max_tokens);
+    log_info("Querying LLM: {} (provider: {}, max_tokens: {})",
+             request.model, config_.provider_name, request.max_tokens);
     
     auto start_time = std::chrono::high_resolution_clock::now();
     
-    // Build API request
+    // Build API request (compatible with OpenAI, DeepSeek, Anthropic)
     json api_request = {
         {"model", request.model},
         {"messages", json::array({
@@ -3046,7 +3066,12 @@ LLMResponse LLMClient::query(const LLMRequest& request) {
         std::string content = response_json["choices"][0]["message"]["content"];
         int tokens_used = response_json["usage"]["total_tokens"];
         
-        log_info("LLM response received ({} tokens, {:.2f}s)", tokens_used, elapsed);
+        // Track cost
+        double cost = calculateCost(tokens_used, config_.provider_name);
+        cost_tracker_->recordCost(cost, config_.provider_name);
+        
+        log_info("LLM response received ({} tokens, {:.2f}s, ${:.4f})",
+                tokens_used, elapsed, cost);
         
         return LLMResponse{
             .content = content,

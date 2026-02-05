@@ -1,9 +1,9 @@
 # Advanced OpenKore AI System - Comprehensive Architecture Design
 
-**Version:** 2.0
+**Version:** 2.1
 **Date:** 2026-02-05
 **Status:** Final Architecture
-**Architecture Update:** HTTP REST API + Python AI Service + Complete Game Autonomy
+**Architecture Update:** DeepSeek LLM (99% cost savings), Social Interactions, Race Condition Prevention
 
 ---
 
@@ -55,7 +55,7 @@ This document defines the architecture for an advanced AI system that integrates
 ```mermaid
 graph TB
     subgraph External Services
-        LLM[LLM Service<br/>GPT-4/Claude]
+        LLM[LLM Service<br/>DeepSeek (Primary)<br/>OpenAI (Fallback)]
         GameServer[Ragnarok Online<br/>Game Server]
     end
 
@@ -2829,36 +2829,55 @@ onnxmltools.utils.save_model(onnx_model, 'model.onnx')
 
 ### 11.4 LLM Integration
 
-| Provider | Model | Use Case | Timeout |
-|----------|-------|----------|---------|
-| **OpenAI** | GPT-4 Turbo | Strategic planning, macro generation | Up to 5 min |
-| **Anthropic** | Claude 3 Opus | Complex reasoning, analysis | Up to 5 min |
-| **CrewAI Multi-Agent** | GPT-4 / Claude | Multi-perspective strategic planning | Up to 5 min |
-| **Local** | Llama 3 70B | Offline fallback, cost optimization | Variable |
+| Provider | Model | Priority | Cost/1M tokens | Use Case | Timeout |
+|----------|-------|----------|----------------|----------|---------|
+| **DeepSeek** | deepseek-chat | 1 (Primary) | $0.14 in / $0.28 out | All strategic planning (default) | Up to 5 min |
+| **OpenAI** | GPT-4 Turbo | 2 (Fallback) | $10 in / $30 out | Fallback if DeepSeek fails | Up to 5 min |
+| **Anthropic** | Claude 3 Opus | 3 (Optional) | $15 in / $75 out | Optional secondary fallback | Up to 5 min |
+| **CrewAI Multi-Agent** | DeepSeek/GPT-4 | - | Variable | Multi-agent planning | Up to 5 min |
+| **Local** | Llama 3 70B | 4 (Offline) | Free | Offline fallback | Variable |
+
+**Monthly Cost Estimate (1,000 PDCA cycles, 10K tokens avg):**
+- DeepSeek: 10M tokens × ($0.14 + $0.28)/1M = **$4.20/month** ✅
+- Previous (OpenAI): 10M tokens × ($10 + $30)/1M = $400/month
+- **Savings: $395.80/month (99% reduction)**
 
 **Configuration**:
 ```json
 {
   "llm_providers": [
     {
-      "name": "openai",
+      "name": "deepseek",
       "priority": 1,
+      "model": "deepseek-chat",
+      "api_key_env": "DEEPSEEK_API_KEY",
+      "endpoint": "https://api.deepseek.com/v1/chat/completions",
+      "max_tokens": 4096,
+      "timeout_s": 300,
+      "extended_timeout_enabled": true,
+      "cost_per_1m_tokens": {"input": 0.14, "output": 0.28}
+    },
+    {
+      "name": "openai",
+      "priority": 2,
       "model": "gpt-4-turbo-preview",
       "api_key_env": "OPENAI_API_KEY",
       "endpoint": "https://api.openai.com/v1/chat/completions",
       "max_tokens": 4096,
       "timeout_s": 300,
-      "extended_timeout_enabled": true
+      "extended_timeout_enabled": true,
+      "cost_per_1m_tokens": {"input": 10.0, "output": 30.0}
     },
     {
       "name": "anthropic",
-      "priority": 2,
+      "priority": 3,
       "model": "claude-3-opus-20240229",
       "api_key_env": "ANTHROPIC_API_KEY",
       "endpoint": "https://api.anthropic.com/v1/messages",
       "max_tokens": 4096,
       "timeout_s": 300,
-      "extended_timeout_enabled": true
+      "extended_timeout_enabled": true,
+      "cost_per_1m_tokens": {"input": 15.0, "output": 75.0}
     }
   ],
   "crewai_enabled": true,
@@ -3140,7 +3159,7 @@ sequenceDiagram
 - [ ] C++ compiler (MSVC 2022 or GCC 11+)
 - [ ] CMake 3.20+
 - [ ] Python 3.9+ (for ML training)
-- [ ] LLM API key (OpenAI/Anthropic)
+- [ ] LLM API key (DeepSeek required, OpenAI/Anthropic optional)
 
 **Build Steps**:
 ```batch

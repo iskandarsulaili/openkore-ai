@@ -1,9 +1,9 @@
 # Configuration Reference
 
-**Version:** 2.0
+**Version:** 2.1
 **Date:** 2026-02-05
 **Status:** Final Specification
-**Update:** Added HTTP REST, Python service, extended LLM timeouts
+**Update:** DeepSeek as default LLM provider, social interaction config, concurrency settings
 
 ---
 
@@ -129,14 +129,18 @@ openkore-ai/config/
 
 ```bash
 # Required
-export OPENAI_API_KEY="sk-..."
+export DEEPSEEK_API_KEY="sk-deepseek-xxxxx"
 export OPENKORE_AI_TOKEN="your-secret-token-here"
 
-# Optional
-export ANTHROPIC_API_KEY="sk-ant-..."
+# Optional (fallbacks)
+export OPENAI_API_KEY="sk-openai-xxxxx"
+export ANTHROPIC_API_KEY="sk-ant-xxxxx"
+
+# Service configuration
 export AI_LOG_LEVEL="debug"
 export AI_ENGINE_THREADS="4"
 export PYTHON_SERVICE_URL="http://localhost:9902"
+export LLM_PRIMARY_PROVIDER="deepseek"
 ```
 
 ---
@@ -353,12 +357,38 @@ export LOG_LEVEL="INFO"
 {
   "llm": {
     "enabled": true,
-    "default_provider": "openai",
+    "default_provider": "deepseek",
     
     "providers": [
       {
-        "name": "openai",
+        "name": "deepseek",
         "priority": 1,
+        "enabled": true,
+        "model": "deepseek-chat",
+        "api_key_env": "DEEPSEEK_API_KEY",
+        "endpoint": "https://api.deepseek.com/v1/chat/completions",
+        "parameters": {
+          "max_tokens": 4096,
+          "temperature": 0.7,
+          "top_p": 0.95,
+          "frequency_penalty": 0.0,
+          "presence_penalty": 0.0
+        },
+        "timeout_seconds": 30,
+        "retry": {
+          "max_attempts": 3,
+          "initial_delay_ms": 1000,
+          "backoff_multiplier": 2.0
+        },
+        "cost_per_1m_tokens": {
+          "input": 0.14,
+          "output": 0.28,
+          "currency": "USD"
+        }
+      },
+      {
+        "name": "openai",
+        "priority": 2,
         "enabled": true,
         "model": "gpt-4-turbo-preview",
         "api_key_env": "OPENAI_API_KEY",
@@ -372,14 +402,19 @@ export LOG_LEVEL="INFO"
         },
         "timeout_seconds": 30,
         "retry": {
-          "max_attempts": 3,
+          "max_attempts": 2,
           "initial_delay_ms": 1000,
           "backoff_multiplier": 2.0
+        },
+        "cost_per_1m_tokens": {
+          "input": 10.00,
+          "output": 30.00,
+          "currency": "USD"
         }
       },
       {
         "name": "anthropic",
-        "priority": 2,
+        "priority": 3,
         "enabled": false,
         "model": "claude-3-opus-20240229",
         "api_key_env": "ANTHROPIC_API_KEY",
@@ -390,30 +425,23 @@ export LOG_LEVEL="INFO"
         },
         "timeout_seconds": 30,
         "retry": {
-          "max_attempts": 3,
-          "initial_delay_ms": 1000,
-          "backoff_multiplier": 2.0
-        }
-      },
-      {
-        "name": "deepseek",
-        "priority": 3,
-        "enabled": false,
-        "model": "deepseek-chat",
-        "api_key_env": "DEEPSEEK_API_KEY",
-        "endpoint": "https://api.deepseek.com/v1/chat/completions",
-        "parameters": {
-          "max_tokens": 4096,
-          "temperature": 0.7
-        },
-        "timeout_seconds": 15,
-        "retry": {
           "max_attempts": 2,
           "initial_delay_ms": 1000,
           "backoff_multiplier": 2.0
+        },
+        "cost_per_1m_tokens": {
+          "input": 15.00,
+          "output": 75.00,
+          "currency": "USD"
         }
       }
     ],
+    
+    "fallback_strategy": {
+      "enabled": true,
+      "on_primary_failure": "use_next_priority",
+      "on_all_failure": "use_cache_or_rule_engine"
+    },
     
     "rate_limiting": {
       "enabled": true,
@@ -431,9 +459,10 @@ export LOG_LEVEL="INFO"
     
     "cost_tracking": {
       "enabled": true,
-      "budget_usd_per_day": 10.0,
+      "budget_usd_per_day": 1.0,
       "alert_threshold": 0.8,
-      "auto_disable_on_budget": true
+      "auto_disable_on_budget": true,
+      "estimated_monthly_cost_usd": 4.20
     },
     
     "prompts": {

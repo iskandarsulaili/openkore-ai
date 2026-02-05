@@ -1,9 +1,9 @@
 # Data Structures Reference
 
-**Version:** 2.0
+**Version:** 2.1
 **Date:** 2026-02-05
 **Status:** Final Specification
-**Update:** Added SQLite schemas, OpenMemory SDK, CrewAI structures
+**Update:** Added social interaction structures, concurrency primitives, player reputation system
 
 ---
 
@@ -1849,6 +1849,205 @@ namespace Serialization {
         return true;  // Implement using nlohmann::json-schema-validator
     }
 }
+```
+
+### 7.7 Social Interaction Tables
+
+**See:** [`09-social-interaction-system.md`](09-social-interaction-system.md) for complete specification
+
+#### Player Reputation Table
+
+```sql
+CREATE TABLE player_reputation (
+    player_id INTEGER PRIMARY KEY,
+    player_name TEXT NOT NULL UNIQUE,
+    reputation_score INTEGER NOT NULL DEFAULT 0 CHECK(reputation_score >= -100 AND reputation_score <= 100),
+    reputation_tier TEXT NOT NULL DEFAULT 'neutral',
+    
+    total_interactions INTEGER DEFAULT 0,
+    positive_interactions INTEGER DEFAULT 0,
+    negative_interactions INTEGER DEFAULT 0,
+    
+    first_seen INTEGER NOT NULL,
+    last_seen INTEGER NOT NULL,
+    last_interaction INTEGER,
+    
+    is_friend BOOLEAN DEFAULT 0,
+    is_guild_member BOOLEAN DEFAULT 0,
+    is_whitelisted BOOLEAN DEFAULT 0,
+    is_blacklisted BOOLEAN DEFAULT 0,
+    attempted_scam BOOLEAN DEFAULT 0,
+    
+    preferred_language TEXT,
+    detected_personality TEXT,
+    notes TEXT,
+    
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+);
+
+CREATE INDEX idx_reputation_score ON player_reputation(reputation_score DESC);
+CREATE INDEX idx_reputation_tier ON player_reputation(reputation_tier);
+CREATE INDEX idx_reputation_blacklisted ON player_reputation(is_blacklisted);
+```
+
+#### Interaction History Table
+
+```sql
+CREATE TABLE interaction_history (
+    interaction_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    player_id INTEGER NOT NULL,
+    player_name TEXT NOT NULL,
+    interaction_type TEXT NOT NULL,
+    interaction_subtype TEXT,
+    channel TEXT,
+    request_content TEXT,
+    our_response TEXT,
+    outcome TEXT NOT NULL,
+    reputation_delta INTEGER DEFAULT 0,
+    metadata TEXT,
+    
+    FOREIGN KEY (session_id) REFERENCES player_sessions(session_id),
+    FOREIGN KEY (player_id) REFERENCES player_reputation(player_id)
+);
+
+CREATE INDEX idx_interaction_player ON interaction_history(player_id);
+CREATE INDEX idx_interaction_type ON interaction_history(interaction_type);
+CREATE INDEX idx_interaction_timestamp ON interaction_history(timestamp DESC);
+```
+
+#### Chat History Table
+
+```sql
+CREATE TABLE chat_history (
+    chat_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    conversation_id TEXT NOT NULL,
+    session_id TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    channel TEXT NOT NULL,
+    sender_id INTEGER,
+    sender_name TEXT NOT NULL,
+    message_content TEXT NOT NULL,
+    is_outgoing BOOLEAN DEFAULT 0,
+    generated_by TEXT,
+    requires_response BOOLEAN DEFAULT 0,
+    metadata TEXT,
+    
+    FOREIGN KEY (session_id) REFERENCES player_sessions(session_id),
+    FOREIGN KEY (sender_id) REFERENCES player_reputation(player_id)
+);
+
+CREATE INDEX idx_chat_conversation ON chat_history(conversation_id);
+CREATE INDEX idx_chat_timestamp ON chat_history(timestamp DESC);
+```
+
+### 7.8 Social Interaction C++ Structures
+
+```cpp
+// Player Reputation
+struct PlayerReputation {
+    uint32_t player_id;
+    std::string player_name;
+    int32_t reputation_score;  // -100 to 100
+    std::string reputation_tier;
+    
+    struct Stats {
+        uint32_t total_interactions;
+        uint32_t positive_interactions;
+        uint32_t negative_interactions;
+    } stats;
+    
+    struct Flags {
+        bool is_friend;
+        bool is_guild_member;
+        bool is_whitelisted;
+        bool is_blacklisted;
+        bool attempted_scam;
+    } flags;
+    
+    json toJson() const;
+    static PlayerReputation fromDb(sqlite3_stmt* stmt);
+};
+
+// Chat Context
+struct ChatContext {
+    std::string conversation_id;
+    std::string sender_name;
+    uint32_t sender_id;
+    std::string channel;  // "whisper", "party", "guild"
+    std::vector<ChatMessage> history;
+    float sender_reputation;
+    
+    json toJson() const;
+};
+
+// Interaction Decision
+struct InteractionDecision {
+    bool accept;
+    std::optional<std::string> response_message;
+    std::optional<Action> response_action;
+    std::string reasoning;
+    
+    json toJson() const;
+};
+```
+
+### 7.9 Concurrency Structures
+
+**See:** [`10-concurrency-and-race-conditions.md`](10-concurrency-and-race-conditions.md) for complete specification
+
+```cpp
+// Thread-safe game state wrapper
+class ThreadSafeGameState {
+private:
+    GameState state_;
+    mutable std::shared_mutex state_mutex_;
+    std::atomic<uint64_t> version_{0};
+    
+public:
+    GameState readState() const;
+    void updateState(const GameState& new_state);
+    uint64_t getVersion() const;
+};
+
+// Lock info for deadlock detection
+struct LockInfo {
+    std::thread::id thread_id;
+    std::string lock_name;
+    uint32_t lock_order;
+    Timestamp acquired_at;
+    std::string stack_trace;
+};
+
+// Versioned value for optimistic locking
+template<typename T>
+class VersionedValue {
+private:
+    T value_;
+    std::atomic<uint64_t> version_{0};
+    mutable std::shared_mutex mutex_;
+    
+public:
+    struct ReadResult {
+        T value;
+        uint64_t version;
+    };
+    
+    ReadResult read() const;
+    void write(const T& new_value);
+    bool writeIfVersion(const T& new_value, uint64_t expected_version);
+};
+
+// Transaction state
+struct TransactionState {
+    std::string transaction_id;
+    Timestamp started_at;
+    std::vector<std::string> operations;
+    bool committed;
+    std::optional<std::string> rollback_reason;
+};
 ```
 
 ---

@@ -1,9 +1,9 @@
 # HTTP REST API Protocol Specification
 
-**Version:** 2.0  
-**Date:** 2026-02-05  
-**Status:** Final Specification  
-**Breaking Change:** Replaces Named Pipes IPC with HTTP REST API
+**Version:** 2.1
+**Date:** 2026-02-05
+**Status:** Final Specification
+**Update:** Added social interaction endpoints, concurrency controls, race condition prevention
 
 ---
 
@@ -18,6 +18,8 @@
 7. [Authentication & Security](#7-authentication--security)
 8. [Performance Requirements](#8-performance-requirements)
 9. [Implementation Examples](#9-implementation-examples)
+10. [Social Interaction Endpoints](#10-social-interaction-endpoints)
+11. [Concurrency Controls](#11-concurrency-controls)
 
 ---
 
@@ -1329,22 +1331,219 @@ if __name__ == "__main__":
 
 ---
 
+## 10. Social Interaction Endpoints
+
+**Full Specification:** See [`09-social-interaction-system.md`](09-social-interaction-system.md)
+
+### 10.1 Process Chat Message
+
+```
+POST /api/v1/social/chat/process
+```
+
+**Request:**
+```json
+{
+  "sender_id": 12345,
+  "sender_name": "PlayerName",
+  "message": "hey wanna party?",
+  "channel": "whisper",
+  "conversation_id": "conv_12345_67890"
+}
+```
+
+**Response:**
+```json
+{
+  "should_respond": true,
+  "response_message": "sure why not",
+  "delay_ms": 2500,
+  "reasoning": "Friendly player, not busy",
+  "reputation_adjustment": 1
+}
+```
+
+### 10.2 Evaluate Trade Request
+
+```
+POST /api/v1/social/trade/evaluate
+```
+
+**Request:**
+```json
+{
+  "trader_id": 12345,
+  "trader_name": "PlayerName",
+  "our_items": [{"id": 501, "name": "Red Potion", "amount": 10}],
+  "their_items": [{"id": 502, "name": "Orange Potion", "amount": 10}],
+  "zeny_offered": 0
+}
+```
+
+**Response:**
+```json
+{
+  "decision": "accept",
+  "reasoning": "Fair trade with friendly player",
+  "is_fair": true,
+  "fair_value_ratio": 1.0,
+  "is_scam": false,
+  "response_message": "ok deal"
+}
+```
+
+### 10.3 Get Player Reputation
+
+```
+GET /api/v1/social/reputation/{player_id}
+```
+
+**Response:**
+```json
+{
+  "player_id": 12345,
+  "player_name": "PlayerName",
+  "reputation_score": 65,
+  "reputation_tier": "friendly",
+  "total_interactions": 45,
+  "positive_interactions": 38,
+  "negative_interactions": 2,
+  "flags": {
+    "is_friend": true,
+    "is_guild_member": false,
+    "is_blacklisted": false
+  }
+}
+```
+
+### 10.4 Adjust Reputation
+
+```
+POST /api/v1/social/reputation/adjust
+```
+
+**Request:**
+```json
+{
+  "player_id": 12345,
+  "delta": -30,
+  "reason": "Attempted trade scam"
+}
+```
+
+---
+
+## 11. Concurrency Controls
+
+**Full Specification:** See [`10-concurrency-and-race-conditions.md`](10-concurrency-and-race-conditions.md)
+
+### 11.1 Request Serialization
+
+All HTTP requests for the same session are processed serially to prevent race conditions:
+
+```cpp
+class HTTPRequestSerializer {
+    // Per-session request queue
+    std::unordered_map<std::string, RequestQueue> session_queues_;
+    
+    void enqueueRequest(const std::string& session_id, HTTPRequest request);
+    void processQueue(const std::string& session_id);
+};
+```
+
+**Guarantees:**
+- Requests from same session are processed in order
+- No concurrent state updates for same session
+- Requests from different sessions can process concurrently
+
+### 11.2 State Update Mutex
+
+Game state updates are protected with read-write locks:
+
+```cpp
+class ThreadSafeGameState {
+    mutable std::shared_mutex state_mutex_;
+    
+    // Multiple readers allowed
+    GameState readState() const {
+        std::shared_lock<std::shared_mutex> lock(state_mutex_);
+        return state_;
+    }
+    
+    // Exclusive write access
+    void updateState(const GameState& new_state) {
+        std::unique_lock<std::shared_mutex> lock(state_mutex_);
+        state_ = new_state;
+    }
+};
+```
+
+### 11.3 Timeout Handling
+
+All locks have timeout protection:
+
+```cpp
+// Lock with timeout
+if (try_lock_with_timeout(mutex, std::chrono::milliseconds(5000))) {
+    // Process request
+} else {
+    // Timeout - return error
+    return HTTPResponse{503, "Service unavailable - timeout"};
+}
+```
+
+### 11.4 Concurrent Request Limits
+
+**Per-Session Limits:**
+- Max 1 concurrent request per session (serialized)
+- Max 100 concurrent requests across all sessions
+- Queue depth limit: 1000 requests per session
+
+**Global Limits:**
+- Connection pool size: 100 connections
+- Thread pool size: 8 worker threads
+- Request timeout: 30 seconds (extendable to 300s for LLM)
+
+### 11.5 Database Concurrency
+
+SQLite WAL mode enabled for concurrent access:
+
+```sql
+PRAGMA journal_mode = WAL;      -- Allow concurrent reads
+PRAGMA busy_timeout = 5000;     -- Wait 5s for locks
+PRAGMA synchronous = NORMAL;    -- Balance safety/performance
+```
+
+**Transaction Isolation:**
+- Read operations use DEFERRED transactions (concurrent reads)
+- Write operations use IMMEDIATE transactions (acquire lock early)
+- No long-running transactions (< 100ms target)
+
+---
+
 ## Summary
 
 This HTTP REST API specification provides:
 
-✅ **Modern Protocol** - Replace Named Pipes with HTTP REST  
-✅ **Three-Process Architecture** - C++ Engine + Python Service + Perl Client  
-✅ **Complete API** - 15+ endpoints for all operations  
-✅ **WebSocket Support** - Real-time streaming option  
-✅ **Python Integration** - OpenMemory SDK and CrewAI endpoints  
-✅ **Security** - Token authentication and localhost-only  
-✅ **Performance** - <10ms latency targets for fast decisions  
-✅ **Debuggability** - Standard HTTP tools, JSON format  
+✅ **Modern Protocol** - Replace Named Pipes with HTTP REST
+✅ **Three-Process Architecture** - C++ Engine + Python Service + Perl Client
+✅ **Complete API** - 20+ endpoints for all operations
+✅ **Social Interactions** - Chat, trade, party, reputation endpoints
+✅ **Concurrency Controls** - Request serialization, mutex protection, timeouts
+✅ **WebSocket Support** - Real-time streaming option
+✅ **Python Integration** - OpenMemory SDK and CrewAI endpoints
+✅ **Security** - Token authentication and localhost-only
+✅ **Performance** - <10ms latency targets for fast decisions
+✅ **Debuggability** - Standard HTTP tools, JSON format
 ✅ **Production-Ready** - Error handling, retry logic, monitoring
+✅ **Race Condition Prevention** - Thread-safe by design
 
 **Migration Path:** The specification includes both HTTP REST (primary) and maintains compatibility concepts, allowing gradual transition from Named Pipes implementation.
 
 ---
 
 **Next Steps:** Implement HTTP server in C++ engine using cpp-httplib or Crow framework, update Perl plugin to use LWP::UserAgent HTTP client, and deploy Python FastAPI service.
+
+**Related Documents:**
+- [`09-social-interaction-system.md`](09-social-interaction-system.md) - Social interaction details
+- [`10-concurrency-and-race-conditions.md`](10-concurrency-and-race-conditions.md) - Concurrency patterns
