@@ -1,8 +1,9 @@
 # Data Structures Reference
 
-**Version:** 1.0  
-**Date:** 2026-02-05  
+**Version:** 2.0
+**Date:** 2026-02-05
 **Status:** Final Specification
+**Update:** Added SQLite schemas, OpenMemory SDK, CrewAI structures
 
 ---
 
@@ -14,6 +15,10 @@
 4. [ML Structures](#4-ml-structures)
 5. [Configuration Structures](#5-configuration-structures)
 6. [Utility Structures](#6-utility-structures)
+7. [SQLite Database Schemas](#7-sqlite-database-schemas)
+8. [OpenMemory SDK Structures](#8-openmemory-sdk-structures)
+9. [CrewAI Agent Structures](#9-crewai-agent-structures)
+10. [HTTP REST Data Transfer Objects](#10-http-rest-data-transfer-objects)
 
 ---
 
@@ -22,10 +27,12 @@
 ### 1.1 Design Principles
 
 - **C++20 Compatible**: Use modern C++ features (std::optional, designated initializers, etc.)
-- **Serialization-Friendly**: All structures can be converted to/from JSON
+- **Serialization-Friendly**: All structures can be converted to/from JSON (HTTP REST)
 - **Memory-Efficient**: Minimize padding, use appropriate data types
 - **Cache-Friendly**: Hot data grouped together
 - **Type-Safe**: Strong typing with enums and type aliases
+- **Cross-Language**: Compatible with Python (JSON serialization)
+- **Database-Ready**: SQLite schema definitions included
 
 ### 1.2 Common Types
 
@@ -1052,6 +1059,796 @@ struct Unoptimized {
     uint64_t b;  // 8 bytes
     uint32_t d;  // 4 bytes + 4 bytes padding
 };
+```
+
+---
+
+## 7. SQLite Database Schemas
+
+### 7.1 Overview
+
+SQLite provides persistent storage for game state, memory, metrics, and lifecycle tracking.
+
+**Database File:** `data/openkore_ai.db`
+
+### 7.2 Player Sessions Table
+
+```sql
+CREATE TABLE player_sessions (
+    session_id TEXT PRIMARY KEY,
+    character_name TEXT NOT NULL,
+    character_id INTEGER NOT NULL,
+    start_time INTEGER NOT NULL,
+    end_time INTEGER,
+    total_exp_gained INTEGER DEFAULT 0,
+    total_job_exp_gained INTEGER DEFAULT 0,
+    total_zeny_earned INTEGER DEFAULT 0,
+    start_level INTEGER NOT NULL,
+    end_level INTEGER,
+    start_job_level INTEGER NOT NULL,
+    end_job_level INTEGER,
+    monsters_killed INTEGER DEFAULT 0,
+    deaths INTEGER DEFAULT 0,
+    quests_completed INTEGER DEFAULT 0,
+    session_metadata TEXT,  -- JSON
+    UNIQUE(character_name, start_time)
+);
+
+CREATE INDEX idx_sessions_character ON player_sessions(character_name);
+CREATE INDEX idx_sessions_time ON player_sessions(start_time DESC);
+```
+
+**C++ Structure:**
+```cpp
+struct PlayerSession {
+    std::string session_id;
+    std::string character_name;
+    uint32_t character_id;
+    Timestamp start_time;
+    std::optional<Timestamp> end_time;
+    uint64_t total_exp_gained;
+    uint64_t total_job_exp_gained;
+    uint64_t total_zeny_earned;
+    uint16_t start_level;
+    std::optional<uint16_t> end_level;
+    uint16_t start_job_level;
+    std::optional<uint16_t> end_job_level;
+    uint32_t monsters_killed;
+    uint32_t deaths;
+    uint32_t quests_completed;
+    json session_metadata;
+    
+    json toJson() const;
+    static PlayerSession fromDb(sqlite3_stmt* stmt);
+};
+```
+
+### 7.3 Memories Table (OpenMemory SDK)
+
+```sql
+CREATE TABLE memories (
+    memory_id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    memory_type TEXT NOT NULL,  -- 'episodic', 'semantic', 'procedural'
+    content TEXT NOT NULL,       -- JSON content
+    embedding BLOB,              -- Synthetic embedding vector (384 dims)
+    importance REAL DEFAULT 0.5, -- 0.0 to 1.0
+    access_count INTEGER DEFAULT 0,
+    last_accessed INTEGER,
+    metadata TEXT,               -- JSON extra data
+    FOREIGN KEY (session_id) REFERENCES player_sessions(session_id)
+);
+
+CREATE INDEX idx_memories_session ON memories(session_id);
+CREATE INDEX idx_memories_type ON memories(memory_type);
+CREATE INDEX idx_memories_importance ON memories(importance DESC);
+CREATE INDEX idx_memories_timestamp ON memories(timestamp DESC);
+```
+
+**Python Structure (Pydantic):**
+```python
+from pydantic import BaseModel
+from typing import Optional, List
+import numpy as np
+
+class Memory(BaseModel):
+    memory_id: str
+    session_id: str
+    timestamp: int
+    memory_type: str  # 'episodic', 'semantic', 'procedural'
+    content: dict
+    embedding: Optional[List[float]] = None  # 384-dim vector
+    importance: float = 0.5
+    access_count: int = 0
+    last_accessed: Optional[int] = None
+    metadata: Optional[dict] = None
+    
+    class Config:
+        arbitrary_types_allowed = True
+    
+    def to_db_tuple(self):
+        """Convert to SQLite insert tuple"""
+        import json
+        import pickle
+        
+        return (
+            self.memory_id,
+            self.session_id,
+            self.timestamp,
+            self.memory_type,
+            json.dumps(self.content),
+            pickle.dumps(np.array(self.embedding)) if self.embedding else None,
+            self.importance,
+            self.access_count,
+            self.last_accessed,
+            json.dumps(self.metadata) if self.metadata else None
+        )
+```
+
+### 7.4 Decision Log Table
+
+```sql
+CREATE TABLE decision_log (
+    decision_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    game_state TEXT NOT NULL,    -- JSON snapshot
+    decision_tier TEXT NOT NULL,  -- 'reflex', 'rule', 'ml', 'llm'
+    action_taken TEXT NOT NULL,   -- JSON action
+    action_type TEXT NOT NULL,    -- 'attack', 'move', 'skill', etc.
+    target_id INTEGER,
+    success BOOLEAN,
+    outcome TEXT,                 -- JSON result
+    reward REAL,                  -- Reinforcement learning reward
+    processing_time_ms REAL,
+    confidence REAL,              -- Decision confidence (0-1)
+    FOREIGN KEY (session_id) REFERENCES player_sessions(session_id)
+);
+
+CREATE INDEX idx_decisions_session ON decision_log(session_id);
+CREATE INDEX idx_decisions_tier ON decision_log(decision_tier);
+CREATE INDEX idx_decisions_type ON decision_log(action_type);
+CREATE INDEX idx_decisions_timestamp ON decision_log(timestamp DESC);
+```
+
+**C++ Structure:**
+```cpp
+struct DecisionLogEntry {
+    uint64_t decision_id;
+    std::string session_id;
+    Timestamp timestamp;
+    json game_state;
+    std::string decision_tier;  // "reflex", "rule", "ml", "llm"
+    json action_taken;
+    std::string action_type;
+    std::optional<uint32_t> target_id;
+    std::optional<bool> success;
+    std::optional<json> outcome;
+    std::optional<float> reward;
+    float processing_time_ms;
+    std::optional<float> confidence;
+    
+    static std::string insertSql();
+    std::vector<std::any> getValues() const;
+};
+```
+
+### 7.5 Performance Metrics Table
+
+```sql
+CREATE TABLE metrics (
+    metric_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    metric_name TEXT NOT NULL,
+    metric_value REAL NOT NULL,
+    metric_unit TEXT,
+    metric_metadata TEXT,  -- JSON extra data
+    FOREIGN KEY (session_id) REFERENCES player_sessions(session_id)
+);
+
+CREATE INDEX idx_metrics_session ON metrics(session_id);
+CREATE INDEX idx_metrics_name ON metrics(metric_name);
+CREATE INDEX idx_metrics_timestamp ON metrics(timestamp DESC);
+
+-- Common metric names:
+-- 'exp_per_hour', 'zeny_per_hour', 'monsters_per_hour',
+-- 'deaths_per_hour', 'decision_latency_ms', 'api_latency_ms'
+```
+
+### 7.6 Game Lifecycle State Table
+
+```sql
+CREATE TABLE lifecycle_state (
+    character_name TEXT PRIMARY KEY,
+    current_level INTEGER DEFAULT 1,
+    current_job TEXT DEFAULT 'Novice',
+    job_level INTEGER DEFAULT 1,
+    current_stage TEXT NOT NULL,  -- Lifecycle stage enum
+    current_goal TEXT,             -- JSON goal object
+    goal_history TEXT,             -- JSON array of completed goals
+    rebirth_count INTEGER DEFAULT 0,
+    total_playtime_hours REAL DEFAULT 0,
+    equipment_value INTEGER DEFAULT 0,
+    last_updated INTEGER NOT NULL,
+    lifecycle_metadata TEXT        -- JSON
+);
+
+CREATE INDEX idx_lifecycle_stage ON lifecycle_state(current_stage);
+CREATE INDEX idx_lifecycle_updated ON lifecycle_state(last_updated DESC);
+```
+
+**Python Structure:**
+```python
+class LifecycleState(BaseModel):
+    character_name: str
+    current_level: int = 1
+    current_job: str = "Novice"
+    job_level: int = 1
+    current_stage: str
+    current_goal: Optional[dict] = None
+    goal_history: List[dict] = []
+    rebirth_count: int = 0
+    total_playtime_hours: float = 0.0
+    equipment_value: int = 0
+    last_updated: int
+    lifecycle_metadata: Optional[dict] = None
+```
+
+### 7.7 Equipment History Table
+
+```sql
+CREATE TABLE equipment_history (
+    equipment_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    character_name TEXT NOT NULL,
+    slot TEXT NOT NULL,  -- 'weapon', 'armor', 'headgear_upper', etc.
+    item_name TEXT NOT NULL,
+    item_id INTEGER NOT NULL,
+    refine_level INTEGER DEFAULT 0,
+    cards TEXT,  -- JSON array of card IDs
+    acquired_at INTEGER NOT NULL,
+    acquisition_method TEXT,  -- 'purchase', 'drop', 'quest', 'craft'
+    cost INTEGER DEFAULT 0,
+    replaced_at INTEGER,
+    replaced_by TEXT,
+    FOREIGN KEY (character_name) REFERENCES lifecycle_state(character_name)
+);
+
+CREATE INDEX idx_equipment_character ON equipment_history(character_name);
+CREATE INDEX idx_equipment_slot ON equipment_history(slot);
+CREATE INDEX idx_equipment_acquired ON equipment_history(acquired_at DESC);
+```
+
+---
+
+## 8. OpenMemory SDK Structures
+
+### 8.1 Overview
+
+OpenMemory SDK provides memory management with synthetic embeddings (no external API dependencies).
+
+**Implementation:** Python library for memory storage and retrieval
+
+### 8.2 Memory Configuration
+
+```python
+from openmemory import MemoryConfig, EmbeddingModel
+
+class OpenMemoryConfiguration:
+    """Configuration for OpenMemory SDK"""
+    
+    config = MemoryConfig(
+        embedding_model="synthetic",  # No OpenAI/external API
+        embedding_dim=384,            # Smaller dimension for performance
+        similarity_threshold=0.75,    # Minimum similarity for retrieval
+        max_memories=10000,           # Maximum memories to store
+        decay_factor=0.995,           # Importance decay over time
+        consolidation_threshold=100   # Memories before consolidation
+    )
+```
+
+### 8.3 Memory Types
+
+```python
+from enum import Enum
+
+class MemoryType(str, Enum):
+    EPISODIC = "episodic"      # Specific game events
+    SEMANTIC = "semantic"       # General knowledge
+    PROCEDURAL = "procedural"   # Learned behaviors/skills
+
+class EpisodicMemory(BaseModel):
+    """Specific game event memory"""
+    event_type: str  # 'combat', 'death', 'level_up', 'quest', 'trade'
+    location: dict   # {'map': str, 'x': int, 'y': int}
+    actors: List[str]  # Involved entities
+    outcome: str     # 'success', 'failure', 'partial'
+    rewards: Optional[dict] = None
+    damage_taken: Optional[int] = None
+    duration_seconds: Optional[float] = None
+
+class SemanticMemory(BaseModel):
+    """General knowledge memory"""
+    concept: str     # 'monster_weakness', 'map_layout', 'quest_solution'
+    knowledge: dict  # Structured knowledge
+    source: str      # 'experience', 'llm', 'manual'
+    confidence: float = 1.0
+
+class ProceduralMemory(BaseModel):
+    """Learned behavior memory"""
+    skill_name: str
+    context: dict    # When to use this skill
+    success_rate: float
+    usage_count: int
+    avg_reward: float
+```
+
+### 8.4 Memory Manager
+
+```python
+from openmemory import OpenMemory
+
+class GameMemoryManager:
+    """Manages game memories using OpenMemory SDK"""
+    
+    def __init__(self, db_path: str):
+        self.memory = OpenMemory(
+            config=OpenMemoryConfiguration.config,
+            db_path=db_path
+        )
+    
+    def store_episodic_memory(self, event: dict) -> str:
+        """Store game event as episodic memory"""
+        memory_id = self.memory.store(
+            content=event,
+            memory_type=MemoryType.EPISODIC,
+            importance=self._calculate_importance(event)
+        )
+        return memory_id
+    
+    def retrieve_similar_situations(
+        self,
+        current_state: dict,
+        k: int = 5
+    ) -> List[dict]:
+        """Retrieve similar past situations"""
+        query = self._state_to_query(current_state)
+        
+        memories = self.memory.search(
+            query=query,
+            top_k=k,
+            memory_types=[MemoryType.EPISODIC]
+        )
+        
+        return memories
+    
+    def _calculate_importance(self, event: dict) -> float:
+        """Calculate memory importance (0.0-1.0)"""
+        importance = 0.5  # Base
+        
+        # High importance events
+        high_importance_events = [
+            'death', 'level_up', 'job_change',
+            'mvp_kill', 'rare_drop'
+        ]
+        if event.get('type') in high_importance_events:
+            importance += 0.3
+        
+        # Reward-based importance
+        if 'reward' in event and event['reward'] > 0:
+            importance += min(0.2, event['reward'] / 10000)
+        
+        return min(1.0, importance)
+```
+
+### 8.5 Synthetic Embedding Strategy
+
+```python
+class SyntheticEmbeddingGenerator:
+    """Generate embeddings without external APIs"""
+    
+    def __init__(self, dimension: int = 384):
+        self.dimension = dimension
+        self.vocab = self._build_vocabulary()
+        self.idf = self._calculate_idf()
+    
+    def generate_embedding(self, text: str) -> np.ndarray:
+        """Generate TF-IDF based embedding"""
+        # Tokenize
+        tokens = self._tokenize(text)
+        
+        # Calculate TF-IDF
+        tf_idf = self._calculate_tf_idf(tokens)
+        
+        # Project to fixed dimension
+        embedding = self._project_to_dimension(tf_idf)
+        
+        # Normalize
+        return embedding / np.linalg.norm(embedding)
+    
+    def semantic_similarity(
+        self,
+        embedding1: np.ndarray,
+        embedding2: np.ndarray
+    ) -> float:
+        """Calculate cosine similarity"""
+        return np.dot(embedding1, embedding2)
+```
+
+---
+
+## 9. CrewAI Agent Structures
+
+### 9.1 Overview
+
+CrewAI provides multi-agent framework for complex decision-making scenarios.
+
+**Implementation:** Python library with LLM-powered agents
+
+### 9.2 Agent Definitions
+
+```python
+from crewai import Agent, Task, Crew, Process
+from langchain_openai import ChatOpenAI
+
+class AgentRole(str, Enum):
+    STRATEGIC_PLANNER = "strategic_planner"
+    COMBAT_TACTICIAN = "combat_tactician"
+    RESOURCE_MANAGER = "resource_manager"
+    PERFORMANCE_ANALYST = "performance_analyst"
+
+class AgentConfig(BaseModel):
+    """Configuration for a single agent"""
+    role: AgentRole
+    goal: str
+    backstory: str
+    llm_model: str = "gpt-4"
+    temperature: float = 0.7
+    max_tokens: int = 2000
+    verbose: bool = True
+```
+
+### 9.3 Strategic Planner Agent
+
+```python
+strategic_planner = Agent(
+    role="Strategic Planner",
+    goal="Develop long-term character progression strategies",
+    backstory="""
+    You are an expert Ragnarok Online strategist with deep knowledge of:
+    - Character progression paths and job systems
+    - Equipment progression and BiS (Best-in-Slot) items
+    - Efficient leveling strategies and farming locations
+    - Quest chains and unlockable content
+    - Economic optimization (zeny farming and spending)
+    
+    Your expertise comes from analyzing thousands of successful players
+    and understanding optimal progression patterns for each job class.
+    """,
+    llm=ChatOpenAI(model="gpt-4", temperature=0.7),
+    verbose=True,
+    allow_delegation=False
+)
+```
+
+### 9.4 Combat Tactician Agent
+
+```python
+combat_tactician = Agent(
+    role="Combat Tactician",
+    goal="Optimize combat strategies and skill rotations",
+    backstory="""
+    You are a specialist in Ragnarok Online combat mechanics:
+    - Skill damage calculations and element interactions
+    - Monster AI patterns and weaknesses
+    - Optimal skill rotations for different situations
+    - Positioning and kiting strategies
+    - Buff management and resource efficiency
+    
+    You analyze combat scenarios to recommend the most effective
+    approach for each situation based on character build and enemies.
+    """,
+    llm=ChatOpenAI(model="gpt-4", temperature=0.5),
+    verbose=True,
+    allow_delegation=False
+)
+```
+
+### 9.5 Resource Manager Agent
+
+```python
+resource_manager = Agent(
+    role="Resource Manager",
+    goal="Manage inventory, zeny, and consumables efficiently",
+    backstory="""
+    You are an expert at economic optimization in Ragnarok Online:
+    - Zeny farming efficiency and profit maximization
+    - Resource allocation and budget management
+    - Market analysis and trading strategies
+    - Inventory management and storage optimization
+    - Cost-benefit analysis for equipment upgrades
+    
+    Your goal is to ensure the character always has necessary resources
+    while maximizing long-term wealth accumulation.
+    """,
+    llm=ChatOpenAI(model="gpt-4", temperature=0.6),
+    verbose=True,
+    allow_delegation=False
+)
+```
+
+### 9.6 Performance Analyst Agent
+
+```python
+performance_analyst = Agent(
+    role="Performance Analyst",
+    goal="Analyze performance metrics and identify improvements",
+    backstory="""
+    You are a data analyst specializing in gaming performance:
+    - Statistical analysis of game metrics
+    - Bottleneck identification and optimization
+    - A/B testing and strategy comparison
+    - Learning curve analysis and skill development
+    - Efficiency measurement (exp/hour, zeny/hour, etc.)
+    
+    You use data-driven approaches to identify what's working well
+    and what needs improvement in the character's gameplay.
+    """,
+    llm=ChatOpenAI(model="gpt-4", temperature=0.3),
+    verbose=True,
+    allow_delegation=False
+)
+```
+
+### 9.7 Crew Task Structure
+
+```python
+class CrewTask(BaseModel):
+    """Task for CrewAI execution"""
+    task_type: str  # 'strategic', 'tactical', 'resource', 'analysis'
+    description: str
+    expected_output: str
+    context: dict
+    agent: AgentRole
+    timeout_seconds: int = 300
+
+class CrewExecutionResult(BaseModel):
+    """Result from CrewAI execution"""
+    task_id: str
+    task_type: str
+    status: str  # 'success', 'failed', 'timeout'
+    result: dict
+    agents_involved: List[str]
+    processing_time_ms: float
+    token_usage: Optional[dict] = None
+```
+
+### 9.8 Crew Manager
+
+```python
+class OpenKoreAgentCrew:
+    """CrewAI-based multi-agent system"""
+    
+    def __init__(self, llm_config: dict):
+        self.llm = ChatOpenAI(**llm_config)
+        self._initialize_agents()
+    
+    def execute_strategic_planning(self, context: dict) -> dict:
+        """Execute strategic planning using multiple agents"""
+        
+        # Define tasks
+        strategic_task = Task(
+            description=f"Analyze and create progression plan: {context}",
+            agent=self.strategic_planner,
+            expected_output="Detailed progression plan with milestones"
+        )
+        
+        combat_task = Task(
+            description=f"Design combat strategy: {context}",
+            agent=self.combat_tactician,
+            expected_output="Combat strategy with skill priorities"
+        )
+        
+        resource_task = Task(
+            description=f"Create resource management plan: {context}",
+            agent=self.resource_manager,
+            expected_output="Resource allocation strategy"
+        )
+        
+        # Create and execute crew
+        crew = Crew(
+            agents=[
+                self.strategic_planner,
+                self.combat_tactician,
+                self.resource_manager
+            ],
+            tasks=[strategic_task, combat_task, resource_task],
+            process=Process.sequential,
+            verbose=True
+        )
+        
+        result = crew.kickoff()
+        return self._parse_crew_result(result)
+```
+
+### 9.9 When to Use CrewAI vs Single LLM
+
+```python
+class DecisionComplexity(Enum):
+    SIMPLE = "simple"          # Single LLM call
+    MODERATE = "moderate"       # Single LLM with context
+    COMPLEX = "complex"         # CrewAI multi-agent
+    CRITICAL = "critical"       # CrewAI with validation
+
+def select_decision_method(scenario: dict) -> DecisionComplexity:
+    """Determine appropriate decision method"""
+    
+    # Time horizon
+    if scenario.get('time_horizon_hours', 0) > 10:
+        return DecisionComplexity.COMPLEX
+    
+    # Multiple objectives
+    if len(scenario.get('objectives', [])) > 3:
+        return DecisionComplexity.COMPLEX
+    
+    # High stakes (expensive decision)
+    if scenario.get('cost', 0) > 1000000:
+        return DecisionComplexity.CRITICAL
+    
+    # Simple tactical decision
+    if scenario.get('type') == 'tactical':
+        return DecisionComplexity.SIMPLE
+    
+    return DecisionComplexity.MODERATE
+```
+
+---
+
+## 10. HTTP REST Data Transfer Objects
+
+### 10.1 Overview
+
+Data structures for HTTP REST API communication between processes.
+
+### 10.2 Request DTOs
+
+```cpp
+// C++ Request structures
+
+struct HandshakeRequest {
+    std::string client;
+    std::string client_version;
+    int32_t pid;
+    std::vector<std::string> capabilities;
+    std::string authentication_token;
+    
+    json toJson() const;
+    static HandshakeRequest fromJson(const json& j);
+};
+
+struct StateUpdateRequest {
+    std::string session_id;
+    Timestamp timestamp;
+    uint64_t tick_number;
+    CharacterState player;
+    std::vector<Monster> monsters;
+    std::vector<InventoryItem> items;
+    std::vector<PartyMember> party;
+    std::vector<SkillInfo> skills;
+    
+    json toJson() const;
+};
+
+struct MacroExecuteRequest {
+    std::string session_id;
+    std::string macro_name;
+    json parameters;
+    
+    json toJson() const;
+};
+```
+
+### 10.3 Response DTOs
+
+```cpp
+// C++ Response structures
+
+struct ActionResponse {
+    std::string status;  // "success", "processing", "error"
+    std::string decision_tier;  // "reflex", "rule", "ml", "llm"
+    float processing_time_ms;
+    Action action;
+    std::optional<std::string> reason;
+    std::optional<float> confidence;
+    
+    json toJson() const;
+    static ActionResponse fromJson(const json& j);
+};
+
+struct HealthCheckResponse {
+    std::string status;  // "healthy", "unhealthy"
+    uint64_t uptime_seconds;
+    uint32_t active_sessions;
+    std::map<std::string, std::string> decision_engines;
+    std::optional<PythonServiceStatus> python_service;
+    PerformanceMetrics performance;
+    
+    json toJson() const;
+};
+```
+
+### 10.4 Python DTOs
+
+```python
+# Python Pydantic models for FastAPI
+
+from pydantic import BaseModel, Field
+from typing import Optional, List, Dict
+
+class MemoryStoreRequest(BaseModel):
+    session_id: str
+    event: dict
+    importance: float = Field(default=0.5, ge=0.0, le=1.0)
+
+class MemoryStoreResponse(BaseModel):
+    status: str
+    memory_id: str
+    embedding_generated: bool
+    stored_at: int
+
+class MemoryRetrieveRequest(BaseModel):
+    session_id: str
+    current_state: dict
+    top_k: int = Field(default=5, ge=1, le=20)
+
+class MemoryRetrieveResponse(BaseModel):
+    status: str
+    memories: List[dict]
+    query_time_ms: float
+
+class CrewTaskRequest(BaseModel):
+    session_id: str
+    task_type: str  # 'strategic', 'combat', 'resource', 'analysis'
+    context: dict
+    timeout_seconds: int = Field(default=120, ge=10, le=600)
+
+class CrewTaskResponse(BaseModel):
+    status: str
+    task_id: str
+    result: dict
+    processing_time_ms: float
+    agents_involved: List[str]
+```
+
+### 10.5 JSON Serialization Helpers
+
+```cpp
+// C++ JSON serialization utilities
+
+namespace Serialization {
+    // Convert game state to JSON for HTTP
+    json gameStateToJson(const GameState& state) {
+        return json{
+            {"player", state.player.toJson()},
+            {"monsters", monstersToJsonArray(state.monsters)},
+            {"items", itemsToJsonArray(state.items)},
+            {"timestamp", state.timestamp}
+        };
+    }
+    
+    // Parse JSON response from HTTP
+    ActionResponse parseActionResponse(const std::string& json_str) {
+        auto j = json::parse(json_str);
+        return ActionResponse::fromJson(j);
+    }
+    
+    // Validate JSON schema
+    bool validateSchema(const json& data, const std::string& schema_name) {
+        // JSON schema validation
+        return true;  // Implement using nlohmann::json-schema-validator
+    }
+}
 ```
 
 ---

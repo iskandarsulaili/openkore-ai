@@ -1,10 +1,11 @@
 # OpenKore Advanced AI System - Project Proposal
 
-**Version:** 1.0  
-**Date:** 2026-02-05  
-**Status:** Proposal for Approval  
-**Project Duration:** 29 weeks (7 months)  
+**Version:** 2.0
+**Date:** 2026-02-05
+**Status:** Proposal for Approval
+**Project Duration:** 29 weeks (7 months)
 **Team Size:** 3-5 developers
+**Architecture Update:** HTTP REST API + Python AI Service + Complete Game Autonomy
 
 ---
 
@@ -19,9 +20,9 @@ The OpenKore Advanced AI System is a next-generation intelligent automation fram
 **Multi-Tier Decision Escalation**: The system employs a four-tier decision hierarchy that balances speed with intelligence:
 
 1. **Reflex Tier** (< 1ms) - Immediate threat response
-2. **Rule Tier** (< 10ms) - Deterministic logic execution  
+2. **Rule Tier** (< 10ms) - Deterministic logic execution
 3. **ML Tier** (< 100ms) - Learned pattern recognition
-4. **LLM Tier** (1-5s) - Strategic planning and novel situations
+4. **LLM Tier** (up to 5 min) - Strategic planning via CrewAI multi-agent and novel situations
 
 This architecture ensures the bot responds instantly to critical situations while leveraging advanced AI for strategic decisions, all while learning and improving over time through a Plan-Do-Check-Act (PDCA) continuous improvement cycle.
 
@@ -29,19 +30,24 @@ This architecture ensures the bot responds instantly to critical situations whil
 
 - **120%+ Efficiency** vs manual gameplay through intelligent decision-making
 - **Self-Improving System** that gets smarter with every session
+- **Complete Autonomy** from character creation to endless endgame content
 - **Production-Grade** architecture with security, performance, and reliability built-in
 - **Future-Proof** design extensible to additional coordinators and capabilities
 - **Cost-Effective** ML reduces expensive LLM API calls by 85%+ after training
+- **Advanced AI Integration** with OpenMemory SDK and CrewAI multi-agent framework
 
 ### Project Scope
 
 **What's Included:**
-- Complete C++ core engine with multi-tier decision system
+- Complete C++ core engine with HTTP REST server and multi-tier decision system
+- Python AI Service with OpenMemory SDK (synthetic embeddings) and CrewAI (multi-agent)
 - 14 specialized coordinators covering all gameplay aspects
 - Machine learning pipeline with 30-day cold-start strategy
-- LLM integration with multiple provider support
+- LLM integration with multiple provider support (up to 5-minute timeouts)
 - PDCA continuous improvement loop
 - Macro generation and hot-reload system
+- Complete game lifecycle autonomy (character creation to endless endgame)
+- SQLite centralized storage in Python service
 - Comprehensive configuration and monitoring
 
 **What's Excluded:**
@@ -176,49 +182,81 @@ The OpenKore Advanced AI System addresses these limitations by introducing:
 
 ### 2.1 High-Level Architecture
 
-The system consists of four major components working in harmony:
+The system consists of three processes working in harmony via HTTP REST APIs:
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    OpenKore Process                      │
-│  ┌──────────────┐                                       │
-│  │ Game Protocol│◄──────► Ragnarok Online Server       │
-│  └──────┬───────┘                                       │
-│         │                                                │
-│  ┌──────▼───────────────────────────────────────┐      │
-│  │         Perl Plugin Bridge                    │      │
-│  │  • State Capture    • IPC Client              │      │
-│  │  • Action Executor  • Macro Hot-Reloader      │      │
-│  └──────┬───────────────────────────────────────┘      │
-└─────────┼──────────────────────────────────────────────┘
-          │ Named Pipe / IPC
+┌──────────────────────────────────────────────────────────┐
+│         Process 1: OpenKore (Perl) - Game Interface       │
+│  ┌──────────────┐                                        │
+│  │ Game Protocol│◄──────► Ragnarok Online Server        │
+│  └──────┬───────┘                                        │
+│         │                                                 │
+│  ┌──────▼──────────────────────────────────────┐        │
+│  │    Perl Plugin Bridge (HTTP REST Client)    │        │
+│  │  • State Capture    • HTTP Client            │        │
+│  │  • Action Executor  • Macro Hot-Reloader     │        │
+│  └──────┬──────────────────────────────────────┘        │
+└─────────┼────────────────────────────────────────────────┘
+          │ HTTP REST API (:9901)
           ▼
-┌─────────────────────────────────────────────────────────┐
-│              C++ Core Engine Process                     │
-│                                                          │
-│  ┌────────────────────────────────────────────┐        │
-│  │       Decision Coordinator                  │        │
-│  │   (Multi-Tier Escalation Manager)          │        │
-│  └────┬──────────┬──────────┬─────────┬───────┘        │
-│       │          │          │         │                 │
-│  ┌────▼────┐ ┌──▼──────┐ ┌─▼────┐ ┌─▼──────────┐     │
-│  │ Reflex  │ │  Rule   │ │  ML  │ │    LLM      │     │
-│  │ Engine  │ │ Engine  │ │Engine│ │  Strategic  │     │
-│  │ (<1ms)  │ │ (<10ms) │ │(100ms)│ │  Planner    │     │
-│  └─────────┘ └─────────┘ └──────┘ └─────────────┘     │
-│                                                          │
-│  ┌────────────────────────────────────────────┐        │
-│  │    14 Specialized Coordinators              │        │
-│  │  Combat • Economy • Navigation • NPC        │        │
-│  │  Planning • Social • Consumables • More     │        │
-│  └────────────────────────────────────────────┘        │
-│                                                          │
-│  ┌────────────────────────────────────────────┐        │
-│  │      PDCA Continuous Improvement            │        │
-│  │  Plan → Do → Check → Act → Improve          │        │
-│  └────────────────────────────────────────────┘        │
-│                                                          │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│    Process 2: C++ Core Engine - AI Decision Making       │
+│                                                           │
+│  ┌─────────────────────────────────────────────┐        │
+│  │   HTTP REST Server (Port 9901)              │        │
+│  └─────┬───────────────────────────────────────┘        │
+│        │                                                  │
+│  ┌─────▼──────────────────────────────────────┐        │
+│  │       Decision Coordinator                   │        │
+│  │   (Multi-Tier Escalation Manager)           │        │
+│  └────┬──────────┬──────────┬─────────┬────────┘        │
+│       │          │          │         │                  │
+│  ┌────▼────┐ ┌──▼──────┐ ┌─▼────┐ ┌─▼──────────┐      │
+│  │ Reflex  │ │  Rule   │ │  ML  │ │    LLM      │      │
+│  │ Engine  │ │ Engine  │ │Engine│ │  Strategic  │      │
+│  │ (<1ms)  │ │ (<10ms) │ │(100ms)│ │  Planner    │      │
+│  └─────────┘ └─────────┘ └──────┘ └──────┬──────┘      │
+│                                            │              │
+│  ┌────────────────────────────────────────┤              │
+│  │    14 Specialized Coordinators         │              │
+│  │  Combat • Economy • Navigation • NPC   │              │
+│  └────────────────────────────────────────┘              │
+│                                            │              │
+│  ┌────────────────────────────────────────▼─────┐       │
+│  │         PDCA Continuous Improvement           │       │
+│  └────────────────────────┬──────────────────────┘       │
+└───────────────────────────┼───────────────────────────────┘
+          │ HTTP REST API (:9902)
+          ▼
+┌──────────────────────────────────────────────────────────┐
+│  Process 3: Python AI Service - Advanced AI & Storage    │
+│                                                           │
+│  ┌─────────────────────────────────────────────┐        │
+│  │   FastAPI Server (Port 9902)                │        │
+│  └─────┬───────────────────────────────────────┘        │
+│        │                                                  │
+│  ┌─────▼──────────────────────────────────────┐        │
+│  │  OpenMemory SDK (Synthetic Embeddings)      │        │
+│  │  • Episodic Memory  • Semantic Memory       │        │
+│  └─────────────────────────────────────────────┘        │
+│                                                           │
+│  ┌─────────────────────────────────────────────┐        │
+│  │  CrewAI Multi-Agent Framework                │        │
+│  │  • Strategic Agent  • Tactical Agent         │        │
+│  │  • Analysis Agent   • Resource Manager       │        │
+│  └─────────────────────────────────────────────┘        │
+│                                                           │
+│  ┌─────────────────────────────────────────────┐        │
+│  │  Game Lifecycle Autonomy System              │        │
+│  │  • Character Creation • Job Path Planning    │        │
+│  │  • Endless Goal Generation                   │        │
+│  └─────────────────────────────────────────────┘        │
+│                                                           │
+│  ┌─────────────────────────────────────────────┐        │
+│  │       SQLite Database (Centralized)          │        │
+│  │  • Memories • Decisions • Metrics • State    │        │
+│  └─────────────────────────────────────────────┘        │
+└──────────────────────────────────────────────────────────┘
 ```
 
 ### 2.2 Decision Flow

@@ -1,17 +1,25 @@
 # OpenKore Advanced AI System - Complete Documentation
 
-**Version:** 1.0  
-**Date:** 2026-02-05  
-**Status:** Complete Planning Phase  
+**Version:** 2.0
+**Date:** 2026-02-05
+**Status:** Complete Planning Phase
+**Architecture:** ✅ Updated - HTTP REST API + Python AI Service + Complete Game Autonomy
 **Project Ready:** ✅ Approved for Implementation
 
 ---
 
 ## 📋 Documentation Overview
 
-This directory contains **complete planning and technical documentation** for the OpenKore Advanced AI System - a production-grade, multi-tier AI framework that combines LLM strategic planning, machine learning, rule-based logic, and reflex-based responses with continuous self-improvement capabilities.
+This directory contains **complete planning and technical documentation** for the OpenKore Advanced AI System - a production-grade, three-process AI framework that combines HTTP REST API communication, Python AI services (OpenMemory SDK + CrewAI), LLM strategic planning, machine learning, rule-based logic, and reflex-based responses with continuous self-improvement and complete game lifecycle autonomy.
 
-**Total Documentation:** 15+ documents covering architecture, specifications, implementation plans, and operational procedures.
+**Total Documentation:** 17+ documents covering architecture, specifications, implementation plans, and operational procedures.
+
+**Version 2.0 Updates:**
+- ✅ **HTTP REST API** replaces Named Pipes for all IPC communication
+- ✅ **Python AI Service** added (OpenMemory SDK + CrewAI + SQLite)
+- ✅ **Extended LLM Latency** up to 5 minutes for complex strategic planning
+- ✅ **Complete Game Autonomy** from character creation to endless endgame
+- ✅ **New Documents**: ARCHITECTURE-UPDATE-PLAN.md, 08-game-lifecycle-autonomy.md
 
 ---
 
@@ -42,11 +50,11 @@ Start here: **[`advanced-ai-architecture.md`](advanced-ai-architecture.md)** - D
 **Target Audience:** Project sponsors, technical leads, stakeholders who need full project understanding.
 
 **Contents:**
-1. ✅ Executive Summary (vision, approach, timeline, team, costs)
-2. ✅ Project Overview (problem statement, objectives, success criteria)
-3. ✅ System Architecture Overview (high-level architecture with diagrams)
-4. ✅ Key Features and Capabilities (multi-tier decisions, PDCA, coordinators)
-5. ✅ Technology Stack (C++, Perl, Python, libraries, frameworks)
+1. ✅ Executive Summary (vision, approach, timeline, team, costs) - **UPDATED v2.0**
+2. ✅ Project Overview (problem statement, objectives, success criteria) - **UPDATED v2.0**
+3. ✅ System Architecture Overview (three-process HTTP REST architecture) - **UPDATED v2.0**
+4. ✅ Key Features and Capabilities (multi-tier, PDCA, Python AI, autonomy) - **UPDATED v2.0**
+5. ✅ Technology Stack (C++, Perl, Python, FastAPI, OpenMemory, CrewAI, SQLite) - **UPDATED v2.0**
 6. ✅ Development Approach (phased delivery, agile methodology)
 7. ✅ Project Timeline (29 weeks, 10 phases, 6 milestones)
 8. ✅ Resource Requirements (team composition, infrastructure)
@@ -74,16 +82,17 @@ Start here: **[`advanced-ai-architecture.md`](advanced-ai-architecture.md)** - D
 **Target Audience:** Developers, architects, technical contributors who will implement the system.
 
 **Contents:**
-1. ✅ Introduction (document purpose, scope, intended audience)
-2. ✅ System Overview (architecture principles, design patterns)
-3. ✅ Component Architecture (detailed breakdown of all components)
-4. ✅ Multi-Tier Decision System (Reflex, Rules, ML, LLM tiers)
+1. ✅ Introduction (document purpose, scope, intended audience) - **UPDATED v2.0**
+2. ✅ System Overview (three-process architecture, HTTP REST APIs) - **UPDATED v2.0**
+3. ✅ Component Architecture (C++ Engine + Python Service + Perl Bridge) - **UPDATED v2.0**
+4. ✅ Multi-Tier Decision System (Reflex, Rules, ML, LLM with 5-min timeout) - **UPDATED v2.0**
 5. ✅ PDCA Continuous Improvement Loop (Plan-Do-Check-Act implementation)
-6. ✅ C++ Core Engine (module structure, design patterns, performance)
-7. ✅ Perl Bridge Plugin (IPC communication, hook system, integration)
-8. ✅ Macro System (template engine, LLM generation, hot-reload)
-9. ✅ ML Pipeline (cold-start strategy, training, deployment, online learning)
-10. ✅ LLM Integration (API clients, prompt engineering, cost management)
+6. ✅ C++ Core Engine (HTTP REST server, module structure, design patterns) - **UPDATED v2.0**
+7. ✅ Perl Bridge Plugin (HTTP REST client, hook system, integration) - **UPDATED v2.0**
+8. ✅ Python AI Service (FastAPI, OpenMemory SDK, CrewAI, SQLite) - **NEW v2.0**
+9. ✅ Macro System (template engine, LLM generation, hot-reload)
+10. ✅ ML Pipeline (cold-start strategy, training, deployment, online learning)
+11. ✅ LLM Integration (API clients, prompt engineering, extended timeouts) - **UPDATED v2.0**
 
 **Length:** 40+ pages (synthesized from 70+ pages of detailed specs)  
 **Style:** Technical, detailed, code examples, reference-quality
@@ -99,20 +108,21 @@ Start here: **[`advanced-ai-architecture.md`](advanced-ai-architecture.md)** - D
 
 ### 🏗️ Architecture Documents
 
-#### [`advanced-ai-architecture.md`](advanced-ai-architecture.md) - **COMPLETE ARCHITECTURE**
+#### [`advanced-ai-architecture.md`](advanced-ai-architecture.md) - **COMPLETE ARCHITECTURE** ⭐ **UPDATED v2.0**
 
-**Contents:** 3,600+ lines of comprehensive architecture covering:
-- Executive summary and design goals
-- High-level architecture diagrams
-- Complete component architecture (Reflex, Rule, ML, LLM engines)
-- Decision escalation ladder with code examples
+**Contents:** 3,700+ lines of comprehensive architecture covering:
+- Executive summary and design goals - **UPDATED v2.0**
+- Three-process architecture diagrams with HTTP REST APIs - **UPDATED v2.0**
+- Complete component architecture (C++ Engine + Python Service + Perl Bridge) - **UPDATED v2.0**
+- Decision escalation ladder with extended LLM timeout (5 min) - **UPDATED v2.0**
+- Python AI Service (OpenMemory SDK + CrewAI) - **NEW v2.0**
 - PDCA cycle implementation
-- C++ core engine architecture with module structure
+- C++ core engine with HTTP REST server - **UPDATED v2.0**
 - Macro generation and hot-reload system
 - Machine learning pipeline with training strategies
-- Complete data flow diagrams
-- Technology stack justification
-- Deployment architecture
+- Complete data flow diagrams - **UPDATED v2.0**
+- Technology stack (added Python, FastAPI, OpenMemory, CrewAI, SQLite) - **UPDATED v2.0**
+- Deployment architecture with three processes - **UPDATED v2.0**
 - Security and obfuscation strategies
 - Performance considerations and optimizations
 - Error handling and resilience
@@ -120,9 +130,9 @@ Start here: **[`advanced-ai-architecture.md`](advanced-ai-architecture.md)** - D
 - Comprehensive configuration examples
 - API reference for all major interfaces
 
-**Length:** 3,684 lines (approximately 100 pages)  
-**Depth:** Complete implementation-ready specifications  
-**Status:** ✅ Final
+**Length:** 3,717 lines (approximately 100 pages)
+**Depth:** Complete implementation-ready specifications
+**Status:** ✅ Final v2.0
 
 ---
 
@@ -133,14 +143,15 @@ Located in **[`technical-specifications/`](technical-specifications/)** director
 #### [`technical-specifications/00-INDEX.md`](technical-specifications/00-INDEX.md)
 Master index and navigation for all technical specifications.
 
-#### [`technical-specifications/01-ipc-protocol-specification.md`](technical-specifications/01-ipc-protocol-specification.md)
-**Complete IPC protocol** between Perl and C++:
-- Message format and serialization (binary protocol)
-- Complete message catalog (25+ message types)
-- Request/response patterns with examples
+#### [`technical-specifications/01-ipc-protocol-specification.md`](technical-specifications/01-ipc-protocol-specification.md) ⭐ **UPDATED v2.0**
+**HTTP REST API Protocol** (replaces Named Pipes):
+- Three-process architecture (Perl → C++ :9901 → Python :9902)
+- REST API endpoints and specifications
+- JSON request/response formats
+- WebSocket support for real-time streaming
 - Error handling and status codes
-- Protocol versioning and compatibility
-- Performance requirements (< 5ms round-trip)
+- Authentication and security
+- Performance requirements (< 10ms target, < 20ms acceptable)
 
 #### [`technical-specifications/02-data-structures-reference.md`](technical-specifications/02-data-structures-reference.md)
 **All C++ data structures** used throughout the system:
@@ -187,17 +198,44 @@ Master index and navigation for all technical specifications.
 - Graceful degradation approaches
 - Compatibility with macro, eventMacro, breakTime, etc.
 
-#### [`technical-specifications/07-configuration-reference.md`](technical-specifications/07-configuration-reference.md)
+#### [`technical-specifications/07-configuration-reference.md`](technical-specifications/07-configuration-reference.md) ⭐ **UPDATED v2.0**
 **Complete configuration file specifications**:
-- Engine configuration (`engine.json`)
-- Decision coordinator settings (`coordinator.json`)
+- Engine configuration (`engine.json`) with HTTP REST settings
+- Python service configuration (`python_service.yaml`) - **NEW v2.0**
+- Decision coordinator settings with extended LLM timeout - **UPDATED v2.0**
 - Reflex, Rule, ML, LLM configurations
+- OpenMemory SDK configuration - **NEW v2.0**
+- CrewAI agent configuration - **NEW v2.0**
 - PDCA cycle settings (`pdca_config.json`)
 - Example configurations for common scenarios:
   - Leveling configuration
   - Farming configuration
   - Party support configuration
   - MVP hunting configuration
+  - Complete game autonomy configuration - **NEW v2.0**
+
+#### [`technical-specifications/08-game-lifecycle-autonomy.md`](technical-specifications/08-game-lifecycle-autonomy.md) ⭐ **NEW v2.0**
+**Complete game lifecycle autonomy system**:
+- Character creation automation
+- All 12 job path strategies
+- Lifecycle stages (Novice → Endgame → Post-Endgame)
+- Autonomous goal generation
+- Quest automation framework
+- Equipment progression system
+- Resource management
+- Endless improvement engine for endgame content
+- 1,812 lines of complete specifications
+
+#### [`ARCHITECTURE-UPDATE-PLAN.md`](ARCHITECTURE-UPDATE-PLAN.md) ⭐ **NEW v2.0**
+**Architecture change documentation**:
+- IPC Protocol Migration (Named Pipes → HTTP REST API)
+- LLM Latency Tolerance (5s → 5 minutes)
+- Python Service Integration (SQLite + OpenMemory + CrewAI)
+- Complete Game Autonomy System
+- Migration strategy and checklist
+- Risk assessment
+- Performance targets
+- Implementation phases
 
 ---
 
@@ -337,17 +375,35 @@ Located in **[`implementation-plan/`](implementation-plan/)** directory.
 
 ### System Capabilities
 
+**Three-Process Architecture:**
+- 🔷 **Process 1**: OpenKore (Perl) - Game protocol + HTTP REST client
+- 🔷 **Process 2**: C++ Engine (Port 9901) - AI decision making + HTTP REST server
+- 🔷 **Process 3**: Python Service (Port 9902) - Advanced AI + storage
+
 **Multi-Tier Intelligence:**
 - ⚡ **Reflex Tier** (< 1ms): Emergency responses
 - 🎯 **Rule Tier** (< 10ms): Tactical decisions
 - 🧠 **ML Tier** (< 100ms): Learned patterns
-- 🤖 **LLM Tier** (< 5s): Strategic planning
+- 🤖 **LLM Tier** (up to 5 min): Strategic planning via CrewAI multi-agent
+
+**Python AI Service Features:**
+- 🧩 **OpenMemory SDK**: Synthetic embeddings (no external API)
+- 👥 **CrewAI Multi-Agent**: Strategic, Tactical, Analysis agents
+- 🗄️ **SQLite Database**: Centralized storage for all data
+- 🎮 **Game Lifecycle**: Complete autonomy from char creation to endgame
 
 **14 Specialized Coordinators:**
 - Combat, Economy, Navigation, NPC
 - Planning, Social, Consumables, Progression
 - Companions, Instances, Crafting, Environment
 - Job-Specific, PvP/WoE
+
+**Complete Game Autonomy:**
+- Character creation automation
+- All 12 job path strategies
+- Autonomous goal generation
+- Endless endgame content
+- Self-improving strategies
 
 **Continuous Improvement:**
 - Automated PDCA cycle
@@ -373,22 +429,31 @@ Located in **[`implementation-plan/`](implementation-plan/)** directory.
 ### Technology Stack
 
 **Core:**
-- C++20 (core engine)
+- C++20 (core engine + HTTP REST server)
 - CMake 3.20+ (build system)
-- Perl 5.x (plugin bridge)
-- Python 3.9+ (ML training)
+- Perl 5.x (plugin bridge + HTTP REST client)
+- Python 3.10+ (AI service + FastAPI)
 
-**Libraries:**
+**C++ Libraries:**
+- cpp-httplib / Crow (HTTP REST server)
 - nlohmann/json (JSON parsing)
-- SQLite 3.40+ (database)
-- Protobuf 3.20+ (serialization)
+- SQLite 3.40+ (optional local cache)
 - XGBoost 2.0+ (ML framework)
 - ONNX Runtime 1.14+ (ML inference)
 - libcurl (HTTP client)
 - spdlog (logging)
 
+**Python Libraries:**
+- FastAPI 0.100+ (REST API server)
+- uvicorn (ASGI server)
+- OpenMemory SDK (memory management)
+- CrewAI 0.30+ (multi-agent framework)
+- SQLite 3.40+ (primary database)
+- pandas / numpy (data processing)
+- httpx (async HTTP client)
+
 **External Services:**
-- OpenAI GPT-4 (strategic planning)
+- OpenAI GPT-4 (strategic planning, up to 5 min timeout)
 - Anthropic Claude (fallback)
 - Local LLMs (offline mode)
 

@@ -1,9 +1,10 @@
 # OpenKore Advanced AI System - Technical Architecture Documentation
 
-**Version:** 1.0  
-**Date:** 2026-02-05  
-**Status:** Technical Reference  
+**Version:** 2.0
+**Date:** 2026-02-05
+**Status:** Technical Reference
 **Audience:** Developers, Architects, Technical Contributors
+**Architecture Update:** HTTP REST API + Python AI Service + Complete Game Autonomy
 
 ---
 
@@ -11,10 +12,21 @@
 
 This document provides complete technical specifications for implementing the OpenKore Advanced AI System. It serves as the definitive reference for developers building the system, containing detailed architecture, component specifications, data structures, protocols, configurations, and implementation guidance.
 
+**Architecture Version 2.0 Updates:**
+- ✅ **HTTP REST API** replaces Named Pipes IPC
+- ✅ **Python AI Service** (OpenMemory SDK + CrewAI) added as third process
+- ✅ **Extended LLM latency** up to 5 minutes for complex reasoning
+- ✅ **Complete game autonomy** from character creation to endless endgame
+- ✅ **SQLite centralized storage** in Python service
+- ✅ **Three-process architecture**: Perl + C++ + Python
+
 **Related Documents:**
 - [`PROJECT-PROPOSAL.md`](PROJECT-PROPOSAL.md) - Executive summary and project overview
 - [`advanced-ai-architecture.md`](advanced-ai-architecture.md) - Comprehensive system architecture
+- [`ARCHITECTURE-UPDATE-PLAN.md`](ARCHITECTURE-UPDATE-PLAN.md) - Architecture change details
 - [`technical-specifications/`](technical-specifications/) - Detailed component specifications
+- [`technical-specifications/01-ipc-protocol-specification.md`](technical-specifications/01-ipc-protocol-specification.md) - HTTP REST API specification
+- [`technical-specifications/08-game-lifecycle-autonomy.md`](technical-specifications/08-game-lifecycle-autonomy.md) - Game lifecycle autonomy
 - [`implementation-plan/`](implementation-plan/) - Phased development roadmap
 
 ---
@@ -68,18 +80,19 @@ This technical documentation covers:
 **Knowledge Requirements:**
 - C++17/20 programming
 - Multi-threaded programming
-- IPC and network protocols
+- HTTP REST API design
 - Machine learning fundamentals
-- Database design (SQL)
+- Database design (SQLite)
 - Perl scripting
-- Python for ML training
+- Python for AI services (FastAPI, OpenMemory SDK, CrewAI)
 
 **System Requirements:**
 - OpenKore 3.x installed and functional
 - C++ compiler (MSVC 2022 or GCC 11+)
 - CMake 3.20+
-- Python 3.9+
+- Python 3.10+ (for FastAPI, OpenMemory SDK, CrewAI)
 - Strawberry Perl 5.x
+- SQLite 3.40+
 
 ### 1.4 Architecture Principles
 
@@ -98,38 +111,52 @@ The system follows these core principles:
 
 ### 2.1 Architecture Layers
 
-The system consists of four primary layers:
+The system consists of five primary layers across three processes:
 
 ```
-┌────────────────────────────────────────────────────┐
-│         Layer 4: External Services                  │
-│  • Ragnarok Online Game Server                     │
-│  • LLM API Services (OpenAI, Anthropic)           │
-└────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│         Layer 5: External Services                       │
+│  • Ragnarok Online Game Server                          │
+│  • LLM API Services (OpenAI, Anthropic)                │
+└─────────────────────────────────────────────────────────┘
                     ▲  ▼
-┌────────────────────────────────────────────────────┐
-│         Layer 3: OpenKore & Plugin Bridge          │
-│  • OpenKore Core (Perl)                            │
-│  • aiCore Plugin (State/Action Bridge)             │
-│  • Existing Plugins (macro, eventMacro, etc.)     │
-└────────────────────────────────────────────────────┘
-                    ▲  ▼  IPC
-┌────────────────────────────────────────────────────┐
-│         Layer 2: C++ Core Engine                    │
-│  • Decision Coordinator (Multi-Tier)               │
-│  • 4 Decision Engines (Reflex/Rule/ML/LLM)        │
-│  • 14 Specialized Coordinators                     │
-│  • PDCA Continuous Improvement                     │
-└────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│  Layer 4: OpenKore Process (Perl)                       │
+│  • OpenKore Core (Game Protocol)                        │
+│  • aiCore Plugin (HTTP REST Client)                     │
+│  • Existing Plugins (macro, eventMacro, etc.)          │
+└─────────────────────────────────────────────────────────┘
+                    ▲  ▼  HTTP REST API (:9901)
+┌─────────────────────────────────────────────────────────┐
+│  Layer 3: C++ Core Engine Process                       │
+│  • HTTP REST Server (:9901)                             │
+│  • Decision Coordinator (Multi-Tier)                    │
+│  • 4 Decision Engines (Reflex/Rule/ML/LLM)             │
+│  • 14 Specialized Coordinators                          │
+│  • PDCA Continuous Improvement                          │
+└─────────────────────────────────────────────────────────┘
+                    ▲  ▼  HTTP REST API (:9902)
+┌─────────────────────────────────────────────────────────┐
+│  Layer 2: Python AI Service Process                     │
+│  • FastAPI Server (:9902)                               │
+│  • OpenMemory SDK (Synthetic Embeddings)                │
+│  • CrewAI Multi-Agent Framework                         │
+│  • Game Lifecycle Autonomy System                       │
+└─────────────────────────────────────────────────────────┘
                     ▲  ▼
-┌────────────────────────────────────────────────────┐
-│         Layer 1: Data & ML Infrastructure          │
-│  • SQLite Databases (State, Metrics)              │
-│  • ML Models (ONNX)                                │
-│  • Training Data (Parquet)                         │
-│  • Configuration Files (JSON/YAML)                 │
-└────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│  Layer 1: Data & Storage Infrastructure                 │
+│  • SQLite Databases (Python - Primary Storage)          │
+│  • ML Models (ONNX - C++)                               │
+│  • Training Data (SQLite/Parquet - Python)              │
+│  • Configuration Files (JSON/YAML - All Processes)      │
+└─────────────────────────────────────────────────────────┘
 ```
+
+**Three-Process Architecture:**
+1. **OpenKore (Perl)**: Game protocol handling, HTTP REST client
+2. **C++ Engine (Port 9901)**: AI decision making, HTTP REST server
+3. **Python Service (Port 9902)**: Advanced AI, memory, storage
 
 ### 2.2 Component Interaction Map
 
@@ -2925,6 +2952,8 @@ void OnlineTrainer::train() {
 ---
 
 ## 10. LLM Integration
+
+**Architecture Update:** LLM timeout extended to 5 minutes (300 seconds) for complex strategic planning. Progress indicators and cancellation support added.
 
 ### 10.1 LLM Client Implementation
 

@@ -1,8 +1,9 @@
 # Advanced OpenKore AI System - Comprehensive Architecture Design
 
-**Version:** 1.0  
-**Date:** 2026-02-05  
-**Status:** Design Phase
+**Version:** 2.0
+**Date:** 2026-02-05
+**Status:** Final Architecture
+**Architecture Update:** HTTP REST API + Python AI Service + Complete Game Autonomy
 
 ---
 
@@ -29,12 +30,17 @@
 
 ## 1. Executive Summary
 
-This document defines the architecture for an advanced AI system that integrates LLM-based strategic planning, rule-based reflexive responses, machine learning pattern recognition, and OpenKore's game protocol handling into a unified, production-grade solution.
+This document defines the architecture for an advanced AI system that integrates LLM-based strategic planning, rule-based reflexive responses, machine learning pattern recognition, Python AI services (OpenMemory SDK, CrewAI), and OpenKore's game protocol handling into a unified, production-grade solution with complete game lifecycle autonomy.
 
 ### Key Design Goals
 
 - **Multi-tier Decision Making**: Fast reflexes → Rules → ML → LLM escalation ladder
 - **PDCA Continuous Improvement**: Automated Plan-Do-Check-Act cycle
+- **Three-Process Architecture**: C++ Engine + Python AI Service + Perl Bridge
+- **HTTP REST API**: Modern, debuggable communication protocol
+- **Complete Game Autonomy**: From character creation to endless endgame
+- **Python AI Integration**: OpenMemory SDK (synthetic embeddings) + CrewAI (multi-agent)
+- **Extended LLM Latency**: Up to 5 minutes for complex strategic planning
 - **Performance**: C++ core engine for speed-critical operations
 - **Security**: Obfuscated compiled binaries to prevent reverse engineering
 - **Compatibility**: Plugin-only approach, no modification of OpenKore .pm files
@@ -53,7 +59,24 @@ graph TB
         GameServer[Ragnarok Online<br/>Game Server]
     end
 
-    subgraph OpenKore AI System
+    subgraph "Process 1: OpenKore (Perl)"
+        subgraph OpenKore Core
+            AILoop[AI Loop<br/>Game Logic]
+            TaskSystem[Task System<br/>Action Queue]
+            PacketHandler[Packet Handler<br/>Protocol Layer]
+            EventMacro[EventMacro Plugin<br/>Script Executor]
+        end
+
+        subgraph Perl Plugin Bridge
+            AIPlugin[AI Plugin<br/>Hook Integration]
+            HTTPClient1[HTTP REST Client]
+            MacroReloader[Macro Hot-Reloader<br/>Dynamic Loading]
+        end
+    end
+
+    subgraph "Process 2: C++ Core Engine :9901"
+        HTTPServer[HTTP REST Server]
+        
         subgraph C++ Core Engine
             ReflexEngine[Reflex Engine<br/>Immediate Response]
             RuleEngine[Rule Engine<br/>Deterministic Logic]
@@ -62,39 +85,35 @@ graph TB
             MetricsCollector[Metrics Collector<br/>Performance Monitor]
         end
 
-        subgraph Perl Plugin Bridge
-            AIPlugin[AI Plugin<br/>Hook Integration]
-            IPCBridge[IPC Bridge<br/>Named Pipes/Sockets]
-            MacroReloader[Macro Hot-Reloader<br/>Dynamic Loading]
-        end
-
-        subgraph OpenKore Core
-            AILoop[AI Loop<br/>Game Logic]
-            TaskSystem[Task System<br/>Action Queue]
-            PacketHandler[Packet Handler<br/>Protocol Layer]
-            EventMacro[EventMacro Plugin<br/>Script Executor]
-        end
-
         subgraph PDCA Loop
             Planner[Strategic Planner<br/>LLM Integration]
             Executor[Action Executor<br/>Macro Generator]
             Monitor[Performance Monitor<br/>Metrics Analysis]
             Adjuster[Strategy Adjuster<br/>Feedback Loop]
         end
+        
+        HTTPClient2[HTTP Client<br/>to Python]
+    end
 
+    subgraph "Process 3: Python AI Service :9902"
+        FastAPIServer[FastAPI Server]
+        OpenMemorySDK[OpenMemory SDK<br/>Synthetic Embeddings]
+        CrewAIFramework[CrewAI Multi-Agent<br/>Strategic/Tactical/Analysis]
+        
         subgraph Data Layer
             GameStateDB[(Game State<br/>SQLite)]
-            MetricsDB[(Metrics<br/>Time Series)]
+            MetricsDB[(Metrics<br/>SQLite)]
             MacroStore[(Macro Store<br/>File System)]
-            TrainingData[(Training Data<br/>JSON/Parquet)]
+            TrainingData[(Training Data<br/>SQLite/Parquet)]
         end
     end
 
     GameServer <-->|Packets| PacketHandler
     PacketHandler -->|Events| AILoop
     AILoop -->|Hooks| AIPlugin
-    AIPlugin <-->|IPC| IPCBridge
-    IPCBridge <-->|Commands/State| DecisionCoordinator
+    AIPlugin --> HTTPClient1
+    HTTPClient1 <-->|HTTP REST API| HTTPServer
+    HTTPServer <-->|Commands/State| DecisionCoordinator
     
     DecisionCoordinator -->|Level 0| ReflexEngine
     DecisionCoordinator -->|Level 1| RuleEngine
@@ -102,19 +121,25 @@ graph TB
     DecisionCoordinator -->|Level 3| Planner
     
     Planner <-->|API Calls| LLM
-    ReflexEngine & RuleEngine & MLEngine & Planner -->|Actions| IPCBridge
-    IPCBridge -->|Commands| MacroReloader
+    
+    HTTPClient2 <-->|HTTP REST API| FastAPIServer
+    DecisionCoordinator --> HTTPClient2
+    FastAPIServer --> OpenMemorySDK
+    FastAPIServer --> CrewAIFramework
+    
+    OpenMemorySDK --> GameStateDB
+    CrewAIFramework --> GameStateDB
+    MetricsCollector --> MetricsDB
+    Planner --> MacroStore
+    
+    HTTPServer --> HTTPClient1
+    HTTPClient1 --> MacroReloader
     MacroReloader -->|Load| EventMacro
     EventMacro -->|Execute| TaskSystem
     
-    MetricsCollector -->|Store| MetricsDB
-    MetricsCollector -->|Store| TrainingData
-    Planner -->|Generate| MacroStore
     Monitor -->|Read| MetricsDB
     Monitor -->|Analyze| Adjuster
     Adjuster -->|Feedback| Planner
-    
-    AILoop & TaskSystem -->|State| GameStateDB
 ```
 
 ### 2.2 Component Responsibilities
@@ -126,9 +151,13 @@ graph TB
 | **ML Engine** | Pattern recognition, learned behaviors | C++ | `openkore-ai/cpp-core/ml/` |
 | **Decision Coordinator** | Escalation logic, tier selection | C++ | `openkore-ai/cpp-core/coordinator/` |
 | **Strategic Planner** | LLM integration, macro generation | C++ | `openkore-ai/cpp-core/planner/` |
-| **IPC Bridge** | C++/Perl communication | C++/Perl | `openkore-ai/cpp-core/ipc/` + `openkore-ai/plugins/aiCore/` |
+| **HTTP REST Server** | C++ REST API endpoint (port 9901) | C++ | `openkore-ai/cpp-core/http/` |
+| **Python AI Service** | OpenMemory SDK, CrewAI, SQLite (port 9902) | Python | `openkore-ai/python-service/` |
+| **OpenMemory SDK** | Memory management with synthetic embeddings | Python | `openkore-ai/python-service/memory/` |
+| **CrewAI Framework** | Multi-agent strategic planning | Python | `openkore-ai/python-service/crew/` |
 | **Metrics Collector** | Performance monitoring, logging | C++ | `openkore-ai/cpp-core/metrics/` |
 | **AI Plugin** | Hook registration, event handling | Perl | `openkore-ai/plugins/aiCore/` |
+| **HTTP REST Client** | Perl HTTP client to C++ engine | Perl | `openkore-ai/plugins/aiCore/HTTPClient.pm` |
 | **Macro Hot-Reloader** | Dynamic macro loading | Perl | `openkore-ai/plugins/aiCore/MacroReloader.pm` |
 
 ---
@@ -137,10 +166,12 @@ graph TB
 
 ### 3.1 Separation of Concerns
 
-- **OpenKore** remains responsible for game protocol, packet handling, and basic action execution
-- **C++ Core Engine** handles all AI decision-making logic
-- **Perl Plugin** serves as a thin bridge layer only
+- **OpenKore (Perl)** remains responsible for game protocol, packet handling, and basic action execution
+- **C++ Core Engine** handles all AI decision-making logic and HTTP REST server
+- **Python AI Service** provides advanced AI (OpenMemory SDK, CrewAI, SQLite storage)
+- **Perl Plugin** serves as a thin HTTP REST client bridge only
 - **External LLM** provides strategic planning without tight coupling
+- **HTTP REST API** enables clean communication between all three processes
 
 ### 3.2 Decision Escalation Ladder
 
@@ -148,8 +179,10 @@ graph TB
 Level 0: Reflex (< 1ms)     → Emergency dodge, immediate threat response
 Level 1: Rule (< 10ms)      → State machine decisions, deterministic logic
 Level 2: ML (< 100ms)       → Pattern recognition, learned behaviors
-Level 3: LLM (1-5s)         → Strategic planning, complex problem solving
+Level 3: LLM (up to 5 min)  → Strategic planning, complex reasoning, CrewAI multi-agent
 ```
+
+**Note:** LLM tier now supports up to 5 minutes for complex strategic planning using CrewAI multi-agent framework. Progress indicators and cancellation support included.
 
 ### 3.3 Fallback Hierarchy
 
@@ -2716,15 +2749,14 @@ graph LR
 |-----------|-----------|---------|---------|
 | **Build System** | CMake | 3.20+ | Cross-platform build |
 | **Compiler** | MSVC / GCC | C++20 | Modern C++ features |
+| **HTTP Server** | cpp-httplib / Crow | Latest | REST API server (port 9901) |
 | **JSON** | nlohmann/json | 3.11+ | Configuration & serialization |
-| **Database** | SQLite | 3.40+ | Game state & metrics storage |
-| **HTTP Client** | libcurl | 7.80+ | LLM API calls |
-| **Serialization** | Protobuf | 3.20+ | IPC message protocol |
+| **Database** | SQLite | 3.40+ | Game state & metrics storage (optional in C++) |
+| **HTTP Client** | libcurl | 7.80+ | LLM API calls & Python service communication |
 | **ML Framework** | XGBoost | 2.0+ | Gradient boosting models |
 | **Neural Nets** | ONNX Runtime | 1.14+ | Deep learning inference |
 | **Logging** | spdlog | 1.11+ | High-performance logging |
 | **Testing** | Google Test | 1.13+ | Unit testing framework |
-| **Time Series DB** | InfluxDB C++ | 2.x | Metrics storage |
 
 ### 11.2 Machine Learning
 
@@ -2775,13 +2807,34 @@ onnx_model = convert_xgboost(model, initial_types=[('input', FloatTensorType([No
 onnxmltools.utils.save_model(onnx_model, 'model.onnx')
 ```
 
-### 11.3 LLM Integration
+### 11.3 Python AI Service
 
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| **OpenAI** | GPT-4 Turbo | Strategic planning, macro generation |
-| **Anthropic** | Claude 3 Opus | Complex reasoning, analysis |
-| **Local** | Llama 3 70B | Offline fallback, cost optimization |
+| Component | Technology | Version | Purpose |
+|-----------|-----------|---------|---------|
+| **Web Framework** | FastAPI | 0.100+ | REST API server (port 9902) |
+| **ASGI Server** | uvicorn | 0.23+ | Production ASGI server |
+| **Memory System** | OpenMemory SDK | Latest | Memory management with synthetic embeddings |
+| **Multi-Agent** | CrewAI | 0.30+ | Multi-agent framework for complex decisions |
+| **LLM Client** | OpenAI SDK / Anthropic SDK | Latest | LLM API integration |
+| **Database** | SQLite | 3.40+ | Persistent storage (primary) |
+| **ORM** | SQLAlchemy | 2.0+ | Database abstraction (optional) |
+| **Data Processing** | pandas / numpy | Latest | Data manipulation |
+| **HTTP Client** | httpx | 0.24+ | Async HTTP client |
+
+**Key Features:**
+- **OpenMemory SDK**: Synthetic embeddings (no external API dependencies)
+- **CrewAI**: Multi-agent framework with Strategic, Tactical, and Analysis agents
+- **SQLite**: Primary storage for memories, decisions, metrics, and lifecycle state
+- **FastAPI**: Modern async REST API framework
+
+### 11.4 LLM Integration
+
+| Provider | Model | Use Case | Timeout |
+|----------|-------|----------|---------|
+| **OpenAI** | GPT-4 Turbo | Strategic planning, macro generation | Up to 5 min |
+| **Anthropic** | Claude 3 Opus | Complex reasoning, analysis | Up to 5 min |
+| **CrewAI Multi-Agent** | GPT-4 / Claude | Multi-perspective strategic planning | Up to 5 min |
+| **Local** | Llama 3 70B | Offline fallback, cost optimization | Variable |
 
 **Configuration**:
 ```json
@@ -2794,7 +2847,8 @@ onnxmltools.utils.save_model(onnx_model, 'model.onnx')
       "api_key_env": "OPENAI_API_KEY",
       "endpoint": "https://api.openai.com/v1/chat/completions",
       "max_tokens": 4096,
-      "timeout_s": 10
+      "timeout_s": 300,
+      "extended_timeout_enabled": true
     },
     {
       "name": "anthropic",
@@ -2803,34 +2857,47 @@ onnxmltools.utils.save_model(onnx_model, 'model.onnx')
       "api_key_env": "ANTHROPIC_API_KEY",
       "endpoint": "https://api.anthropic.com/v1/messages",
       "max_tokens": 4096,
-      "timeout_s": 10
+      "timeout_s": 300,
+      "extended_timeout_enabled": true
     }
   ],
+  "crewai_enabled": true,
   "fallback_enabled": true,
   "cache_responses": true,
-  "cache_ttl_minutes": 30
+  "cache_ttl_minutes": 30,
+  "progress_updates": true,
+  "cancellation_support": true
 }
 ```
 
-### 11.4 Perl Plugin Layer
+**Note:** LLM timeout extended to 300 seconds (5 minutes) for complex strategic planning with progress indicators and user cancellation support.
+
+### 11.5 Perl Plugin Layer
 
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
-| **IPC** | Win32::Pipe / IO::Socket::UNIX | Communication with C++ engine |
+| **HTTP Client** | LWP::UserAgent | REST API communication with C++ engine |
 | **JSON** | JSON::XS | Fast JSON parsing |
 | **File Monitoring** | File::Monitor | Macro hot-reload |
 | **Existing Plugins** | macro, eventMacro, etc. | Leverage existing functionality |
 
-### 11.5 Data Storage
+**Note:** Replaced Named Pipes/Unix Sockets with HTTP REST API for better cross-platform support and debuggability.
 
-| Data Type | Storage | Format |
-|-----------|---------|--------|
-| **Configuration** | File System | JSON / YAML |
-| **Game State** | SQLite | Relational DB |
-| **Metrics** | InfluxDB / SQLite | Time Series |
-| **Training Data** | Parquet files | Columnar format |
-| **Macros** | File System | Plain text |
-| **Logs** | File System | Structured JSON logs |
+### 11.6 Data Storage
+
+| Data Type | Storage | Format | Location |
+|-----------|---------|--------|----------|
+| **Configuration** | File System | JSON / YAML | All processes |
+| **Game State** | SQLite (Python) | Relational DB | Python AI Service |
+| **Memories** | SQLite (Python) | With embeddings | Python AI Service |
+| **Decision History** | SQLite (Python) | Time Series | Python AI Service |
+| **Metrics** | SQLite (Python) | Time Series | Python AI Service |
+| **Training Data** | Parquet files / SQLite | Columnar / Relational | Python AI Service |
+| **Lifecycle State** | SQLite (Python) | Relational DB | Python AI Service |
+| **Macros** | File System | Plain text | All processes |
+| **Logs** | File System | Structured JSON logs | All processes |
+
+**Architecture Note:** SQLite is primarily used in Python AI Service for centralized data storage. C++ engine can optionally use SQLite for local caching but primarily communicates with Python service via HTTP REST API.
 
 ---
 
@@ -2845,25 +2912,57 @@ openkore-ai/                              # Main OpenKore directory
 ├── openkore.pl                           # Main OpenKore script
 │
 ├── bin/                                  # Compiled binaries
-│   └── openkore_ai_engine.exe           # C++ core engine (obfuscated)
+│   └── openkore_ai_engine.exe           # C++ core engine (obfuscated, HTTP server :9901)
 │
 ├── cpp-core/                             # C++ source code
 │   ├── src/                             # Source files
+│   │   ├── http/                        # HTTP REST server
+│   │   ├── reflex/                      # Reflex engine
+│   │   ├── rules/                       # Rule engine
+│   │   ├── ml/                          # ML engine
+│   │   └── planner/                     # Strategic planner
 │   ├── include/                         # Headers
 │   ├── third_party/                     # Dependencies
 │   ├── CMakeLists.txt                   # Build config
 │   └── build/                           # Build artifacts
 │
+├── python-service/                       # Python AI Service (:9902)
+│   ├── main.py                          # FastAPI entry point
+│   ├── requirements.txt                 # Python dependencies
+│   ├── memory/
+│   │   ├── __init__.py
+│   │   ├── memory_manager.py            # OpenMemory SDK integration
+│   │   └── embeddings.py                # Synthetic embeddings
+│   ├── crew/
+│   │   ├── __init__.py
+│   │   ├── crew_manager.py              # CrewAI framework
+│   │   ├── strategic_agent.py           # Strategic planning agent
+│   │   ├── tactical_agent.py            # Tactical analysis agent
+│   │   └── analysis_agent.py            # Performance analysis agent
+│   ├── database/
+│   │   ├── __init__.py
+│   │   ├── models.py                    # SQLAlchemy models
+│   │   └── schema.sql                   # Database schema
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── memory.py                    # Memory endpoints
+│   │   ├── crew.py                      # CrewAI endpoints
+│   │   └── lifecycle.py                 # Game lifecycle endpoints
+│   ├── config/
+│   │   └── config.yaml                  # Python service configuration
+│   └── data/
+│       └── openkore_ai.db               # SQLite database
+│
 ├── plugins/                              # OpenKore plugins
 │   ├── aiCore/                          # Main AI plugin (new)
 │   │   ├── aiCore.pl                   # Plugin entry point
-│   │   ├── IPCClient.pm                # IPC communication
+│   │   ├── HTTPClient.pm                # HTTP REST client
 │   │   ├── StateCapture.pm             # Game state capture
 │   │   ├── ActionExecutor.pm           # Action execution
 │   │   ├── MacroReloader.pm            # Hot-reload system
 │   │   └── config/                     # Plugin configuration
 │   │       ├── ai_engine.json
-│   │       └── ipc_config.json
+│   │       └── http_config.json         # HTTP REST config
 │   │
 │   ├── macro/                           # Existing macro plugin
 │   ├── eventMacro/                      # Existing eventMacro plugin

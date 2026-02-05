@@ -1,8 +1,9 @@
 # Configuration Reference
 
-**Version:** 1.0  
-**Date:** 2026-02-05  
+**Version:** 2.0
+**Date:** 2026-02-05
 **Status:** Final Specification
+**Update:** Added HTTP REST, Python service, extended LLM timeouts
 
 ---
 
@@ -10,12 +11,17 @@
 
 1. [Overview](#1-overview)
 2. [Engine Configuration](#2-engine-configuration)
-3. [Decision Coordinator Configuration](#3-decision-coordinator-configuration)
-4. [LLM Configuration](#4-llm-configuration)
-5. [ML Configuration](#5-ml-configuration)
-6. [PDCA Configuration](#6-pdca-configuration)
-7. [Coordinator Configurations](#7-coordinator-configurations)
-8. [Example Configurations](#8-example-configurations)
+3. [HTTP REST API Configuration](#3-http-rest-api-configuration)
+4. [Python Service Configuration](#4-python-service-configuration)
+5. [Decision Coordinator Configuration](#5-decision-coordinator-configuration)
+6. [LLM Configuration](#6-llm-configuration)
+7. [ML Configuration](#7-ml-configuration)
+8. [PDCA Configuration](#8-pdca-configuration)
+9. [OpenMemory SDK Configuration](#9-openmemory-sdk-configuration)
+10. [CrewAI Configuration](#10-crewai-configuration)
+11. [Game Lifecycle Configuration](#11-game-lifecycle-configuration)
+12. [Coordinator Configurations](#12-coordinator-configurations)
+13. [Example Configurations](#13-example-configurations)
 
 ---
 
@@ -26,10 +32,15 @@
 ```
 openkore-ai/config/
 ├── engine.json              # Main engine configuration
+├── http_api.json           # HTTP REST API settings
+├── python_service.json     # Python AI service configuration
 ├── coordinator.json         # Decision coordinator settings
-├── llm_config.json         # LLM provider configuration
+├── llm_config.json         # LLM provider configuration (updated timeouts)
 ├── ml_config.json          # Machine learning settings
 ├── pdca_config.json        # PDCA cycle configuration
+├── openmemory_config.json  # OpenMemory SDK settings
+├── crewai_config.json      # CrewAI agent configuration
+├── lifecycle_autonomy.yaml # Game lifecycle automation
 ├── reflexes.json           # Reflex engine rules
 └── rules/                  # Rule engine configurations
     ├── combat_rules.yaml
@@ -65,13 +76,27 @@ openkore-ai/config/
     }
   },
   
-  "ipc": {
-    "type": "named_pipe",
-    "pipe_name": "\\\\.\\pipe\\openkore_ai",
-    "timeout_ms": 100,
-    "buffer_size": 65536,
+  "communication": {
+    "type": "http_rest",
+    "http_server": {
+      "host": "127.0.0.1",
+      "port": 9901,
+      "enable_ssl": false,
+      "ssl_cert": "",
+      "ssl_key": ""
+    },
+    "timeout_ms": 10000,
     "authentication_required": true,
-    "shared_secret_env": "OPENKORE_AI_SECRET"
+    "token_secret_env": "OPENKORE_AI_TOKEN",
+    "rate_limit_per_second": 100
+  },
+  
+  "python_service": {
+    "enabled": true,
+    "url": "http://localhost:9902",
+    "health_check_interval_seconds": 30,
+    "timeout_seconds": 120,
+    "retry_attempts": 3
   },
   
   "performance": {
@@ -105,18 +130,173 @@ openkore-ai/config/
 ```bash
 # Required
 export OPENAI_API_KEY="sk-..."
-export OPENKORE_AI_SECRET="your-secret-here"
+export OPENKORE_AI_TOKEN="your-secret-token-here"
 
 # Optional
 export ANTHROPIC_API_KEY="sk-ant-..."
-export DEEPSEEK_API_KEY="..."
 export AI_LOG_LEVEL="debug"
 export AI_ENGINE_THREADS="4"
+export PYTHON_SERVICE_URL="http://localhost:9902"
 ```
 
 ---
 
-## 3. Decision Coordinator Configuration
+## 3. HTTP REST API Configuration
+
+### 3.1 Complete http_api.json
+
+```json
+{
+  "http_server": {
+    "host": "127.0.0.1",
+    "port": 9901,
+    "enable_ssl": false,
+    "ssl_cert_path": "certs/server.crt",
+    "ssl_key_path": "certs/server.key",
+    "max_connections": 100,
+    "keep_alive": true,
+    "keep_alive_timeout_seconds": 60
+  },
+  
+  "authentication": {
+    "enabled": true,
+    "token_secret_env": "OPENKORE_AI_TOKEN",
+    "token_expiry_hours": 24,
+    "require_https": false
+  },
+  
+  "rate_limiting": {
+    "enabled": true,
+    "requests_per_second": 100,
+    "burst_size": 150,
+    "per_client": true
+  },
+  
+  "cors": {
+    "enabled": false,
+    "allowed_origins": ["http://localhost:3000"],
+    "allowed_methods": ["GET", "POST"],
+    "allowed_headers": ["Content-Type", "Authorization"]
+  },
+  
+  "timeouts": {
+    "handshake_ms": 5000,
+    "state_update_ms": 10000,
+    "macro_execute_ms": 30000,
+    "llm_simple_ms": 30000,
+    "llm_strategic_ms": 300000,
+    "health_check_ms": 5000
+  },
+  
+  "compression": {
+    "enabled": true,
+    "min_size_bytes": 1024,
+    "algorithms": ["gzip", "deflate"]
+  },
+  
+  "logging": {
+    "log_requests": true,
+    "log_responses": false,
+    "log_errors": true,
+    "log_file": "data/logs/http_api.log"
+  },
+  
+  "monitoring": {
+    "metrics_enabled": true,
+    "health_endpoint": "/api/v1/health",
+    "metrics_endpoint": "/api/v1/metrics",
+    "prometheus_export": false
+  }
+}
+```
+
+### 3.2 WebSocket Configuration
+
+```json
+{
+  "websocket": {
+    "enabled": true,
+    "path": "/ws/state-stream",
+    "max_connections": 10,
+    "ping_interval_seconds": 30,
+    "timeout_seconds": 60,
+    "buffer_size_kb": 64
+  }
+}
+```
+
+---
+
+## 4. Python Service Configuration
+
+### 4.1 Complete python_service.json
+
+```json
+{
+  "python_service": {
+    "enabled": true,
+    "url": "http://localhost:9902",
+    "startup": {
+      "auto_start": true,
+      "command": "python -m uvicorn main:app --host 127.0.0.1 --port 9902",
+      "working_directory": "python-service",
+      "startup_timeout_seconds": 30
+    },
+    
+    "health_check": {
+      "enabled": true,
+      "interval_seconds": 30,
+      "timeout_seconds": 5,
+      "retry_attempts": 3,
+      "endpoint": "/api/health"
+    },
+    
+    "timeouts": {
+      "memory_store_ms": 5000,
+      "memory_retrieve_ms": 20000,
+      "crew_execute_simple_ms": 60000,
+      "crew_execute_complex_ms": 300000
+    },
+    
+    "retry": {
+      "enabled": true,
+      "max_attempts": 3,
+      "backoff_multiplier": 2,
+      "max_backoff_seconds": 10
+    },
+    
+    "fallback": {
+      "on_failure": "use_cache",
+      "cache_ttl_seconds": 300
+    }
+  },
+  
+  "database": {
+    "path": "data/openkore_ai.db",
+    "backup": {
+      "enabled": true,
+      "interval_hours": 24,
+      "max_backups": 7,
+      "backup_directory": "data/backups"
+    }
+  }
+}
+```
+
+### 4.2 Python Service Environment
+
+```bash
+# Python service environment variables
+export PYTHON_SERVICE_PORT=9902
+export OPENAI_API_KEY="sk-..."
+export ANTHROPIC_API_KEY="sk-ant-..."
+export SQLITE_DB_PATH="data/openkore_ai.db"
+export LOG_LEVEL="INFO"
+```
+
+---
+
+## 5. Decision Coordinator Configuration
 
 ### 3.1 Complete coordinator.json
 
@@ -130,7 +310,8 @@ export AI_ENGINE_THREADS="4"
       "reflex": 1,
       "rule": 10,
       "ml": 100,
-      "llm": 5000
+      "llm_simple": 30000,
+      "llm_strategic": 300000
     },
     
     "confidence_thresholds": {
@@ -164,9 +345,9 @@ export AI_ENGINE_THREADS="4"
 
 ---
 
-## 4. LLM Configuration
+## 6. LLM Configuration
 
-### 4.1 Complete llm_config.json
+### 6.1 Complete llm_config.json (Updated Timeouts)
 
 ```json
 {
@@ -189,7 +370,7 @@ export AI_ENGINE_THREADS="4"
           "frequency_penalty": 0.0,
           "presence_penalty": 0.0
         },
-        "timeout_seconds": 10,
+        "timeout_seconds": 30,
         "retry": {
           "max_attempts": 3,
           "initial_delay_ms": 1000,
@@ -207,7 +388,7 @@ export AI_ENGINE_THREADS="4"
           "max_tokens": 4096,
           "temperature": 0.7
         },
-        "timeout_seconds": 10,
+        "timeout_seconds": 30,
         "retry": {
           "max_attempts": 3,
           "initial_delay_ms": 1000,
@@ -528,7 +709,370 @@ economy:
 
 ---
 
-## 8. Example Configurations
+## 7. ML Configuration
+
+(Keep existing ML configuration as is - renumbered from 5 to 7)
+
+---
+
+## 8. PDCA Configuration
+
+(Keep existing PDCA configuration as is - renumbered from 6 to 8)
+
+---
+
+## 9. OpenMemory SDK Configuration
+
+### 9.1 Complete openmemory_config.json
+
+```json
+{
+  "openmemory": {
+    "enabled": true,
+    "embedding_model": "synthetic",
+    "embedding_dimension": 384,
+    "similarity_threshold": 0.75,
+    "max_memories": 10000,
+    
+    "memory_types": {
+      "episodic": {
+        "enabled": true,
+        "retention_days": 90,
+        "importance_threshold": 0.3,
+        "max_per_session": 1000
+      },
+      "semantic": {
+        "enabled": true,
+        "retention_days": 365,
+        "importance_threshold": 0.5,
+        "consolidation_enabled": true
+      },
+      "procedural": {
+        "enabled": true,
+        "retention_days": 180,
+        "update_on_use": true,
+        "success_rate_tracking": true
+      }
+    },
+    
+    "consolidation": {
+      "enabled": true,
+      "interval_hours": 24,
+      "similarity_threshold": 0.90,
+      "merge_strategy": "weighted_average"
+    },
+    
+    "decay": {
+      "enabled": true,
+      "decay_factor": 0.995,
+      "min_importance": 0.1
+    },
+    
+    "retrieval": {
+      "default_top_k": 5,
+      "max_top_k": 20,
+      "use_time_weighting": true,
+      "use_importance_weighting": true
+    }
+  },
+  
+  "synthetic_embeddings": {
+    "method": "tfidf",
+    "vocabulary_size": 10000,
+    "min_df": 2,
+    "max_df": 0.95,
+    "use_idf": true,
+    "smooth_idf": true,
+    "sublinear_tf": true
+  }
+}
+```
+
+### 9.2 Memory Storage Settings
+
+```json
+{
+  "storage": {
+    "database_path": "data/openkore_ai.db",
+    "batch_insert_size": 100,
+    "auto_commit_interval_seconds": 30,
+    "vacuum_interval_days": 7,
+    
+    "performance": {
+      "wal_mode": true,
+      "cache_size_mb": 50,
+      "page_size": 4096,
+      "journal_mode": "WAL"
+    }
+  }
+}
+```
+
+---
+
+## 10. CrewAI Configuration
+
+### 10.1 Complete crewai_config.json
+
+```json
+{
+  "crewai": {
+    "enabled": true,
+    "default_process": "sequential",
+    "verbose": true,
+    
+    "llm_config": {
+      "provider": "openai",
+      "model": "gpt-4",
+      "temperature": 0.7,
+      "max_tokens": 2000,
+      "timeout_seconds": 120
+    },
+    
+    "agents": {
+      "strategic_planner": {
+        "enabled": true,
+        "role": "Strategic Planner",
+        "goal": "Develop long-term character progression strategies",
+        "backstory": "Expert at Ragnarok Online meta-game and optimization",
+        "allow_delegation": false,
+        "max_iter": 15,
+        "max_rpm": 10
+      },
+      
+      "combat_tactician": {
+        "enabled": true,
+        "role": "Combat Tactician",
+        "goal": "Optimize combat strategies and skill rotations",
+        "backstory": "Specialist in combat mechanics and enemy AI patterns",
+        "allow_delegation": false,
+        "max_iter": 10,
+        "max_rpm": 15
+      },
+      
+      "resource_manager": {
+        "enabled": true,
+        "role": "Resource Manager",
+        "goal": "Manage inventory, zeny, and consumables efficiently",
+        "backstory": "Expert at economic optimization and resource allocation",
+        "allow_delegation": false,
+        "max_iter": 10,
+        "max_rpm": 15
+      },
+      
+      "performance_analyst": {
+        "enabled": true,
+        "role": "Performance Analyst",
+        "goal": "Analyze performance metrics and identify improvements",
+        "backstory": "Data analyst specializing in game performance optimization",
+        "allow_delegation": false,
+        "max_iter": 8,
+        "max_rpm": 10
+      }
+    },
+    
+    "task_types": {
+      "strategic": {
+        "agents": ["strategic_planner", "combat_tactician", "resource_manager"],
+        "process": "sequential",
+        "timeout_seconds": 180
+      },
+      "tactical": {
+        "agents": ["combat_tactician"],
+        "process": "sequential",
+        "timeout_seconds": 60
+      },
+      "economic": {
+        "agents": ["resource_manager"],
+        "process": "sequential",
+        "timeout_seconds": 60
+      },
+      "analysis": {
+        "agents": ["performance_analyst"],
+        "process": "sequential",
+        "timeout_seconds": 120
+      }
+    },
+    
+    "decision_threshold": {
+      "use_crew_if_complexity": "high",
+      "use_crew_if_time_horizon_hours": 5,
+      "use_crew_if_cost_exceeds": 1000000,
+      "always_use_for": ["character_build", "strategic_planning"]
+    }
+  }
+}
+```
+
+### 10.2 Agent Interaction Patterns
+
+```json
+{
+  "interaction_patterns": {
+    "collaboration": {
+      "share_context": true,
+      "sequential_handoff": true,
+      "validate_results": true
+    },
+    
+    "conflict_resolution": {
+      "strategy": "weighted_vote",
+      "weights": {
+        "strategic_planner": 1.5,
+        "combat_tactician": 1.0,
+        "resource_manager": 1.0,
+        "performance_analyst": 1.2
+      }
+    }
+  }
+}
+```
+
+---
+
+## 11. Game Lifecycle Configuration
+
+### 11.1 Complete lifecycle_autonomy.yaml
+
+```yaml
+lifecycle:
+  character_creation:
+    enabled: true
+    auto_select_job: true
+    job_selection_criteria:
+      - efficiency
+      - versatility
+      - endgame_potential
+    default_preferences:
+      playstyle: balanced
+      content_focus: pve
+      party_preference: flexible
+  
+  autonomous_goal_generation:
+    enabled: true
+    goal_count: 5
+    regeneration_interval_hours: 24
+    llm_provider: openai
+    crew_ai_enabled: true
+    creativity_temperature: 0.8
+    
+  stages:
+    novice_training:
+      target_level: 10
+      farming_locations:
+        - Training Grounds
+        - Prontera Field
+      skill_priorities:
+        - basic_skill
+      
+    early_game:
+      level_range: [10, 50]
+      job_change_priority: critical
+      equipment_budget_percent: 0.2
+      farming_efficiency_target: 80000  # exp/hour
+      
+    mid_game:
+      level_range: [50, 99]
+      equipment_budget_percent: 0.3
+      farming_efficiency_target: 500000  # exp/hour
+      mvp_hunting_enabled: false
+      
+    late_game:
+      level_range: [99, 175]
+      equipment_budget_percent: 0.4
+      farming_efficiency_target: 1000000  # exp/hour
+      mvp_hunting_enabled: true
+      
+    post_endgame:
+      endless_mode: true
+      activity_diversity: 0.7
+      avoid_repetition_count: 3
+      generate_creative_goals: true
+  
+  quest_automation:
+    enabled: true
+    auto_complete_essential: true
+    auto_complete_job_specific: true
+    skip_optional: false
+    llm_assistance: true
+    
+  equipment_progression:
+    enabled: true
+    auto_upgrade: true
+    budget_percentage: 0.3
+    prioritize_bis: true
+    consider_future_jobs: true
+    
+  resource_management:
+    zeny_thresholds:
+      minimum: 100000
+      optimal: 1000000
+      emergency: 50000
+    consumable_thresholds:
+      healing_potions: 100
+      sp_potions: 50
+      arrows: 500
+      buff_items: 20
+    auto_restock: true
+    restock_trigger_percent: 0.3
+    
+  performance_targets:
+    exp_per_hour_minimum: 100000
+    zeny_per_hour_minimum: 50000
+    death_rate_maximum: 0.5
+    goal_completion_rate_minimum: 0.8
+    
+  safety:
+    emergency_teleport_hp: 0.2
+    emergency_logout_enabled: true
+    avoid_pvp_maps: true
+    max_continuous_hours: 8
+    break_interval_hours: 2
+    break_duration_minutes: 15
+```
+
+### 11.2 Job Path Configurations
+
+```yaml
+job_paths:
+  swordsman_knight:
+    priority: high
+    difficulty: 3
+    stat_priorities: [STR, VIT, AGI]
+    equipment_path:
+      - Sword
+      - Spear
+      - Two-Hand Sword
+    farming_locations:
+      early: [Prontera Culvert, Ant Hell]
+      mid: [Clock Tower, Glast Heim]
+      late: [Abyss Lake, Thanatos Tower]
+    
+  mage_wizard:
+    priority: high
+    difficulty: 2
+    stat_priorities: [INT, DEX, VIT]
+    equipment_path:
+      - Rod
+      - Staff
+      - Ancient Staff
+    farming_locations:
+      early: [Geffen Tower, Orc Village]
+      mid: [Clock Tower, Magma Dungeon]
+      late: [Thanatos Tower, Endless Tower]
+  
+  # ... configurations for all 12 job paths
+```
+
+---
+
+## 12. Coordinator Configurations
+
+(Keep existing coordinator configurations as is - renumbered from 7 to 12)
+
+---
+
+## 13. Example Configurations
 
 ### 8.1 Leveling Configuration
 
