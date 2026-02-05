@@ -1,0 +1,150 @@
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\JSON-SUBBUILD\CMAKEFILES\22088FFB41A81DECDCAE01B1AE513953\JSON-POPULATE-MKDIR.RULE
+setlocal
+"D:\Program Files\CMake\bin\cmake.exe" -Dcfgdir=/Debug -P D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/json-populate-prefix/tmp/json-populate-mkdirs.cmake
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E touch D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/json-populate-prefix/src/json-populate-stamp/Debug/json-populate-mkdir
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\JSON-SUBBUILD\CMAKEFILES\22088FFB41A81DECDCAE01B1AE513953\JSON-POPULATE-DOWNLOAD.RULE
+setlocal
+cd D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE -P D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/json-populate-prefix/tmp/json-populate-gitclone.cmake
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E touch D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/json-populate-prefix/src/json-populate-stamp/Debug/json-populate-download
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\JSON-SUBBUILD\CMAKEFILES\22088FFB41A81DECDCAE01B1AE513953\JSON-POPULATE-UPDATE.RULE
+setlocal
+cd D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-src
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -Dcan_fetch=YES -DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE -P D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/json-populate-prefix/tmp/json-populate-gitupdate.cmake
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\JSON-SUBBUILD\CMAKEFILES\22088FFB41A81DECDCAE01B1AE513953\JSON-POPULATE-PATCH.RULE
+setlocal
+"D:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E touch D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/json-populate-prefix/src/json-populate-stamp/Debug/json-populate-patch
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\JSON-SUBBUILD\CMAKEFILES\22088FFB41A81DECDCAE01B1AE513953\JSON-POPULATE-CONFIGURE.RULE
+setlocal
+cd D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-build
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E touch D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/json-populate-prefix/src/json-populate-stamp/Debug/json-populate-configure
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\JSON-SUBBUILD\CMAKEFILES\22088FFB41A81DECDCAE01B1AE513953\JSON-POPULATE-BUILD.RULE
+setlocal
+cd D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-build
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E touch D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/json-populate-prefix/src/json-populate-stamp/Debug/json-populate-build
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\JSON-SUBBUILD\CMAKEFILES\22088FFB41A81DECDCAE01B1AE513953\JSON-POPULATE-INSTALL.RULE
+setlocal
+cd D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-build
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E touch D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/json-populate-prefix/src/json-populate-stamp/Debug/json-populate-install
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\JSON-SUBBUILD\CMAKEFILES\22088FFB41A81DECDCAE01B1AE513953\JSON-POPULATE-TEST.RULE
+setlocal
+cd D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-build
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E touch D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/json-populate-prefix/src/json-populate-stamp/Debug/json-populate-test
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\JSON-SUBBUILD\CMAKEFILES\AE8DA2E2D88C857AD35976DD2EFC2F30\JSON-POPULATE-COMPLETE.RULE
+setlocal
+"D:\Program Files\CMake\bin\cmake.exe" -E make_directory D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/CMakeFiles/Debug
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E touch D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/CMakeFiles/Debug/json-populate-complete
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E touch D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/json-populate-prefix/src/json-populate-stamp/Debug/json-populate-done
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\JSON-SUBBUILD\CMAKEFILES\8A642CCBA5D93E3CF2EF10284A8FCF59\JSON-POPULATE.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\JSON-SUBBUILD\CMAKELISTS.TXT
+setlocal
+"D:\Program Files\CMake\bin\cmake.exe" -SD:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild -BD:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild --check-stamp-file D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

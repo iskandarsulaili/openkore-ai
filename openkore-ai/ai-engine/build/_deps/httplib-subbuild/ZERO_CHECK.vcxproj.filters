@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\httplib-subbuild\CMakeFiles\06cf292e99c76c812e9e23bd2ec647b0\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{5A7188D4-C700-37F8-839B-DAA8A4416017}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

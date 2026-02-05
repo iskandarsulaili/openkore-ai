@@ -1,0 +1,8 @@
+D:/RO/bot/renew/openkore-ai/ai-engine/build/CMakeFiles/ai-engine.dir
+D:/RO/bot/renew/openkore-ai/ai-engine/build/CMakeFiles/INSTALL.dir
+D:/RO/bot/renew/openkore-ai/ai-engine/build/CMakeFiles/ALL_BUILD.dir
+D:/RO/bot/renew/openkore-ai/ai-engine/build/CMakeFiles/ZERO_CHECK.dir
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-build/CMakeFiles/INSTALL.dir
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-build/CMakeFiles/ALL_BUILD.dir
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-build/CMakeFiles/INSTALL.dir
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-build/CMakeFiles/ALL_BUILD.dir

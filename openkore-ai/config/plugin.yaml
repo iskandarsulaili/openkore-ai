@@ -1,0 +1,29 @@
+ai_engine:
+  url: "http://127.0.0.1:9901"
+  timeout: 30
+
+personality:
+  chattiness: 0.5      # 0.0 = silent, 1.0 = very chatty
+  friendliness: 0.7    # 0.0 = hostile, 1.0 = very friendly
+  helpfulness: 0.6     # 0.0 = selfish, 1.0 = very helpful
+  curiosity: 0.5       # 0.0 = incurious, 1.0 = very curious
+  caution: 0.6         # 0.0 = reckless, 1.0 = very cautious
+  formality: 0.4       # 0.0 = casual, 1.0 = very formal
+  humor: 0.5           # 0.0 = serious, 1.0 = playful
+  patience: 0.7        # 0.0 = impatient, 1.0 = very patient
+
+social:
+  auto_chat_enabled: true
+  auto_buff_enabled: true
+  auto_trade_enabled: false
+  auto_party_enabled: true
+  auto_guild_enabled: true
+  
+  reputation_tiers:
+    blocked: -100
+    suspicious: -50
+    neutral: 0
+    acquaintance: 25
+    friendly: 50
+    trusted: 75
+    whitelisted: 100

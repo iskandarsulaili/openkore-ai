@@ -1,0 +1,10 @@
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\HTTPLIB-SUBBUILD\CMAKEFILES\06CF292E99C76C812E9E23BD2EC647B0\GENERATE.STAMP.RULE
+setlocal
+"D:\Program Files\CMake\bin\cmake.exe" -SD:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild -BD:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/httplib-populate.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

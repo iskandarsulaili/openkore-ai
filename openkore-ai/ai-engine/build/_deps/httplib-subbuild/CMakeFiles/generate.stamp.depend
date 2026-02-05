@@ -1,0 +1,20 @@
+# CMake generation dependency list for this directory.
+D:/Program Files/CMake/share/cmake-4.1/Modules/CMakeGenericSystem.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/CMakeInitializeConfigs.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/CMakeSystemSpecificInformation.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/CMakeSystemSpecificInitialize.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/ExternalProject.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/ExternalProject/PatchInfo.txt.in
+D:/Program Files/CMake/share/cmake-4.1/Modules/ExternalProject/RepositoryInfo.txt.in
+D:/Program Files/CMake/share/cmake-4.1/Modules/ExternalProject/UpdateInfo.txt.in
+D:/Program Files/CMake/share/cmake-4.1/Modules/ExternalProject/cfgcmd.txt.in
+D:/Program Files/CMake/share/cmake-4.1/Modules/ExternalProject/gitclone.cmake.in
+D:/Program Files/CMake/share/cmake-4.1/Modules/ExternalProject/gitupdate.cmake.in
+D:/Program Files/CMake/share/cmake-4.1/Modules/ExternalProject/mkdirs.cmake.in
+D:/Program Files/CMake/share/cmake-4.1/Modules/ExternalProject/shared_internal_commands.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/Platform/Windows-Initialize.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/Platform/Windows.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/Platform/WindowsPaths.cmake
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/CMakeFiles/4.1.2/CMakeSystem.cmake
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/CMakeLists.txt
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/httplib-populate-prefix/tmp/httplib-populate-mkdirs.cmake

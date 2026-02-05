@@ -1,0 +1,27 @@
+server:
+  host: "127.0.0.1"
+  port: 9901
+  max_connections: 100
+  timeout_ms: 30000
+
+python_service:
+  url: "http://127.0.0.1:9902"
+  timeout_ms: 300000  # 5 minutes for complex LLM queries
+
+decision_system:
+  reflex_enabled: true
+  rules_enabled: true
+  ml_enabled: true
+  llm_enabled: true
+  
+  thresholds:
+    reflex_max_ms: 1
+    rules_max_ms: 10
+    ml_max_ms: 100
+    llm_max_ms: 300000
+
+logging:
+  level: "info"  # debug, info, warning, error
+  file: "../logs/ai-engine.log"
+  max_size_mb: 100
+  max_files: 10

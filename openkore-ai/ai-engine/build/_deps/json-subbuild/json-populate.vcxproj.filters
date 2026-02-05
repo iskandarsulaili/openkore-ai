@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-subbuild\CMakeFiles\22088ffb41a81decdcae01b1ae513953\json-populate-mkdir.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-subbuild\CMakeFiles\22088ffb41a81decdcae01b1ae513953\json-populate-download.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-subbuild\CMakeFiles\22088ffb41a81decdcae01b1ae513953\json-populate-update.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-subbuild\CMakeFiles\22088ffb41a81decdcae01b1ae513953\json-populate-patch.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-subbuild\CMakeFiles\22088ffb41a81decdcae01b1ae513953\json-populate-configure.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-subbuild\CMakeFiles\22088ffb41a81decdcae01b1ae513953\json-populate-build.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-subbuild\CMakeFiles\22088ffb41a81decdcae01b1ae513953\json-populate-install.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-subbuild\CMakeFiles\22088ffb41a81decdcae01b1ae513953\json-populate-test.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-subbuild\CMakeFiles\ae8da2e2d88c857ad35976dd2efc2f30\json-populate-complete.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-subbuild\CMakeFiles\8a642ccba5d93e3cf2ef10284a8fcf59\json-populate.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-subbuild\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-subbuild\CMakeFiles\json-populate" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{E82E512D-DF6A-3E78-A6EA-4632C31A3EA6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

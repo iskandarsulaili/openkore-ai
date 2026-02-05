@@ -1,0 +1,10 @@
+# CMake generation dependency list for this directory.
+D:/Program Files/CMake/share/cmake-4.1/Modules/CMakePackageConfigHelpers.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/ExternalProject.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/ExternalProject/shared_internal_commands.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/GNUInstallDirs.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/WriteBasicConfigVersionFile.cmake
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-src/CMakeLists.txt
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-src/cmake/config.cmake.in
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-src/cmake/nlohmann_jsonConfigVersion.cmake.in
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-src/cmake/pkg-config.pc.in

@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/CMakeFiles/httplib-populate"
+		},
+		{
+			"file" : "D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/CMakeFiles/06cf292e99c76c812e9e23bd2ec647b0/httplib-populate.rule"
+		},
+		{
+			"file" : "D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/CMakeFiles/da9cd331e37babe3557db7199960dae5/httplib-populate-complete.rule"
+		},
+		{
+			"file" : "D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/CMakeFiles/1bbe3ab3bcf5f06eb3b88be91c0324fe/httplib-populate-build.rule"
+		},
+		{
+			"file" : "D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/CMakeFiles/1bbe3ab3bcf5f06eb3b88be91c0324fe/httplib-populate-configure.rule"
+		},
+		{
+			"file" : "D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/CMakeFiles/1bbe3ab3bcf5f06eb3b88be91c0324fe/httplib-populate-download.rule"
+		},
+		{
+			"file" : "D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/CMakeFiles/1bbe3ab3bcf5f06eb3b88be91c0324fe/httplib-populate-install.rule"
+		},
+		{
+			"file" : "D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/CMakeFiles/1bbe3ab3bcf5f06eb3b88be91c0324fe/httplib-populate-mkdir.rule"
+		},
+		{
+			"file" : "D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/CMakeFiles/1bbe3ab3bcf5f06eb3b88be91c0324fe/httplib-populate-patch.rule"
+		},
+		{
+			"file" : "D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/CMakeFiles/1bbe3ab3bcf5f06eb3b88be91c0324fe/httplib-populate-test.rule"
+		},
+		{
+			"file" : "D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/CMakeFiles/1bbe3ab3bcf5f06eb3b88be91c0324fe/httplib-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"httplib-populate"
+		],
+		"name" : "httplib-populate"
+	}
+}

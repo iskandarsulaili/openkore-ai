@@ -1,0 +1,14 @@
+# Target labels
+ json-populate
+# Source files and their labels
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/CMakeFiles/json-populate
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/CMakeFiles/8a642ccba5d93e3cf2ef10284a8fcf59/json-populate.rule
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/CMakeFiles/ae8da2e2d88c857ad35976dd2efc2f30/json-populate-complete.rule
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/CMakeFiles/22088ffb41a81decdcae01b1ae513953/json-populate-build.rule
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/CMakeFiles/22088ffb41a81decdcae01b1ae513953/json-populate-configure.rule
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/CMakeFiles/22088ffb41a81decdcae01b1ae513953/json-populate-download.rule
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/CMakeFiles/22088ffb41a81decdcae01b1ae513953/json-populate-install.rule
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/CMakeFiles/22088ffb41a81decdcae01b1ae513953/json-populate-mkdir.rule
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/CMakeFiles/22088ffb41a81decdcae01b1ae513953/json-populate-patch.rule
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/CMakeFiles/22088ffb41a81decdcae01b1ae513953/json-populate-test.rule
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/CMakeFiles/22088ffb41a81decdcae01b1ae513953/json-populate-update.rule

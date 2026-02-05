@@ -1,0 +1,392 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{2EBB8697-6683-34F4-876B-80E17E74467B}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>ai-engine</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\RO\bot\renew\openkore-ai\ai-engine\build\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ai-engine.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ai-engine</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\RO\bot\renew\openkore-ai\ai-engine\build\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ai-engine.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ai-engine</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\RO\bot\renew\openkore-ai\ai-engine\build\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">ai-engine.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">ai-engine</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\RO\bot\renew\openkore-ai\ai-engine\build\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">ai-engine.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">ai-engine</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\RO\bot\renew\openkore-ai\ai-engine\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-src"</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <ForceConformanceInForLoopScope></ForceConformanceInForLoopScope>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData></RemoveUnreferencedCodeData>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\RO\bot\renew\openkore-ai\ai-engine\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-src\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\httplib-src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\RO\bot\renew\openkore-ai\ai-engine\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-src\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\httplib-src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>ws2_32.lib;crypt32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <DataExecutionPrevention></DataExecutionPrevention>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
+      <ImportLibrary>D:/RO/bot/renew/openkore-ai/ai-engine/build/Debug/ai-engine.lib</ImportLibrary>
+      <LinkErrorReporting></LinkErrorReporting>
+      <ProgramDataBaseFile>D:/RO/bot/renew/openkore-ai/ai-engine/build/Debug/ai-engine.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress></RandomizedBaseAddress>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\RO\bot\renew\openkore-ai\ai-engine\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-src"</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <ForceConformanceInForLoopScope></ForceConformanceInForLoopScope>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData></RemoveUnreferencedCodeData>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\RO\bot\renew\openkore-ai\ai-engine\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-src\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\httplib-src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\RO\bot\renew\openkore-ai\ai-engine\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-src\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\httplib-src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>ws2_32.lib;crypt32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <DataExecutionPrevention></DataExecutionPrevention>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
+      <ImportLibrary>D:/RO/bot/renew/openkore-ai/ai-engine/build/Release/ai-engine.lib</ImportLibrary>
+      <LinkErrorReporting></LinkErrorReporting>
+      <ProgramDataBaseFile>D:/RO/bot/renew/openkore-ai/ai-engine/build/Release/ai-engine.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress></RandomizedBaseAddress>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\RO\bot\renew\openkore-ai\ai-engine\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-src"</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <ForceConformanceInForLoopScope></ForceConformanceInForLoopScope>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData></RemoveUnreferencedCodeData>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\RO\bot\renew\openkore-ai\ai-engine\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-src\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\httplib-src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\RO\bot\renew\openkore-ai\ai-engine\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-src\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\httplib-src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>ws2_32.lib;crypt32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <DataExecutionPrevention></DataExecutionPrevention>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
+      <ImportLibrary>D:/RO/bot/renew/openkore-ai/ai-engine/build/MinSizeRel/ai-engine.lib</ImportLibrary>
+      <LinkErrorReporting></LinkErrorReporting>
+      <ProgramDataBaseFile>D:/RO/bot/renew/openkore-ai/ai-engine/build/MinSizeRel/ai-engine.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress></RandomizedBaseAddress>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\RO\bot\renew\openkore-ai\ai-engine\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-src"</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <ForceConformanceInForLoopScope></ForceConformanceInForLoopScope>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData></RemoveUnreferencedCodeData>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\RO\bot\renew\openkore-ai\ai-engine\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-src\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\httplib-src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\RO\bot\renew\openkore-ai\ai-engine\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-src\include;D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\httplib-src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>ws2_32.lib;crypt32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <DataExecutionPrevention></DataExecutionPrevention>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
+      <ImportLibrary>D:/RO/bot/renew/openkore-ai/ai-engine/build/RelWithDebInfo/ai-engine.lib</ImportLibrary>
+      <LinkErrorReporting></LinkErrorReporting>
+      <ProgramDataBaseFile>D:/RO/bot/renew/openkore-ai/ai-engine/build/RelWithDebInfo/ai-engine.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress></RandomizedBaseAddress>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\RO\bot\renew\openkore-ai\ai-engine\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule D:/RO/bot/renew/openkore-ai/ai-engine/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"D:\Program Files\CMake\bin\cmake.exe" -SD:/RO/bot/renew/openkore-ai/ai-engine -BD:/RO/bot/renew/openkore-ai/ai-engine/build --check-stamp-file D:/RO/bot/renew/openkore-ai/ai-engine/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeCXXInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeCommonLanguageInclude.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeGenericSystem.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeInitializeConfigs.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeLanguageInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeRCInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeSystemSpecificInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeSystemSpecificInitialize.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CheckCXXSourceCompiles.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CheckIncludeFileCXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CheckLibraryExists.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Compiler\MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Compiler\MSVC.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\ExternalProject\shared_internal_commands.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FetchContent.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FetchContent\CMakeLists.cmake.in;D:\Program Files\CMake\share\cmake-4.1\Modules\FindGit.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FindOpenSSL.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FindPackageHandleStandardArgs.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FindPackageMessage.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FindThreads.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Internal\CMakeCXXLinkerInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Internal\CMakeCommonLinkerInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Internal\CheckSourceCompiles.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Linker\MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Linker\MSVC.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Windows-Initialize.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Windows-MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Windows-MSVC.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Windows.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\WindowsPaths.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\SelectLibraryConfigurations.cmake;D:\RO\bot\renew\openkore-ai\ai-engine\build\CMakeFiles\4.1.2\CMakeCXXCompiler.cmake;D:\RO\bot\renew\openkore-ai\ai-engine\build\CMakeFiles\4.1.2\CMakeRCCompiler.cmake;D:\RO\bot\renew\openkore-ai\ai-engine\build\CMakeFiles\4.1.2\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\RO\bot\renew\openkore-ai\ai-engine\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule D:/RO/bot/renew/openkore-ai/ai-engine/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"D:\Program Files\CMake\bin\cmake.exe" -SD:/RO/bot/renew/openkore-ai/ai-engine -BD:/RO/bot/renew/openkore-ai/ai-engine/build --check-stamp-file D:/RO/bot/renew/openkore-ai/ai-engine/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeCXXInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeCommonLanguageInclude.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeGenericSystem.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeInitializeConfigs.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeLanguageInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeRCInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeSystemSpecificInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeSystemSpecificInitialize.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CheckCXXSourceCompiles.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CheckIncludeFileCXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CheckLibraryExists.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Compiler\MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Compiler\MSVC.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\ExternalProject\shared_internal_commands.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FetchContent.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FetchContent\CMakeLists.cmake.in;D:\Program Files\CMake\share\cmake-4.1\Modules\FindGit.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FindOpenSSL.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FindPackageHandleStandardArgs.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FindPackageMessage.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FindThreads.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Internal\CMakeCXXLinkerInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Internal\CMakeCommonLinkerInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Internal\CheckSourceCompiles.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Linker\MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Linker\MSVC.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Windows-Initialize.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Windows-MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Windows-MSVC.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Windows.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\WindowsPaths.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\SelectLibraryConfigurations.cmake;D:\RO\bot\renew\openkore-ai\ai-engine\build\CMakeFiles\4.1.2\CMakeCXXCompiler.cmake;D:\RO\bot\renew\openkore-ai\ai-engine\build\CMakeFiles\4.1.2\CMakeRCCompiler.cmake;D:\RO\bot\renew\openkore-ai\ai-engine\build\CMakeFiles\4.1.2\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\RO\bot\renew\openkore-ai\ai-engine\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule D:/RO/bot/renew/openkore-ai/ai-engine/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"D:\Program Files\CMake\bin\cmake.exe" -SD:/RO/bot/renew/openkore-ai/ai-engine -BD:/RO/bot/renew/openkore-ai/ai-engine/build --check-stamp-file D:/RO/bot/renew/openkore-ai/ai-engine/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeCXXInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeCommonLanguageInclude.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeGenericSystem.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeInitializeConfigs.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeLanguageInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeRCInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeSystemSpecificInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeSystemSpecificInitialize.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CheckCXXSourceCompiles.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CheckIncludeFileCXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CheckLibraryExists.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Compiler\MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Compiler\MSVC.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\ExternalProject\shared_internal_commands.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FetchContent.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FetchContent\CMakeLists.cmake.in;D:\Program Files\CMake\share\cmake-4.1\Modules\FindGit.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FindOpenSSL.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FindPackageHandleStandardArgs.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FindPackageMessage.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FindThreads.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Internal\CMakeCXXLinkerInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Internal\CMakeCommonLinkerInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Internal\CheckSourceCompiles.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Linker\MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Linker\MSVC.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Windows-Initialize.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Windows-MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Windows-MSVC.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Windows.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\WindowsPaths.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\SelectLibraryConfigurations.cmake;D:\RO\bot\renew\openkore-ai\ai-engine\build\CMakeFiles\4.1.2\CMakeCXXCompiler.cmake;D:\RO\bot\renew\openkore-ai\ai-engine\build\CMakeFiles\4.1.2\CMakeRCCompiler.cmake;D:\RO\bot\renew\openkore-ai\ai-engine\build\CMakeFiles\4.1.2\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\RO\bot\renew\openkore-ai\ai-engine\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule D:/RO/bot/renew/openkore-ai/ai-engine/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"D:\Program Files\CMake\bin\cmake.exe" -SD:/RO/bot/renew/openkore-ai/ai-engine -BD:/RO/bot/renew/openkore-ai/ai-engine/build --check-stamp-file D:/RO/bot/renew/openkore-ai/ai-engine/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeCXXInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeCommonLanguageInclude.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeGenericSystem.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeInitializeConfigs.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeLanguageInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeRCInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeSystemSpecificInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CMakeSystemSpecificInitialize.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CheckCXXSourceCompiles.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CheckIncludeFileCXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\CheckLibraryExists.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Compiler\MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Compiler\MSVC.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\ExternalProject\shared_internal_commands.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FetchContent.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FetchContent\CMakeLists.cmake.in;D:\Program Files\CMake\share\cmake-4.1\Modules\FindGit.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FindOpenSSL.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FindPackageHandleStandardArgs.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FindPackageMessage.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\FindThreads.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Internal\CMakeCXXLinkerInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Internal\CMakeCommonLinkerInformation.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Internal\CheckSourceCompiles.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Linker\MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Linker\MSVC.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Windows-Initialize.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Windows-MSVC-CXX.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Windows-MSVC.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\Windows.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\Platform\WindowsPaths.cmake;D:\Program Files\CMake\share\cmake-4.1\Modules\SelectLibraryConfigurations.cmake;D:\RO\bot\renew\openkore-ai\ai-engine\build\CMakeFiles\4.1.2\CMakeCXXCompiler.cmake;D:\RO\bot\renew\openkore-ai\ai-engine\build\CMakeFiles\4.1.2\CMakeRCCompiler.cmake;D:\RO\bot\renew\openkore-ai\ai-engine\build\CMakeFiles\4.1.2\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\RO\bot\renew\openkore-ai\ai-engine\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\decision\llm.cpp" />
+    <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\decision\ml.cpp" />
+    <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\decision\reflex.cpp" />
+    <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\decision\rules.cpp" />
+    <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\main.cpp" />
+    <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\decision\llm.hpp" />
+    <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\decision\ml.hpp" />
+    <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\decision\reflex.hpp" />
+    <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\decision\rules.hpp" />
+    <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\types.hpp" />
+    <Natvis Include="D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\json-src\nlohmann_json.natvis">
+    </Natvis>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="D:\RO\bot\renew\openkore-ai\ai-engine\build\ZERO_CHECK.vcxproj">
+      <Project>{9EEBE04E-DDB6-3561-998A-0CBE1040AA84}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

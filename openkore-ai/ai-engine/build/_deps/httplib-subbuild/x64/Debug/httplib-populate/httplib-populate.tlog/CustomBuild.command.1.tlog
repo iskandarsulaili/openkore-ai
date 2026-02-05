@@ -1,0 +1,150 @@
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\HTTPLIB-SUBBUILD\CMAKEFILES\1BBE3AB3BCF5F06EB3B88BE91C0324FE\HTTPLIB-POPULATE-MKDIR.RULE
+setlocal
+"D:\Program Files\CMake\bin\cmake.exe" -Dcfgdir=/Debug -P D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/httplib-populate-prefix/tmp/httplib-populate-mkdirs.cmake
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E touch D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/httplib-populate-prefix/src/httplib-populate-stamp/Debug/httplib-populate-mkdir
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\HTTPLIB-SUBBUILD\CMAKEFILES\1BBE3AB3BCF5F06EB3B88BE91C0324FE\HTTPLIB-POPULATE-DOWNLOAD.RULE
+setlocal
+cd D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE -P D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/httplib-populate-prefix/tmp/httplib-populate-gitclone.cmake
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E touch D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/httplib-populate-prefix/src/httplib-populate-stamp/Debug/httplib-populate-download
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\HTTPLIB-SUBBUILD\CMAKEFILES\1BBE3AB3BCF5F06EB3B88BE91C0324FE\HTTPLIB-POPULATE-UPDATE.RULE
+setlocal
+cd D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\httplib-src
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -Dcan_fetch=YES -DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE -P D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/httplib-populate-prefix/tmp/httplib-populate-gitupdate.cmake
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\HTTPLIB-SUBBUILD\CMAKEFILES\1BBE3AB3BCF5F06EB3B88BE91C0324FE\HTTPLIB-POPULATE-PATCH.RULE
+setlocal
+"D:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E touch D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/httplib-populate-prefix/src/httplib-populate-stamp/Debug/httplib-populate-patch
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\HTTPLIB-SUBBUILD\CMAKEFILES\1BBE3AB3BCF5F06EB3B88BE91C0324FE\HTTPLIB-POPULATE-CONFIGURE.RULE
+setlocal
+cd D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\httplib-build
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E touch D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/httplib-populate-prefix/src/httplib-populate-stamp/Debug/httplib-populate-configure
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\HTTPLIB-SUBBUILD\CMAKEFILES\1BBE3AB3BCF5F06EB3B88BE91C0324FE\HTTPLIB-POPULATE-BUILD.RULE
+setlocal
+cd D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\httplib-build
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E touch D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/httplib-populate-prefix/src/httplib-populate-stamp/Debug/httplib-populate-build
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\HTTPLIB-SUBBUILD\CMAKEFILES\1BBE3AB3BCF5F06EB3B88BE91C0324FE\HTTPLIB-POPULATE-INSTALL.RULE
+setlocal
+cd D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\httplib-build
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E touch D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/httplib-populate-prefix/src/httplib-populate-stamp/Debug/httplib-populate-install
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\HTTPLIB-SUBBUILD\CMAKEFILES\1BBE3AB3BCF5F06EB3B88BE91C0324FE\HTTPLIB-POPULATE-TEST.RULE
+setlocal
+cd D:\RO\bot\renew\openkore-ai\ai-engine\build\_deps\httplib-build
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E touch D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/httplib-populate-prefix/src/httplib-populate-stamp/Debug/httplib-populate-test
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\HTTPLIB-SUBBUILD\CMAKEFILES\DA9CD331E37BABE3557DB7199960DAE5\HTTPLIB-POPULATE-COMPLETE.RULE
+setlocal
+"D:\Program Files\CMake\bin\cmake.exe" -E make_directory D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/CMakeFiles/Debug
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E touch D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/CMakeFiles/Debug/httplib-populate-complete
+if %errorlevel% neq 0 goto :cmEnd
+"D:\Program Files\CMake\bin\cmake.exe" -E touch D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/httplib-populate-prefix/src/httplib-populate-stamp/Debug/httplib-populate-done
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\HTTPLIB-SUBBUILD\CMAKEFILES\06CF292E99C76C812E9E23BD2EC647B0\HTTPLIB-POPULATE.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\RO\BOT\RENEW\OPENKORE-AI\AI-ENGINE\BUILD\_DEPS\HTTPLIB-SUBBUILD\CMAKELISTS.TXT
+setlocal
+"D:\Program Files\CMake\bin\cmake.exe" -SD:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild -BD:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild --check-stamp-file D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-subbuild/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

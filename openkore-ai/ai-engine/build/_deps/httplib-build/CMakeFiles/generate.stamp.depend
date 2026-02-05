@@ -1,0 +1,18 @@
+# CMake generation dependency list for this directory.
+D:/Program Files/CMake/share/cmake-4.1/Modules/BasicConfigVersion-SameMinorVersion.cmake.in
+D:/Program Files/CMake/share/cmake-4.1/Modules/CMakePackageConfigHelpers.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/CheckCXXSourceCompiles.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/CheckIncludeFileCXX.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/CheckLibraryExists.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/FindOpenSSL.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/FindPackageHandleStandardArgs.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/FindPackageMessage.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/FindPkgConfig.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/FindThreads.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/FindZLIB.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/GNUInstallDirs.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/SelectLibraryConfigurations.cmake
+D:/Program Files/CMake/share/cmake-4.1/Modules/WriteBasicConfigVersionFile.cmake
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-src/CMakeLists.txt
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-src/cmake/FindBrotli.cmake
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-src/httplibConfig.cmake.in

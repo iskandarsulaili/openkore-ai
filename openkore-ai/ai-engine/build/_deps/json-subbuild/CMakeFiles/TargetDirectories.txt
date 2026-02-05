@@ -1,0 +1,3 @@
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/CMakeFiles/json-populate.dir
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/CMakeFiles/ALL_BUILD.dir
+D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-subbuild/CMakeFiles/ZERO_CHECK.dir

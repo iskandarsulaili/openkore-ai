@@ -1,0 +1,9 @@
+{
+	"InstallScripts" : 
+	[
+		"D:/RO/bot/renew/openkore-ai/ai-engine/build/cmake_install.cmake",
+		"D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/httplib-build/cmake_install.cmake",
+		"D:/RO/bot/renew/openkore-ai/ai-engine/build/_deps/json-build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
