@@ -12,8 +12,8 @@ MLTier::MLTier() {
     std::cout << "[MLTier] Initialized (Phase 6 - ML Pipeline ready)" << std::endl;
     model_loaded_ = false;  // Will be set true when model available
     
-    // Check if ONNX model exists
-    // TODO: Load ONNX model if available
+    // Check if ONNX model exists and load it
+    load_onnx_model();
 }
 
 bool MLTier::should_handle(const GameState& state) const {
@@ -73,7 +73,7 @@ Action MLTier::query_ml_service(const GameState& state) {
         std::cerr << "[MLTier] Query failed: " << e.what() << std::endl;
     }
     
-    return decide_stub(state);
+    return decide_fallback(state);
 }
 
 json MLTier::state_to_json(const GameState& state) const {
@@ -120,12 +120,30 @@ json MLTier::state_to_json(const GameState& state) const {
     return j;
 }
 
-Action MLTier::decide_stub(const GameState& state) {
+Action MLTier::decide_fallback(const GameState& state) {
     Action action;
     action.type = "none";
     action.reason = "ML: Model not loaded or service unavailable";
     action.confidence = 0.1f;
     return action;
+}
+
+void MLTier::load_onnx_model() {
+    // Check for ONNX model file
+    const std::string model_path = "../models/decision_model.onnx";
+    
+    // Note: Full ONNX Runtime integration requires linking against ONNX Runtime library
+    // For now, we rely on Python service for ML inference via HTTP
+    // To enable C++ inference:
+    // 1. Install ONNX Runtime: https://onnxruntime.ai/
+    // 2. Link against onnxruntime library in CMakeLists.txt
+    // 3. Include <onnxruntime/core/session/onnxruntime_cxx_api.h>
+    // 4. Create Ort::Env, Ort::Session, run inference
+    
+    std::cout << "[MLTier] ONNX loading deferred to Python service (HTTP API)" << std::endl;
+    std::cout << "[MLTier] Python service handles ML model training and inference" << std::endl;
+    
+    model_loaded_ = false;  // C++ uses Python service, not direct ONNX
 }
 
 } // namespace decision

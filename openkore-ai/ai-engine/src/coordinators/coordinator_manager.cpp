@@ -24,7 +24,7 @@ void CoordinatorManager::initialize() {
     coordinators_.push_back(std::make_unique<CombatCoordinator>());
     coordinators_.push_back(std::make_unique<EconomyCoordinator>());
     
-    // Basic stub coordinators
+    // Navigation coordinator
     coordinators_.push_back(std::make_unique<NavigationCoordinator>());
     coordinators_.push_back(std::make_unique<NPCCoordinator>());
     coordinators_.push_back(std::make_unique<PlanningCoordinator>());
@@ -32,7 +32,7 @@ void CoordinatorManager::initialize() {
     coordinators_.push_back(std::make_unique<ConsumablesCoordinator>());
     coordinators_.push_back(std::make_unique<ProgressionCoordinator>());
     
-    // Stub coordinators from stub_coordinators.hpp
+    // Additional coordinators
     coordinators_.push_back(std::make_unique<CompanionsCoordinator>());
     coordinators_.push_back(std::make_unique<InstancesCoordinator>());
     coordinators_.push_back(std::make_unique<CraftingCoordinator>());

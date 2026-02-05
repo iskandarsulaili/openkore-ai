@@ -22,6 +22,7 @@ private:
     // Phase 6: ML service integration
     Action query_ml_service(const GameState& state);
     nlohmann::json state_to_json(const GameState& state) const;
+    void load_onnx_model();  // Load ONNX model if available
     
     // Stub helper
     Action decide_stub(const GameState& state);
