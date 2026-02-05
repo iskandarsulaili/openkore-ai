@@ -147,14 +147,14 @@ if __name__ == "__main__":
         print("\n" + "=" * 60)
         print("TEST RESULTS")
         print("=" * 60)
-        print(f"Reflex Tier: {'✓ PASS' if reflex_ok else '✗ FAIL'}")
-        print(f"Rules Tier: {'✓ PASS' if rules_ok else '✗ FAIL'}")
-        print(f"Statistics: {'✓ PASS' if stats_ok else '✗ FAIL'}")
+        print(f"Reflex Tier: {'[PASS]' if reflex_ok else '[FAIL]'}")
+        print(f"Rules Tier: {'[PASS]' if rules_ok else '[FAIL]'}")
+        print(f"Statistics: {'[PASS]' if stats_ok else '[FAIL]'}")
         
         if reflex_ok and rules_ok and stats_ok:
-            print("\n✓ Phase 2 tests PASSED - Multi-tier system working!")
+            print("\n[SUCCESS] Phase 2 tests PASSED - Multi-tier system working!")
         else:
-            print("\n✗ Phase 2 tests FAILED")
+            print("\n[FAILED] Phase 2 tests FAILED")
             
     except Exception as e:
-        print(f"\n✗ TEST ERROR: {e}")
+        print(f"\n[ERROR] TEST ERROR: {e}")
