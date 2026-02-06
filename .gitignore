@@ -1,0 +1,52 @@
+# ============================================================================
+# Root .gitignore
+# ============================================================================
+
+# Python artifacts - comprehensive
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+**/__pycache__/
+.Python
+
+# Python distribution
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Sensitive files
+secret.txt
+.env
+*.key
+*.pem
+*.crt
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3

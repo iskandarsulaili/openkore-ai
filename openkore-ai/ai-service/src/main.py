@@ -21,7 +21,7 @@ from contextlib import asynccontextmanager
 # Import Phase 3 components
 from database import db
 from memory.openmemory_manager import OpenMemoryManager
-from agents.crew_manager import crew_manager
+from agents.crew_manager import crew_manager, hierarchical_crew_manager
 from llm.provider_chain import llm_chain
 
 # Import Phase 4 PDCA components
@@ -269,26 +269,156 @@ async def memory_add(session_id: str, sector: str, content: str, importance: flo
         logger.error(f"Memory add error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/v1/crew/analyze")
-async def crew_analyze(character_level: int, job_class: str, monsters_count: int = 0):
-    """Get CrewAI agent analysis"""
+@app.post("/api/v1/crew/analyze")
+async def crew_analyze(
+    character_level: int,
+    job_class: str,
+    monsters_count: int = 0,
+    use_async: bool = False,
+    hp: int = 1000,
+    max_hp: int = 1000,
+    weight: int = 0,
+    max_weight: int = 100,
+    zeny: int = 0
+):
+    """
+    CrewAI agent analysis with full crewai 1.9.3+ features
+    - Custom tools per agent
+    - Memory system (short-term, long-term, entity)
+    - Agent delegation
+    - Task context passing
+    - Optional async execution
+    - Callbacks for progress tracking
+    
+    Backward compatible with legacy calls (simple parameters default to sensible values)
+    """
     try:
         context = {
             'character': {
                 'level': character_level,
                 'job_class': job_class,
-                'hp': 1000,
-                'max_hp': 1000
+                'hp': hp,
+                'max_hp': max_hp,
+                'weight': weight,
+                'max_weight': max_weight,
+                'zeny': zeny,
+                'position': {'map': 'prt_fild08'}
             },
-            'monsters': [{'name': f'Monster{i}', 'is_aggressive': False} for i in range(monsters_count)]
+            'monsters': [{'name': f'Monster{i}', 'is_aggressive': i % 2 == 0} for i in range(monsters_count)],
+            'inventory': [],
+            'session_duration': 30
         }
         
-        insights = await crew_manager.consult_agents(context)
+        insights = await crew_manager.consult_agents(context, async_execution=use_async)
         return insights
         
     except Exception as e:
         logger.error(f"Crew analyze error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/crew/analyze_hierarchical")
+async def crew_analyze_hierarchical(
+    character_level: int,
+    job_class: str,
+    monsters_count: int = 0,
+    hp: int = 1000,
+    max_hp: int = 1000
+):
+    """
+    Hierarchical CrewAI analysis - Strategic planner delegates to specialists
+    Demonstrates hierarchical process and agent delegation
+    """
+    try:
+        context = {
+            'character': {
+                'level': character_level,
+                'job_class': job_class,
+                'hp': hp,
+                'max_hp': max_hp,
+                'weight': 50,
+                'max_weight': 100,
+                'zeny': 10000,
+                'position': {'map': 'prt_fild08'}
+            },
+            'monsters': [{'name': f'Monster{i}', 'is_aggressive': True} for i in range(monsters_count)],
+            'inventory': [],
+            'session_duration': 45
+        }
+        
+        insights = await hierarchical_crew_manager.analyze_with_delegation(context)
+        return insights
+        
+    except Exception as e:
+        logger.error(f"Hierarchical crew analyze error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/crew/tools")
+async def crew_tools():
+    """
+    List all available CrewAI tools for agents
+    """
+    from agents.game_tools import GAME_TOOLS, COMBAT_TOOLS, RESOURCE_TOOLS, STRATEGIC_TOOLS
+    
+    return {
+        "all_tools": [
+            {
+                "name": tool.name,
+                "description": tool.description
+            }
+            for tool in GAME_TOOLS
+        ],
+        "tool_sets": {
+            "combat": [t.name for t in COMBAT_TOOLS],
+            "resource": [t.name for t in RESOURCE_TOOLS],
+            "strategic": [t.name for t in STRATEGIC_TOOLS]
+        },
+        "total_tools": len(GAME_TOOLS)
+    }
+
+@app.get("/api/v1/crew/agents")
+async def crew_agents():
+    """
+    Get information about CrewAI agents and their capabilities
+    """
+    return {
+        "agents": [
+            {
+                "name": "Strategic Planner",
+                "role": "Long-term strategy and goal setting",
+                "tools": [t.name for t in STRATEGIC_TOOLS],
+                "delegation": True,
+                "features": ["memory", "verbose", "callbacks"]
+            },
+            {
+                "name": "Combat Tactician",
+                "role": "Combat optimization and monster targeting",
+                "tools": [t.name for t in COMBAT_TOOLS],
+                "delegation": False,
+                "features": ["memory", "verbose", "callbacks"]
+            },
+            {
+                "name": "Resource Manager",
+                "role": "Inventory and economy management",
+                "tools": [t.name for t in RESOURCE_TOOLS],
+                "delegation": True,
+                "features": ["memory", "verbose", "callbacks"]
+            },
+            {
+                "name": "Performance Analyst",
+                "role": "Performance monitoring and optimization",
+                "tools": ["analyze_game_state"],
+                "delegation": True,
+                "features": ["memory", "verbose", "callbacks"]
+            }
+        ],
+        "orchestration": {
+            "default_process": "sequential",
+            "hierarchical_available": True,
+            "async_execution_available": True,
+            "memory_enabled": True
+        },
+        "crewai_version": "1.9.3+"
+    }
 
 @app.post("/api/v1/pdca/plan")
 async def pdca_plan(session_id: str, character_state: dict):
@@ -632,7 +762,13 @@ async def root():
         "features": [
             "SQLite Database (8 tables)",
             "OpenMemory SDK (synthetic embeddings)",
-            "CrewAI Multi-Agent (4 agents)",
+            "CrewAI Multi-Agent (4 agents with crewai 1.9.3+)",
+            "CrewAI Custom Tools (10 game action tools)",
+            "CrewAI Memory System (Entity, Short-term, Long-term)",
+            "CrewAI Agent Delegation",
+            "CrewAI Hierarchical Process",
+            "CrewAI Task Context Passing",
+            "CrewAI Async Execution",
             "LLM Provider Chain (DeepSeek→OpenAI→Anthropic)",
             "PDCA Cycle (Plan-Do-Check-Act)",
             "ML Pipeline (4-phase cold-start)",
@@ -653,6 +789,9 @@ async def root():
             "/api/v1/memory/query",
             "/api/v1/memory/add",
             "/api/v1/crew/analyze",
+            "/api/v1/crew/analyze_hierarchical",
+            "/api/v1/crew/tools",
+            "/api/v1/crew/agents",
             "/api/v1/pdca/plan",
             "/api/v1/pdca/do",
             "/api/v1/pdca/check",

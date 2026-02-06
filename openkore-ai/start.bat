@@ -1,0 +1,563 @@
+@echo off
+setlocal enabledelayedexpansion
+:: ============================================================================
+:: OpenKore Advanced AI System - Startup Script
+:: ============================================================================
+:: This script starts the C++ AI Engine, Python AI Service, and OpenKore
+:: with proper health checks and process management
+:: ============================================================================
+
+:: Script configuration
+set "SCRIPT_DIR=%~dp0"
+set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+set "LOG_FILE=%SCRIPT_DIR%\startup.log"
+set "VENV_DIR=%SCRIPT_DIR%\venv"
+set "AI_SERVICE_DIR=%SCRIPT_DIR%\ai-service"
+set "AI_ENGINE_DIR=%SCRIPT_DIR%\ai-engine"
+set "CONFIG_DIR=%SCRIPT_DIR%\config"
+set "DATA_DIR=%SCRIPT_DIR%\data"
+set "LOGS_DIR=%SCRIPT_DIR%\logs"
+set "SECRET_FILE=%SCRIPT_DIR%\..\secret.txt"
+
+:: Process configuration
+set "AI_ENGINE_EXE=%AI_ENGINE_DIR%\build\Release\ai-engine.exe"
+set "AI_SERVICE_MAIN=%AI_SERVICE_DIR%\src\main.py"
+set "OPENKORE_SCRIPT=%SCRIPT_DIR%\openkore.pl"
+
+:: Port configuration
+set "AI_ENGINE_PORT=9901"
+set "AI_SERVICE_PORT=9902"
+
+:: Process IDs (will be populated)
+set "AI_ENGINE_PID="
+set "AI_SERVICE_PID="
+
+:: Health check configuration
+set "ENGINE_RETRY_COUNT=3"
+set "SERVICE_RETRY_COUNT=5"
+set "RETRY_DELAY=2"
+set "ENGINE_START_DELAY=5"
+set "SERVICE_START_DELAY=10"
+
+:: Restart configuration
+set "MAX_RESTARTS=3"
+set "ENGINE_RESTART_COUNT=0"
+set "SERVICE_RESTART_COUNT=0"
+
+:: Clear previous log
+echo. > "%LOG_FILE%"
+
+:: ============================================================================
+:: LOGGING FUNCTIONS
+:: ============================================================================
+
+goto :skip_functions
+
+:log_info
+echo [INFO] %*
+echo [INFO] %* >> "%LOG_FILE%"
+goto :eof
+
+:log_success
+echo [SUCCESS] %*
+echo [SUCCESS] %* >> "%LOG_FILE%"
+goto :eof
+
+:log_warning
+echo [WARNING] %*
+echo [WARNING] %* >> "%LOG_FILE%"
+goto :eof
+
+:log_error
+echo [ERROR] %*
+echo [ERROR] %* >> "%LOG_FILE%"
+goto :eof
+
+:log_step
+echo [STEP] %*
+echo [STEP] %* >> "%LOG_FILE%"
+goto :eof
+
+:skip_functions
+
+:: ============================================================================
+:: BANNER
+:: ============================================================================
+
+cls
+echo.
+echo ========================================================================
+echo    OpenKore AI - Advanced AI System
+echo    Startup Script
+echo ========================================================================
+echo.
+echo               Starting Multi-Layer AI System
+echo.
+
+call :log_info "Starting OpenKore AI System..."
+call :log_info "Script directory: %SCRIPT_DIR%"
+call :log_info "Log file: %LOG_FILE%"
+echo.
+
+:: ============================================================================
+:: PRE-FLIGHT CHECKS
+:: ============================================================================
+
+call :log_step "Running pre-flight checks..."
+echo.
+
+:: Check if install.bat was run
+call :log_info "Checking Python installation..."
+
+set "PYTHON_CMD="
+set "PYTHON_FOUND=0"
+
+:: Check if venv exists
+if exist "%VENV_DIR%\Scripts\python.exe" (
+    set "PYTHON_CMD=%VENV_DIR%\Scripts\python.exe"
+    set "PYTHON_FOUND=1"
+    call :log_success "Found Python in virtual environment"
+) else (
+    :: Check system Python
+    python --version >nul 2>&1
+    if !errorlevel! equ 0 (
+        set "PYTHON_CMD=python"
+        set "PYTHON_FOUND=1"
+        call :log_success "Found system Python"
+    ) else (
+        py --version >nul 2>&1
+        if !errorlevel! equ 0 (
+            set "PYTHON_CMD=py"
+            set "PYTHON_FOUND=1"
+            call :log_success "Found Python via py launcher"
+        )
+    )
+)
+
+if !PYTHON_FOUND! equ 0 (
+    call :log_error "Python not found. Please run install.bat first."
+    goto :error_exit
+)
+
+:: Check required directories
+call :log_info "Checking directory structure..."
+
+if not exist "%DATA_DIR%" (
+    call :log_error "Data directory not found: %DATA_DIR%"
+    call :log_error "Please run install.bat first"
+    goto :error_exit
+)
+
+if not exist "%LOGS_DIR%" (
+    call :log_warning "Logs directory not found, creating: %LOGS_DIR%"
+    mkdir "%LOGS_DIR%" 2>nul
+)
+
+if not exist "%CONFIG_DIR%" (
+    call :log_error "Config directory not found: %CONFIG_DIR%"
+    goto :error_exit
+)
+
+call :log_success "Directory structure OK"
+
+:: Check configuration files
+call :log_info "Checking configuration files..."
+
+if not exist "%CONFIG_DIR%\ai-engine.yaml" (
+    call :log_error "Missing: config/ai-engine.yaml"
+    goto :error_exit
+)
+
+if not exist "%CONFIG_DIR%\ai-service.yaml" (
+    call :log_error "Missing: config/ai-service.yaml"
+    goto :error_exit
+)
+
+if not exist "%CONFIG_DIR%\plugin.yaml" (
+    call :log_error "Missing: config/plugin.yaml"
+    goto :error_exit
+)
+
+call :log_success "Configuration files OK"
+
+:: Check secret.txt
+if not exist "%SECRET_FILE%" (
+    call :log_error "API key file not found: %SECRET_FILE%"
+    call :log_error "Please create secret.txt with your DeepSeek API key"
+    goto :error_exit
+)
+
+call :log_success "API key file found"
+
+:: Check AI Engine executable
+if not exist "%AI_ENGINE_EXE%" (
+    call :log_error "AI Engine not found: %AI_ENGINE_EXE%"
+    call :log_error "Please compile or download ai-engine.exe"
+    goto :error_exit
+)
+
+call :log_success "AI Engine executable found"
+
+:: Check AI Service main.py
+if not exist "%AI_SERVICE_MAIN%" (
+    call :log_error "AI Service not found: %AI_SERVICE_MAIN%"
+    goto :error_exit
+)
+
+call :log_success "AI Service script found"
+
+:: Check OpenKore
+if not exist "%OPENKORE_SCRIPT%" (
+    call :log_error "OpenKore not found: %OPENKORE_SCRIPT%"
+    goto :error_exit
+)
+
+call :log_success "OpenKore script found"
+
+:: Check if ports are available
+call :log_info "Checking port availability..."
+
+netstat -ano | findstr ":%AI_ENGINE_PORT%" >nul 2>&1
+if !errorlevel! equ 0 (
+    call :log_warning "Port %AI_ENGINE_PORT% is already in use"
+    echo.
+    echo Port %AI_ENGINE_PORT% ^(AI Engine^) is already in use.
+    echo Do you want to continue anyway? ^(Y/N^)
+    set /p "CONTINUE=Continue? "
+    if /i "!CONTINUE!" neq "Y" (
+        call :log_info "Startup cancelled by user"
+        goto :cleanup_exit
+    )
+) else (
+    call :log_success "Port %AI_ENGINE_PORT% is available"
+)
+
+netstat -ano | findstr ":%AI_SERVICE_PORT%" >nul 2>&1
+if !errorlevel! equ 0 (
+    call :log_warning "Port %AI_SERVICE_PORT% is already in use"
+    echo.
+    echo Port %AI_SERVICE_PORT% ^(AI Service^) is already in use.
+    echo Do you want to continue anyway? ^(Y/N^)
+    set /p "CONTINUE=Continue? "
+    if /i "!CONTINUE!" neq "Y" (
+        call :log_info "Startup cancelled by user"
+        goto :cleanup_exit
+    )
+) else (
+    call :log_success "Port %AI_SERVICE_PORT% is available"
+)
+
+echo.
+call :log_success "All pre-flight checks passed!"
+echo.
+
+:: ============================================================================
+:: SETUP CLEANUP HANDLER
+:: ============================================================================
+
+:: Setup Ctrl+C handler
+if "%1"=="child" goto :start_services
+
+:: ============================================================================
+:: START SERVICES
+:: ============================================================================
+
+:start_services
+
+call :log_step "Starting AI Engine (Port %AI_ENGINE_PORT%)..."
+echo.
+
+:: Start C++ AI Engine in background
+call :log_info "Launching ai-engine.exe..."
+start /B "" "%AI_ENGINE_EXE%" >> "%LOGS_DIR%\ai-engine.log" 2>&1
+
+:: Get the PID of ai-engine.exe
+timeout /t 1 /nobreak >nul
+for /f "tokens=2" %%a in ('tasklist /fi "imagename eq ai-engine.exe" /fo list ^| findstr "PID:"') do (
+    set "AI_ENGINE_PID=%%a"
+)
+
+if "!AI_ENGINE_PID!"=="" (
+    call :log_error "Failed to start AI Engine"
+    goto :cleanup_exit
+)
+
+call :log_success "AI Engine started (PID: !AI_ENGINE_PID!)"
+
+:: Wait for engine to initialize
+call :log_info "Waiting %ENGINE_START_DELAY% seconds for engine initialization..."
+timeout /t %ENGINE_START_DELAY% /nobreak >nul
+
+:: Health check for AI Engine
+call :log_info "Performing health check on AI Engine..."
+call :health_check_engine
+if !errorlevel! neq 0 (
+    call :log_error "AI Engine health check failed"
+    echo.
+    echo Do you want to continue anyway? ^(for debugging^) ^(Y/N^)
+    set /p "CONTINUE=Continue? "
+    if /i "!CONTINUE!" neq "Y" (
+        goto :cleanup_exit
+    )
+    call :log_warning "Continuing despite failed health check..."
+) else (
+    call :log_success "AI Engine is healthy and responding"
+)
+
+echo.
+call :log_step "Starting AI Service (Port %AI_SERVICE_PORT%)..."
+echo.
+
+:: Activate venv if it exists
+if exist "%VENV_DIR%\Scripts\activate.bat" (
+    call :log_info "Activating virtual environment..."
+    call "%VENV_DIR%\Scripts\activate.bat"
+    set "PYTHON_CMD=python"
+)
+
+:: Start Python AI Service in background
+call :log_info "Launching main.py..."
+cd /d "%AI_SERVICE_DIR%"
+start /B "" !PYTHON_CMD! "%AI_SERVICE_MAIN%" >> "%LOGS_DIR%\ai-service.log" 2>&1
+cd /d "%SCRIPT_DIR%"
+
+:: Get the PID of python process
+timeout /t 1 /nobreak >nul
+for /f "tokens=2" %%a in ('tasklist /fi "imagename eq python.exe" /fo list ^| findstr "PID:"') do (
+    set "AI_SERVICE_PID=%%a"
+)
+
+if "!AI_SERVICE_PID!"=="" (
+    call :log_warning "Could not detect AI Service PID (multiple Python processes may be running)"
+) else (
+    call :log_success "AI Service started (PID: !AI_SERVICE_PID!)"
+)
+
+:: Wait for service to initialize
+call :log_info "Waiting %SERVICE_START_DELAY% seconds for service initialization..."
+timeout /t %SERVICE_START_DELAY% /nobreak >nul
+
+:: Health check for AI Service
+call :log_info "Performing health check on AI Service..."
+call :health_check_service
+if !errorlevel! neq 0 (
+    call :log_error "AI Service health check failed"
+    echo.
+    echo Do you want to continue anyway? ^(for debugging^) ^(Y/N^)
+    set /p "CONTINUE=Continue? "
+    if /i "!CONTINUE!" neq "Y" (
+        goto :cleanup_exit
+    )
+    call :log_warning "Continuing despite failed health check..."
+) else (
+    call :log_success "AI Service is healthy and responding"
+)
+
+:: ============================================================================
+:: SYSTEM READY
+:: ============================================================================
+
+echo.
+echo ========================================================================
+echo   AI System Ready!
+echo ========================================================================
+echo.
+call :log_success "All AI services are running"
+echo.
+echo Service Status:
+echo   [OK] AI Engine:  http://localhost:%AI_ENGINE_PORT% (PID: !AI_ENGINE_PID!)
+echo   [OK] AI Service: http://localhost:%AI_SERVICE_PORT%
+echo.
+echo Press any key to launch OpenKore...
+pause >nul
+
+:: ============================================================================
+:: LAUNCH OPENKORE
+:: ============================================================================
+
+echo.
+call :log_step "Launching OpenKore..."
+echo.
+
+:: Check for Perl
+perl -v >nul 2>&1
+if !errorlevel! neq 0 (
+    call :log_error "Perl not found. Please install Perl to run OpenKore."
+    goto :cleanup_exit
+)
+
+call :log_info "Starting OpenKore in foreground..."
+call :log_info "To stop, close OpenKore or press Ctrl+C"
+echo.
+echo ========================================================================
+echo   OpenKore is starting...
+echo ========================================================================
+echo.
+
+:: Start OpenKore in foreground (blocks until exit)
+cd /d "%SCRIPT_DIR%"
+perl "%OPENKORE_SCRIPT%"
+set "OPENKORE_EXIT=!errorlevel!"
+
+:: OpenKore exited, cleanup services
+call :log_info "OpenKore exited with code: !OPENKORE_EXIT!"
+goto :cleanup_exit
+
+:: ============================================================================
+:: HEALTH CHECK FUNCTIONS
+:: ============================================================================
+
+:health_check_engine
+set "HEALTH_URL=http://localhost:%AI_ENGINE_PORT%/health"
+set "RETRY=0"
+
+:engine_health_retry
+set /a RETRY+=1
+
+:: Try curl first (Windows 10+)
+curl --version >nul 2>&1
+if !errorlevel! equ 0 (
+    curl -s -o nul -w "%%{http_code}" "%HEALTH_URL%" 2>nul | findstr "200" >nul
+    if !errorlevel! equ 0 (
+        exit /b 0
+    )
+) else (
+    :: Fallback: check if port is listening
+    netstat -ano | findstr ":%AI_ENGINE_PORT%" | findstr "LISTENING" >nul
+    if !errorlevel! equ 0 (
+        exit /b 0
+    )
+)
+
+if !RETRY! lss %ENGINE_RETRY_COUNT% (
+    call :log_warning "Health check attempt !RETRY!/%ENGINE_RETRY_COUNT% failed, retrying..."
+    timeout /t %RETRY_DELAY% /nobreak >nul
+    goto :engine_health_retry
+)
+
+exit /b 1
+
+:health_check_service
+set "HEALTH_URL=http://localhost:%AI_SERVICE_PORT%/health"
+set "RETRY=0"
+
+:service_health_retry
+set /a RETRY+=1
+
+:: Try curl first (Windows 10+)
+curl --version >nul 2>&1
+if !errorlevel! equ 0 (
+    curl -s -o nul -w "%%{http_code}" "%HEALTH_URL%" 2>nul | findstr "200" >nul
+    if !errorlevel! equ 0 (
+        exit /b 0
+    )
+) else (
+    :: Fallback: check if port is listening
+    netstat -ano | findstr ":%AI_SERVICE_PORT%" | findstr "LISTENING" >nul
+    if !errorlevel! equ 0 (
+        exit /b 0
+    )
+)
+
+if !RETRY! lss %SERVICE_RETRY_COUNT% (
+    call :log_warning "Health check attempt !RETRY!/%SERVICE_RETRY_COUNT% failed, retrying..."
+    timeout /t %RETRY_DELAY% /nobreak >nul
+    goto :service_health_retry
+)
+
+exit /b 1
+
+:: ============================================================================
+:: CLEANUP FUNCTION
+:: ============================================================================
+
+:cleanup_exit
+echo.
+call :log_step "Shutting down AI services..."
+echo.
+
+:: Kill AI Service
+if not "!AI_SERVICE_PID!"=="" (
+    call :log_info "Stopping AI Service (PID: !AI_SERVICE_PID!)..."
+    taskkill /PID !AI_SERVICE_PID! /F >nul 2>&1
+    if !errorlevel! equ 0 (
+        call :log_success "AI Service stopped"
+    ) else (
+        call :log_warning "Could not stop AI Service gracefully"
+    )
+) else (
+    :: Kill all python processes running main.py (fallback)
+    call :log_info "Stopping AI Service processes..."
+    for /f "tokens=2" %%a in ('tasklist /fi "imagename eq python.exe" /fo list ^| findstr "PID:"') do (
+        taskkill /PID %%a /F >nul 2>&1
+    )
+)
+
+:: Kill AI Engine
+if not "!AI_ENGINE_PID!"=="" (
+    call :log_info "Stopping AI Engine (PID: !AI_ENGINE_PID!)..."
+    taskkill /PID !AI_ENGINE_PID! /F >nul 2>&1
+    if !errorlevel! equ 0 (
+        call :log_success "AI Engine stopped"
+    ) else (
+        call :log_warning "Could not stop AI Engine gracefully"
+    )
+) else (
+    :: Kill all ai-engine.exe processes (fallback)
+    call :log_info "Stopping AI Engine processes..."
+    taskkill /IM ai-engine.exe /F >nul 2>&1
+)
+
+:: Save final logs
+call :log_info "Saving final logs..."
+if exist "%LOGS_DIR%\ai-engine.log" (
+    echo ========== SESSION ENDED: %date% %time% ========== >> "%LOGS_DIR%\ai-engine.log"
+)
+if exist "%LOGS_DIR%\ai-service.log" (
+    echo ========== SESSION ENDED: %date% %time% ========== >> "%LOGS_DIR%\ai-service.log"
+)
+
+echo.
+echo ========================================================================
+echo   Shutdown Complete
+echo ========================================================================
+echo.
+call :log_success "All services stopped gracefully"
+echo.
+echo Logs saved to:
+echo   - Startup: %LOG_FILE%
+echo   - AI Engine: %LOGS_DIR%\ai-engine.log
+echo   - AI Service: %LOGS_DIR%\ai-service.log
+echo.
+
+pause
+exit /b 0
+
+:: ============================================================================
+:: ERROR EXIT
+:: ============================================================================
+
+:error_exit
+echo.
+echo ========================================================================
+echo   Startup Failed
+echo ========================================================================
+echo.
+call :log_error "Failed to start OpenKore AI System"
+echo.
+echo For help, check:
+echo   - Log file: %LOG_FILE%
+echo   - Run install.bat to verify installation
+echo   - Check configuration files in config/
+echo.
+
+:: Cleanup any started services
+if not "!AI_ENGINE_PID!"=="" (
+    taskkill /PID !AI_ENGINE_PID! /F >nul 2>&1
+)
+if not "!AI_SERVICE_PID!"=="" (
+    taskkill /PID !AI_SERVICE_PID! /F >nul 2>&1
+)
+
+pause
+exit /b 1

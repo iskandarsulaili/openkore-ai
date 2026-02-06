@@ -1,27 +1,117 @@
-# Debug logs
-config.log
-errors.txt
-benchmark-results.txt
-logs
-DUMP.txt
+# ============================================================================
+# OpenKore AI - Advanced AI System .gitignore
+# ============================================================================
 
-# Plugin files
-/profiles
-
-# Backup files
-*~
-.#*
-*.old
-*.bak
-*.BAK
-*.orig
-*.rej
-
-# Auto generated files
-*.pyc
-*.dist
+# ============================================================================
+# Build Artifacts (C++ AI Engine)
+# ============================================================================
+ai-engine/build/
+ai-engine/CMakeFiles/
+ai-engine/CMakeCache.txt
+ai-engine/cmake_install.cmake
+ai-engine/Makefile
+*.exe
+!start.exe
+!winguistart.exe
+!start-poseidon.exe
+!tkstart.exe
+!vxstart.exe
+!wxstart.exe
 *.o
-*.os
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+!NetRedirect.dll
+!XSTools.dll
+*.pdb
+*.ilk
+*.exp
+
+# ============================================================================
+# Python Artifacts (AI Service)
+# ============================================================================
+# Virtual environment
+venv/
+ai-service/venv/
+.venv/
+env/
+ENV/
+
+# Python bytecode - comprehensive
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Python distribution
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# ============================================================================
+# Data and Logs
+# ============================================================================
+# Database files
+data/*.db
+data/*.db-wal
+data/*.db-shm
+data/*.sqlite
+data/*.sqlite3
+
+# Log files
+logs/*.log
+*.log
+install.log
+startup.log
+errors.txt
+DUMP.txt
+config.log
+benchmark-results.txt
+
+# ============================================================================
+# Generated Files
+# ============================================================================
+# Generated macros
+macros/*.txt
+macros/backups/
+
+# Auto-generated files
+*.dist
 .sconf_temp
 .sconsign.dblite
 src/test/consoleui-test
@@ -39,13 +129,136 @@ src/auto/XSTools/utils/perl/Rijndael.xs.cpp
 src/auto/XSTools/utils/perl/Whirlpool.c
 src/test/http-reader-test
 
-# Local modifications of official files.
-tables/iRO/*-custom.txt
-
-# Auto-generated files.
+# Auto-generated tables
 tables/**/portalsLOS.txt
 tables/pserver/**/portalsLOS.txt
 tables/**/npcs.txt
 tables/**/monsters.txt
 *.xpm
 *.weight
+
+# ============================================================================
+# Sensitive Files
+# ============================================================================
+# API keys and secrets
+secret.txt
+.env
+ai-service/.env
+*.key
+*.pem
+*.crt
+
+# Configuration overrides (keep templates)
+config/*.local.*
+control/*.local.*
+
+# ============================================================================
+# IDE and Editor Files
+# ============================================================================
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Vim
+*.swp
+*.swo
+*~
+.#*
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# ============================================================================
+# OS Files
+# ============================================================================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+.directory
+.Trash-*
+
+# ============================================================================
+# Backup Files
+# ============================================================================
+*.old
+*.bak
+*.BAK
+*.orig
+*.rej
+
+# ============================================================================
+# OpenKore Specific
+# ============================================================================
+# Plugin profiles
+/profiles
+
+# Local modifications
+tables/iRO/*-custom.txt
+
+# ============================================================================
+# KEEP (Explicitly DO NOT ignore)
+# ============================================================================
+# Keep source code
+!ai-engine/src/**
+!ai-engine/include/**
+!ai-engine/CMakeLists.txt
+
+# Keep Python source
+!ai-service/src/
+!ai-service/src/**/*.py
+!ai-service/requirements.txt
+!ai-service/pyproject.toml
+
+# Re-ignore Python artifacts even in kept directories
+ai-service/src/**/__pycache__/
+ai-service/src/**/*.pyc
+ai-service/src/**/*.pyo
+ai-service/src/**/*.pyd
+
+# Keep configuration templates
+!config/*.yaml
+!config/*.yml
+
+# Keep plugins
+!plugins/**
+
+# Keep deployment scripts
+!install.bat
+!start.bat
+!install.sh
+!start.sh
+
+# Keep OpenKore core files
+!openkore.pl
+!start.pl
+!mapview.pl
+
+# Keep important directories (ensure they exist in git)
+!macros/.gitkeep
+!data/.gitkeep
+!logs/.gitkeep

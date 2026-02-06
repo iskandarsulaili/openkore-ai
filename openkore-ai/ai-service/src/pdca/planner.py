@@ -1,8 +1,9 @@
 """
 PDCA Plan Phase: LLM-powered strategy and macro generation
+Enhanced with optional CrewAI multi-agent analysis
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from loguru import logger
 from llm.provider_chain import llm_chain
 from database.schema import db
@@ -106,10 +107,56 @@ automacro manage_weight {{
             "avg_confidence": sum(d[2] or 0 for d in decisions) / total
         }
         
-    async def generate_strategy(self, session_id: str, character_state: Dict[str, Any], 
-                               performance_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Use LLM to generate strategic plan"""
-        logger.info("Generating strategy with DeepSeek LLM...")
+    async def generate_strategy(
+        self,
+        session_id: str,
+        character_state: Dict[str, Any],
+        performance_data: Dict[str, Any],
+        use_crew: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Use LLM to generate strategic plan
+        
+        Args:
+            session_id: Session identifier
+            character_state: Current character state
+            performance_data: Performance metrics
+            use_crew: Use CrewAI multi-agent analysis (enhanced)
+        """
+        logger.info(f"Generating strategy (crew={'enabled' if use_crew else 'disabled'})...")
+        
+        # Optional: Use CrewAI for multi-agent strategy generation
+        if use_crew:
+            try:
+                from agents.crew_manager import crew_manager
+                
+                # Build context for crew
+                crew_context = {
+                    'character': character_state,
+                    'monsters': [],
+                    'inventory': [],
+                    'session_duration': 30,
+                    'recent_decisions': performance_data
+                }
+                
+                logger.info("Consulting CrewAI agents for strategic insights...")
+                crew_result = await crew_manager.consult_agents(crew_context)
+                
+                # Extract strategic recommendations from crew
+                crew_strategy = "\n".join([
+                    f"- {rec.get('output', '')}"
+                    for rec in crew_result.get('aggregated_recommendations', [])
+                ])
+                
+                return {
+                    "strategy": crew_strategy,
+                    "provider": "crewai_multi_agent",
+                    "character_level": character_state.get('level', 1),
+                    "crew_confidence": crew_result.get('consensus_confidence', 0.85)
+                }
+            except Exception as e:
+                logger.warning(f"CrewAI strategy generation failed: {e}, falling back to LLM")
+                # Fall through to LLM
         
         # Build context-rich prompt
         prompt = f"""
