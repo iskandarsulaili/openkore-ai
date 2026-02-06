@@ -50,7 +50,31 @@ loadPlugins 2
 # loadPlugins_list <list>
 #   if loadPlugins is set to 2, this comma-separated list of plugin names (filename without the extension)
 #   specifies which plugin files to load at startup or when the "plugin load all" command is used.
-loadPlugins_list godtier-ai,macro,profiles,breakTime,raiseStat,raiseSkill,map,reconnect,eventMacro,item_weight_recorder,xconf,OTP,LatamChecksum,AdventureAgency,LATAMTranslate
+#
+# Essential AI Plugins (Core functionality)
+# - eventMacro: Event-driven macro system for complex behaviors
+# - MacroHotReload: Dynamic macro reloading without restart
+# - godtier-ai: Advanced AI decision-making system
+# - macro: Base macro functionality
+#
+# Utility Plugins (Enhanced functionality)
+# - alertSound: Audio notifications for important events
+# - raiseSkill: Automatic skill leveling
+# - raiseStat: Automatic stat allocation
+# - reconnect: Auto-reconnect on disconnect
+# - map: Enhanced map functionality
+# - breakTime: Scheduled breaks for natural behavior
+# - item_weight_recorder: Weight management tracking
+# - xconf: Extended configuration management
+# - OTP: One-time password support
+# - teleToDest: Teleport to destination optimization
+# - AdventureAgency: Adventure quest automation
+#
+# Server-specific Plugins
+# - LatamChecksum: LATAM server checksum support
+# - LATAMTranslate: LATAM translation support
+#
+loadPlugins_list eventMacro,MacroHotReload,godtier-ai,macro,alertSound,raiseSkill,raiseStat,reconnect,map,breakTime,item_weight_recorder,xconf,OTP,teleToDest,AdventureAgency,LatamChecksum,LATAMTranslate
 
 # skipPlugins_list <list>
 #   if loadPlugins is set to 3, this comma-separated list of plugin names (filename without the extension)

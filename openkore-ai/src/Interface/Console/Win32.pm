@@ -78,10 +78,39 @@ sub DESTROY {
 
 sub setWinDim {
 	my $self = shift;
-	my($wLeft, $wTop, $wRight, $wBottom) = $self->{out_con}->Window() or die "Can't find initial dimentions for the output window\n";
-	my($bCol, $bRow) = $self->{out_con}->Size() or die "Can't find dimentions for the output buffer\n";
-	$self->{out_con}->Window(1, $wLeft, $bRow - $wBottom - 1, $wRight, $bRow - 1);# or die "Can't set dimentions for the output window\n";
-	@{$self}{qw(left out_top right in_line)} = $self->{out_con}->Window() or die "Can't find new dimentions for the output window\n";
+	
+	# Get window dimensions with fallback defaults for compatibility
+	my($wLeft, $wTop, $wRight, $wBottom) = $self->{out_con}->Window();
+	if (!defined($wLeft) || !defined($wRight) || !defined($wBottom)) {
+		# Fallback to safe defaults if Window() fails
+		$wLeft = 0;
+		$wTop = 0;
+		$wRight = 79;  # Standard 80 column terminal
+		$wBottom = 24; # Standard 25 row terminal
+	}
+	
+	my($bCol, $bRow) = $self->{out_con}->Size();
+	if (!defined($bCol) || !defined($bRow)) {
+		# Fallback to safe defaults if Size() fails
+		$bCol = 80;
+		$bRow = 25;
+	}
+	
+	# Safely set window dimensions with validated values
+	$self->{out_con}->Window(1, $wLeft, $bRow - $wBottom - 1, $wRight, $bRow - 1);
+	
+	# Get final dimensions with fallback
+	my @dims = $self->{out_con}->Window();
+	if (@dims && defined($dims[0])) {
+		@{$self}{qw(left out_top right in_line)} = @dims;
+	} else {
+		# Use fallback values
+		$self->{left} = $wLeft;
+		$self->{out_top} = $wTop;
+		$self->{right} = $wRight;
+		$self->{in_line} = $bRow;
+	}
+	
 	$self->{out_bot} = $self->{in_line} - 1; #one line above the input line
 	$self->{out_line} = $self->{in_line};
 	$self->{out_col} = $self->{in_pos} = $self->{left};
@@ -293,31 +322,50 @@ sub writeOutput {
 	my ($self, $type, $message, $domain) = @_;
 
 	#wrap the text
-	local($Text::Wrap::columns) = $self->{right} - $self->{left} + 1;
+	# Defensive check: ensure console dimensions are initialized before calculation
+	my $columns = 80; # Default fallback value
+	if (defined($self->{right}) && defined($self->{left})) {
+		$columns = $self->{right} - $self->{left} + 1;
+	}
+	# Ensure minimum column width to prevent Text::Wrap warnings
+	$columns = 80 if ($columns < 20);
+	
+	local($Text::Wrap::columns) = $columns;
 	my ($endspace) = $message =~ /(\s*)$/; #Save trailing whitespace: wrap kills spaces near wraps, especialy at the end of stings, so "\n" becomes "", not what we want
 	$message = wrap('', '', $message);
 	$message =~ s/\s*$/$endspace/; #restore the whitespace
 	
 	my $lines = $message =~ s/\r?\n/\n/g; #fastest? way to count newlines
+	$lines = 0 unless defined($lines); # Defensive: ensure $lines is defined
 	
 	#this paragraph is all about handleing lines that don't end in a newline. I have no clue how it works, even though I wrote it, but it does. =)
 	$lines++ if (!$lines && $self->{last_line_end});
 	if ($lines && !$self->{last_line_end}) {
 		$lines--;
-		$self->{out_line}--;
+		$self->{out_line}-- if defined($self->{out_line});
 	} elsif (!$self->{last_line_end}) {
-		$self->{out_line}--;
+		$self->{out_line}-- if defined($self->{out_line});
 	}
 	$self->{last_line_end} = ($message =~ /\n$/) ? 1 : 0;
 
+	# Defensive: ensure all required values are defined
+	my $left = $self->{left} // 0;
+	my $right = $self->{right} // 79;
+	my $out_bot = $self->{out_bot} // 24;
+	
 	my $ret = $self->{out_con}->Scroll(
-		$self->{left}, 0, $self->{right}, $self->{out_bot},
-		0, 0-$lines, ord(' '), $main::ATTR_NORMAL, 
-		$self->{left}, 0, $self->{right}, $self->{out_bot}
+		$left, 0, $right, $out_bot,
+		0, 0-$lines, ord(' '), $main::ATTR_NORMAL,
+		$left, 0, $right, $out_bot
 	);
 
 	my ($ocx, $ocy) = $self->{out_con}->Cursor();
-	$self->{out_con}->Cursor($self->{out_col}, $self->{out_line} - $lines);
+	$ocx = 0 unless defined($ocx);
+	$ocy = 0 unless defined($ocy);
+	
+	my $out_col = $self->{out_col} // 0;
+	my $out_line = $self->{out_line} // 0;
+	$self->{out_con}->Cursor($out_col, $out_line - $lines);
 	$self->setColor($type, $domain);
 	#$self->{out_con}->Write($message);
 	Utils::Win32::printConsole($message);

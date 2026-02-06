@@ -1,5 +1,6 @@
 # CrewAI - Install first to manage dependencies
 crewai>=1.9.3
+crewai-tools>=1.9.3
 
 # HTTP Server
 fastapi>=0.128.2
@@ -13,15 +14,17 @@ aiosqlite~=0.21.0
 # Note: Using openai~=1.83.0 for compatibility with crewai 1.9.3
 anthropic>=0.78.0
 openai~=1.83.0
-httpx>=0.28.1
+httpx<0.28.0,>=0.23.0  # Version compatible with litellm<1.60.0
+litellm<1.60.0,>=1.59.12  # Required by CrewAI for LLM abstraction, must be <1.60 for openai 1.83 compatibility
 
 # OpenMemory SDK (using synthetic embeddings)
 openmemory-py>=1.3.2
 
-# ML & Data
+# ML & Deep Learning
 numpy>=1.26.4,<3.0.0  # Compatible with scikit-learn
 scikit-learn>=1.8.0
-onnxruntime
+torch>=2.1.0  # PyTorch for RL and model optimization
+onnxruntime>=1.24.1  # Optimized inference
 
 # Utilities
 pyyaml>=6.0.3

@@ -285,6 +285,51 @@ serverType kRO_RagexeRE_2009_11_04a
 serverEncoding Western
 addTableFolders translated/kRO_english;kRO
 
+# Configuration for rathena-AI-world server (local development)
+# IP preserved as 192.168.0.100 for local development
+[rAthena AI World]
+ip 192.168.0.100
+port 6900
+private 1
+master_version 1
+version 55
+serverType Landverse
+serverEncoding Western
+addTableFolders kRO_RagexeRE_2021_11_03
+charBlockSize 175
+charDeleteDateType 1
+blockingPlayerCancel 1
+rankingSystemType 1
+itemListType 1
+pinCode 0
+
+[RAGNAROK LAND BR]
+ip 103.234.239.1
+port 6900
+master_version 1
+version 55
+serverType Landverse
+serverEncoding Western
+addTableFolders Landverse;translated/kRO_english
+charBlockSize 247
+charDeleteDateType 1
+blockingPlayerCancel 1
+rankingSystemType 1
+itemListType 1
+pinCode 0
+
+[WoM]
+ip 172.86.126.116
+port 6900
+private 1
+master_version 20
+version 55
+charBlockSize 128
+serverType kRO_RagexeRE_2021_11_03
+serverEncoding Western
+charBlockSize 175
+addTableFolders kRO/Ragexe_2021_11_03;translated/kRO_english;kRO
+
 ####################
 # Dead
 

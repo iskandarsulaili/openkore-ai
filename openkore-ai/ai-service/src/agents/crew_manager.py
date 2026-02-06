@@ -8,7 +8,7 @@ CrewAI Multi-Agent Coordination (Enhanced for crewai>=1.9.3)
 
 Features utilized:
 - Custom tools per agent
-- Memory system (short-term, long-term, entity)
+- Memory system (short-term, long-term, entity) with OpenMemory synthetic embeddings
 - Agent delegation
 - Hierarchical process support
 - Task context passing
@@ -30,6 +30,9 @@ from agents.game_tools import (
     COMBAT_TOOLS, RESOURCE_TOOLS, STRATEGIC_TOOLS, NAVIGATION_TOOLS,
     AnalyzeGameStateTool
 )
+
+# Import OpenMemory embedder for CrewAI memory
+from memory.crewai_embedder import get_crewai_embedder
 
 load_dotenv()
 
@@ -167,47 +170,87 @@ class CrewManager:
         logger.info(f"[TASK COMPLETE] {output}")
     
     def _create_crew(self) -> Crew:
-        """Create crew with enhanced orchestration"""
-        # Create memory systems if enabled
-        # Note: Disable memory if OPENAI_API_KEY not available (CrewAI requires it for embeddings)
-        memory_config = None
+        """Create crew with enhanced orchestration using OpenMemory synthetic embeddings"""
+        # Create memory systems with OpenMemory synthetic embeddings
+        # This enables memory without requiring OpenAI API key
+        memory_config = False
+        embedder_config = None
+        
         if self.enable_memory:
-            # Check if we can use memory (needs OPENAI_API_KEY for embeddings)
-            if not os.getenv("OPENAI_API_KEY") and not os.getenv("OPENAI_API_BASE"):
-                logger.warning("Memory disabled: OPENAI_API_KEY not set for embeddings")
-                memory_config = False
-            else:
+            try:
+                # Create OpenMemory embedder for CrewAI
+                embedder = get_crewai_embedder(dimension=384)
+                
+                # Set up embedder config for CrewAI's memory system
+                # CrewAI uses ChromaDB internally, so we pass the embedder directly
+                embedder_config = embedder  # Pass the embedder instance directly
+                
                 memory_config = True
+                logger.success("Memory enabled with OpenMemory synthetic embeddings (no OpenAI API required)")
+            except Exception as e:
+                logger.warning(f"Failed to initialize OpenMemory embedder: {e}, memory will be disabled")
+                memory_config = False
         
         # Manager LLM for hierarchical mode
         manager_llm = self.llm if self.use_hierarchical else None
         
         try:
-            crew = Crew(
-                agents=list(self.agents.values()),
-                tasks=[],  # Tasks will be created dynamically
-                process=Process.hierarchical if self.use_hierarchical else Process.sequential,
-                verbose=True,
-                memory=memory_config,
-                max_rpm=30,  # Overall rate limit
-                manager_llm=manager_llm,
-                step_callback=self._agent_callback,
-                task_callback=self._task_callback
-            )
+            # Create crew with embedder configuration
+            # The embedder is passed through embedder_config to RAGStorage
+            crew_config = {
+                "agents": list(self.agents.values()),
+                "tasks": [],  # Tasks will be created dynamically
+                "process": Process.hierarchical if self.use_hierarchical else Process.sequential,
+                "verbose": True,
+                "memory": memory_config,
+                "max_rpm": 30,  # Overall rate limit
+                "manager_llm": manager_llm,
+                "step_callback": self._agent_callback,
+                "task_callback": self._task_callback
+            }
+            
+            # Add embedder config if memory is enabled
+            if memory_config and embedder_config:
+                crew_config["embedder_config"] = embedder_config
+            
+            crew = Crew(**crew_config)
+            logger.info(f"Crew created successfully with memory={'enabled' if memory_config else 'disabled'}")
+            
         except Exception as e:
-            logger.warning(f"Failed to create crew with memory: {e}, retrying without memory")
-            # Retry without memory if it fails
-            crew = Crew(
-                agents=list(self.agents.values()),
-                tasks=[],
-                process=Process.hierarchical if self.use_hierarchical else Process.sequential,
-                verbose=True,
-                memory=False,  # Disable memory
-                max_rpm=30,
-                manager_llm=manager_llm,
-                step_callback=self._agent_callback,
-                task_callback=self._task_callback
-            )
+            logger.warning(f"Failed to create crew with custom embedder: {e}")
+            logger.info("Retrying with standard memory configuration (ChromaDB default)...")
+            
+            # Retry without custom embedder - ChromaDB will use default sentence-transformers
+            # This still avoids OpenAI API calls
+            try:
+                crew = Crew(
+                    agents=list(self.agents.values()),
+                    tasks=[],
+                    process=Process.hierarchical if self.use_hierarchical else Process.sequential,
+                    verbose=True,
+                    memory=memory_config,  # Still enable memory
+                    max_rpm=30,
+                    manager_llm=manager_llm,
+                    step_callback=self._agent_callback,
+                    task_callback=self._task_callback
+                )
+                logger.info("Crew created with ChromaDB default embeddings (sentence-transformers)")
+                logger.info("Note: This uses local embeddings, no OpenAI API required")
+            except Exception as e2:
+                logger.warning(f"Failed to create crew with memory: {e2}, retrying without memory")
+                # Final fallback: disable memory completely
+                crew = Crew(
+                    agents=list(self.agents.values()),
+                    tasks=[],
+                    process=Process.hierarchical if self.use_hierarchical else Process.sequential,
+                    verbose=True,
+                    memory=False,  # Disable memory
+                    max_rpm=30,
+                    manager_llm=manager_llm,
+                    step_callback=self._agent_callback,
+                    task_callback=self._task_callback
+                )
+                logger.warning("Crew created without memory")
         
         return crew
     

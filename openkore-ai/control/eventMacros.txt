@@ -1,0 +1,64 @@
+# OpenKore EventMacro Configuration - MINIMAL REFLEX LAYER
+# THREE-LAYER ADAPTIVE MACRO SYSTEM
+# 
+# This file contains MINIMAL emergency reflex macros using ONLY verified conditions.
+# All strategic and utility macros are generated dynamically by the AI system.
+#
+# CRITICAL: Condition names MUST match Perl module filenames EXACTLY (case-sensitive)
+# - Console.pm exists, so use "Console" (capital C)
+# - There is NO status.pm module, so NO status condition available
+#
+# Available Conditions Used:
+# - Console: Matches console output messages (eventMacro::Condition::Console)
+#
+# Documentation: https://openkore.com/wiki/eventMacros
+# Architecture: See docs/MACRO_SYSTEM_ARCHITECTURE.md
+
+###############################################
+# REFLEX MACRO: EMERGENCY STOP
+###############################################
+# Trigger: Console command for emergency shutdown
+# Response Time: <10ms
+# Priority: 150 (Maximum)
+# Justification: Manual emergency control
+# Action: Stop all autonomous actions
+
+automacro emergency_stop {
+	Console /EMERGENCY/
+	priority 150
+	exclusive 1
+	call emergency_stop_protocol
+}
+
+macro emergency_stop_protocol {
+	log ========================================
+	log [REFLEX] EMERGENCY STOP ACTIVATED
+	log [REFLEX] Disabling all autonomous systems...
+	log ========================================
+	do conf attackAuto 0
+	do conf route_randomWalk 0
+	do conf attackAuto_party 0
+	do conf follow 0
+	log [REFLEX] Emergency stop complete - bot paused
+}
+
+###############################################
+# END OF REFLEX LAYER
+###############################################
+# 
+# All other macros (HP/SP management, farming, resource management, targeting, etc.)
+# are now generated dynamically by the Three-Layer Adaptive Macro System via the
+# MacroHotReload plugin. The AI service analyzes game state in real-time and injects
+# appropriate macros as needed.
+#
+# This minimal configuration:
+# - Uses ONLY the verified Console condition to avoid module loading errors
+# - Provides emergency manual control via console command
+# - Delegates all complex logic to the AI service for better adaptability
+#
+# To request AI-generated macros:
+# - Ensure MacroManagementCoordinator is running (ai-service port 9902)
+# - POST game state to /api/v1/macro/process
+# - Macros will be injected dynamically via MacroHotReload plugin
+#
+# For more information, see: docs/MACRO_SYSTEM_ARCHITECTURE.md

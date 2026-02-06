@@ -22,7 +22,6 @@ set "SECRET_FILE=%SCRIPT_DIR%\..\secret.txt"
 :: Process configuration
 set "AI_ENGINE_EXE=%AI_ENGINE_DIR%\build\Release\ai-engine.exe"
 set "AI_SERVICE_MAIN=%AI_SERVICE_DIR%\src\main.py"
-set "OPENKORE_SCRIPT=%SCRIPT_DIR%\openkore.pl"
 
 :: Port configuration
 set "AI_ENGINE_PORT=9901"
@@ -34,10 +33,10 @@ set "AI_SERVICE_PID="
 
 :: Health check configuration
 set "ENGINE_RETRY_COUNT=3"
-set "SERVICE_RETRY_COUNT=5"
+set "SERVICE_RETRY_COUNT=10"
 set "RETRY_DELAY=2"
 set "ENGINE_START_DELAY=5"
-set "SERVICE_START_DELAY=10"
+set "SERVICE_START_DELAY=30"
 
 :: Restart configuration
 set "MAX_RESTARTS=3"
@@ -55,27 +54,27 @@ goto :skip_functions
 
 :log_info
 echo [INFO] %*
-echo [INFO] %* >> "%LOG_FILE%"
+echo [INFO] %* >> "%LOG_FILE%" 2>nul
 goto :eof
 
 :log_success
 echo [SUCCESS] %*
-echo [SUCCESS] %* >> "%LOG_FILE%"
+echo [SUCCESS] %* >> "%LOG_FILE%" 2>nul
 goto :eof
 
 :log_warning
 echo [WARNING] %*
-echo [WARNING] %* >> "%LOG_FILE%"
+echo [WARNING] %* >> "%LOG_FILE%" 2>nul
 goto :eof
 
 :log_error
 echo [ERROR] %*
-echo [ERROR] %* >> "%LOG_FILE%"
+echo [ERROR] %* >> "%LOG_FILE%" 2>nul
 goto :eof
 
 :log_step
 echo [STEP] %*
-echo [STEP] %* >> "%LOG_FILE%"
+echo [STEP] %* >> "%LOG_FILE%" 2>nul
 goto :eof
 
 :skip_functions
@@ -206,9 +205,9 @@ if not exist "%AI_SERVICE_MAIN%" (
 
 call :log_success "AI Service script found"
 
-:: Check OpenKore
-if not exist "%OPENKORE_SCRIPT%" (
-    call :log_error "OpenKore not found: %OPENKORE_SCRIPT%"
+:: Check OpenKore openkore.pl
+if not exist "%SCRIPT_DIR%\openkore.pl" (
+    call :log_error "OpenKore script not found"
     goto :error_exit
 )
 
@@ -256,7 +255,7 @@ echo.
 :: ============================================================================
 
 :: Setup Ctrl+C handler
-if "%1"=="child" goto :start_services
+if /i "%~1"=="child" goto :start_services
 
 :: ============================================================================
 :: START SERVICES
@@ -267,12 +266,12 @@ if "%1"=="child" goto :start_services
 call :log_step "Starting AI Engine (Port %AI_ENGINE_PORT%)..."
 echo.
 
-:: Start C++ AI Engine in background
-call :log_info "Launching ai-engine.exe..."
-start /B "" "%AI_ENGINE_EXE%" >> "%LOGS_DIR%\ai-engine.log" 2>&1
+:: Start C++ AI Engine in NEW WINDOW
+call :log_info "Launching ai-engine.exe in separate window..."
+start "AI Engine (Port %AI_ENGINE_PORT%)" cmd /k "%AI_ENGINE_EXE%"
 
 :: Get the PID of ai-engine.exe
-timeout /t 1 /nobreak >nul
+ping 127.0.0.1 -n 3 > nul 2>&1
 for /f "tokens=2" %%a in ('tasklist /fi "imagename eq ai-engine.exe" /fo list ^| findstr "PID:"') do (
     set "AI_ENGINE_PID=%%a"
 )
@@ -282,19 +281,21 @@ if "!AI_ENGINE_PID!"=="" (
     goto :cleanup_exit
 )
 
-call :log_success "AI Engine started (PID: !AI_ENGINE_PID!)"
+call :log_success "AI Engine started in separate window (PID: !AI_ENGINE_PID!)"
 
 :: Wait for engine to initialize
 call :log_info "Waiting %ENGINE_START_DELAY% seconds for engine initialization..."
-timeout /t %ENGINE_START_DELAY% /nobreak >nul
+set /a PING_COUNT=%ENGINE_START_DELAY%+1
+ping 127.0.0.1 -n %PING_COUNT% > nul 2>&1
 
 :: Health check for AI Engine
 call :log_info "Performing health check on AI Engine..."
 call :health_check_engine
 if !errorlevel! neq 0 (
-    call :log_error "AI Engine health check failed"
+    call :log_warning "AI Engine health check failed (may still be starting in separate window)"
     echo.
-    echo Do you want to continue anyway? ^(for debugging^) ^(Y/N^)
+    echo Note: AI Engine is running in a separate window. Check that window for errors.
+    echo Do you want to continue anyway? ^(Y/N^)
     set /p "CONTINUE=Continue? "
     if /i "!CONTINUE!" neq "Y" (
         goto :cleanup_exit
@@ -308,21 +309,16 @@ echo.
 call :log_step "Starting AI Service (Port %AI_SERVICE_PORT%)..."
 echo.
 
-:: Activate venv if it exists
-if exist "%VENV_DIR%\Scripts\activate.bat" (
-    call :log_info "Activating virtual environment..."
-    call "%VENV_DIR%\Scripts\activate.bat"
-    set "PYTHON_CMD=python"
+:: Start Python AI Service in NEW WINDOW
+call :log_info "Launching main.py in separate window..."
+if exist "%VENV_DIR%\Scripts\python.exe" (
+    start "AI Service (Port %AI_SERVICE_PORT%)" /D "%SCRIPT_DIR%" cmd /k ""%VENV_DIR%\Scripts\python.exe" "%AI_SERVICE_MAIN%""
+) else (
+    start "AI Service (Port %AI_SERVICE_PORT%)" /D "%SCRIPT_DIR%" cmd /k "!PYTHON_CMD! "%AI_SERVICE_MAIN%""
 )
 
-:: Start Python AI Service in background
-call :log_info "Launching main.py..."
-cd /d "%AI_SERVICE_DIR%"
-start /B "" !PYTHON_CMD! "%AI_SERVICE_MAIN%" >> "%LOGS_DIR%\ai-service.log" 2>&1
-cd /d "%SCRIPT_DIR%"
-
 :: Get the PID of python process
-timeout /t 1 /nobreak >nul
+ping 127.0.0.1 -n 3 > nul 2>&1
 for /f "tokens=2" %%a in ('tasklist /fi "imagename eq python.exe" /fo list ^| findstr "PID:"') do (
     set "AI_SERVICE_PID=%%a"
 )
@@ -330,20 +326,22 @@ for /f "tokens=2" %%a in ('tasklist /fi "imagename eq python.exe" /fo list ^| fi
 if "!AI_SERVICE_PID!"=="" (
     call :log_warning "Could not detect AI Service PID (multiple Python processes may be running)"
 ) else (
-    call :log_success "AI Service started (PID: !AI_SERVICE_PID!)"
+    call :log_success "AI Service started in separate window (PID: !AI_SERVICE_PID!)"
 )
 
 :: Wait for service to initialize
 call :log_info "Waiting %SERVICE_START_DELAY% seconds for service initialization..."
-timeout /t %SERVICE_START_DELAY% /nobreak >nul
+set /a PING_COUNT=%SERVICE_START_DELAY%+1
+ping 127.0.0.1 -n %PING_COUNT% > nul 2>&1
 
 :: Health check for AI Service
 call :log_info "Performing health check on AI Service..."
 call :health_check_service
 if !errorlevel! neq 0 (
-    call :log_error "AI Service health check failed"
+    call :log_warning "AI Service health check failed (may still be starting in separate window)"
     echo.
-    echo Do you want to continue anyway? ^(for debugging^) ^(Y/N^)
+    echo Note: AI Service is running in a separate window. Check that window for errors.
+    echo Do you want to continue anyway? ^(Y/N^)
     set /p "CONTINUE=Continue? "
     if /i "!CONTINUE!" neq "Y" (
         goto :cleanup_exit
@@ -365,8 +363,8 @@ echo.
 call :log_success "All AI services are running"
 echo.
 echo Service Status:
-echo   [OK] AI Engine:  http://localhost:%AI_ENGINE_PORT% (PID: !AI_ENGINE_PID!)
-echo   [OK] AI Service: http://localhost:%AI_SERVICE_PORT%
+echo   [OK] AI Engine:  http://127.0.0.1:%AI_ENGINE_PORT% (PID: !AI_ENGINE_PID!)
+echo   [OK] AI Service: http://127.0.0.1:%AI_SERVICE_PORT% (PID: !AI_SERVICE_PID!)
 echo.
 echo Press any key to launch OpenKore...
 pause >nul
@@ -386,21 +384,36 @@ if !errorlevel! neq 0 (
     goto :cleanup_exit
 )
 
-call :log_info "Starting OpenKore in foreground..."
-call :log_info "To stop, close OpenKore or press Ctrl+C"
+call :log_info "Starting OpenKore in separate window..."
 echo.
 echo ========================================================================
 echo   OpenKore is starting...
 echo ========================================================================
 echo.
 
-:: Start OpenKore in foreground (blocks until exit)
+:: Start OpenKore in NEW WINDOW
 cd /d "%SCRIPT_DIR%"
-perl "%OPENKORE_SCRIPT%"
-set "OPENKORE_EXIT=!errorlevel!"
+start "OpenKore" /D "%SCRIPT_DIR%" cmd /k "perl openkore.pl"
 
-:: OpenKore exited, cleanup services
-call :log_info "OpenKore exited with code: !OPENKORE_EXIT!"
+call :log_success "OpenKore launched in separate window"
+echo.
+echo ========================================================================
+echo   All Services Launched!
+echo ========================================================================
+echo.
+echo Service Status:
+echo   [OK] AI Engine:  http://127.0.0.1:%AI_ENGINE_PORT% (PID: !AI_ENGINE_PID!) - Separate window
+echo   [OK] AI Service: http://127.0.0.1:%AI_SERVICE_PORT% (PID: !AI_SERVICE_PID!) - Separate window
+echo   [OK] OpenKore: Running in separate window
+echo.
+echo This launcher window will remain open to monitor services.
+echo Close this window or press Ctrl+C to stop all services.
+echo.
+echo Press any key to exit and stop all services...
+pause >nul
+
+:: User wants to exit, cleanup services
+call :log_info "User requested shutdown"
 goto :cleanup_exit
 
 :: ============================================================================
@@ -408,7 +421,7 @@ goto :cleanup_exit
 :: ============================================================================
 
 :health_check_engine
-set "HEALTH_URL=http://localhost:%AI_ENGINE_PORT%/health"
+set "HEALTH_URL=http://127.0.0.1:%AI_ENGINE_PORT%/health"
 set "RETRY=0"
 
 :engine_health_retry
@@ -431,14 +444,14 @@ if !errorlevel! equ 0 (
 
 if !RETRY! lss %ENGINE_RETRY_COUNT% (
     call :log_warning "Health check attempt !RETRY!/%ENGINE_RETRY_COUNT% failed, retrying..."
-    timeout /t %RETRY_DELAY% /nobreak >nul
+    ping 127.0.0.1 -n %RETRY_DELAY% > nul 2>&1
     goto :engine_health_retry
 )
 
 exit /b 1
 
 :health_check_service
-set "HEALTH_URL=http://localhost:%AI_SERVICE_PORT%/health"
+set "HEALTH_URL=http://127.0.0.1:%AI_SERVICE_PORT%/api/v1/health"
 set "RETRY=0"
 
 :service_health_retry
@@ -461,7 +474,7 @@ if !errorlevel! equ 0 (
 
 if !RETRY! lss %SERVICE_RETRY_COUNT% (
     call :log_warning "Health check attempt !RETRY!/%SERVICE_RETRY_COUNT% failed, retrying..."
-    timeout /t %RETRY_DELAY% /nobreak >nul
+    ping 127.0.0.1 -n %RETRY_DELAY% > nul 2>&1
     goto :service_health_retry
 )
 

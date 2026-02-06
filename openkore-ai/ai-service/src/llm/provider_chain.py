@@ -206,5 +206,38 @@ class LLMProviderChain:
                 
         logger.error("All LLM providers failed")
         return None
+    
+    def get_crewai_llm(self):
+        """
+        Get a CrewAI-compatible LLM instance
+        Uses DeepSeek as primary, with fallback to OpenAI if needed
+        """
+        from crewai import LLM
+        
+        # Try DeepSeek first (priority 1)
+        deepseek_key = os.getenv("DEEPSEEK_API_KEY", "")
+        if deepseek_key:
+            logger.info("Creating CrewAI LLM with DeepSeek provider")
+            return LLM(
+                model="deepseek/deepseek-chat",
+                api_key=deepseek_key,
+                base_url="https://api.deepseek.com/v1"
+            )
+        
+        # Fallback to OpenAI if DeepSeek not available
+        openai_key = os.getenv("OPENAI_API_KEY", "")
+        if openai_key:
+            logger.warning("DeepSeek unavailable, falling back to OpenAI for CrewAI")
+            return LLM(
+                model="gpt-4-turbo-preview",
+                api_key=openai_key
+            )
+        
+        # If no API keys available, raise error
+        logger.error("No LLM API keys available for CrewAI agents")
+        raise ValueError(
+            "No LLM provider available. Please set DEEPSEEK_API_KEY or OPENAI_API_KEY "
+            "in environment variables or .env file"
+        )
 
 llm_chain = LLMProviderChain()

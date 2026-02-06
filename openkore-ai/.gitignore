@@ -102,6 +102,7 @@ errors.txt
 DUMP.txt
 config.log
 benchmark-results.txt
+logs/*.txt
 
 # ============================================================================
 # Generated Files
@@ -109,6 +110,7 @@ benchmark-results.txt
 # Generated macros
 macros/*.txt
 macros/backups/
+control/eventMacros.txt.backup*
 
 # Auto-generated files
 *.dist

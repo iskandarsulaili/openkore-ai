@@ -4,6 +4,17 @@ Port: 9902
 Provides: LLM integration, Memory system, Database access, CrewAI agents, ML Pipeline, Game Lifecycle Autonomy, Social Interaction System
 """
 
+import warnings
+
+# Suppress Pydantic V1 deprecation warnings from third-party dependencies (ChromaDB 1.1.1)
+# Our code is fully Pydantic V2 compliant, but ChromaDB has deprecated patterns
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+    module="pydantic._internal._config",
+    message=".*Valid config keys have changed in V2.*"
+)
+
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -43,6 +54,10 @@ from social import reputation_manager as rep_mgr_module
 from social import chat_generator as chat_gen_module
 from social import interaction_handler as int_handler_module
 
+# Import Phase 9 Macro Management components
+from macro.coordinator import MacroManagementCoordinator
+from routers import macro_router
+
 # Lifespan context manager for startup/shutdown
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -80,6 +95,15 @@ async def lifespan(app: FastAPI):
     interaction_handler = InteractionHandler(personality_engine, reputation_manager, chat_generator)
     logger.info("Social Interaction System initialized")
     
+    # Initialize macro management system (Phase 9)
+    global macro_coordinator
+    macro_coordinator = MacroManagementCoordinator(
+        openkore_url="http://127.0.0.1:8765",
+        db_path="data/openkore-ai.db"
+    )
+    macro_router.set_coordinator(macro_coordinator)
+    logger.info("Three-Layer Adaptive Macro System initialized")
+    
     logger.success("All systems initialized successfully")
     
     yield
@@ -91,9 +115,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="OpenKore AI Service",
-    version="1.0.0-phase8",
+    version="1.0.0-phase9",
     lifespan=lifespan
 )
+
+# Register macro router
+app.include_router(macro_router.router)
 
 # Startup time
 START_TIME = time.time()
@@ -756,9 +783,9 @@ async def root():
     """Root endpoint with service info"""
     return {
         "service": "OpenKore AI Service",
-        "version": "1.0.0-phase8",
+        "version": "1.0.0-phase9",
         "status": "online",
-        "phase": "8 - Social Interaction System Complete",
+        "phase": "9 - Three-Layer Adaptive Macro System Complete",
         "features": [
             "SQLite Database (8 tables)",
             "OpenMemory SDK (synthetic embeddings)",
@@ -781,7 +808,11 @@ async def root():
             "Personality Engine (8 traits)",
             "Player Reputation System (7 tiers)",
             "Human-Like Chat Generation",
-            "Social Interaction Handler (7 categories)"
+            "Social Interaction Handler (7 categories)",
+            "Three-Layer Adaptive Macro System",
+            "MacroHotReload Integration",
+            "ML-Based Macro Prediction",
+            "CrewAI Macro Generation"
         ],
         "endpoints": [
             "/api/v1/health",
@@ -809,14 +840,22 @@ async def root():
             "/api/v1/social/reputation/update",
             "/api/v1/social/party_invite",
             "/api/v1/social/trade",
-            "/api/v1/social/personality"
+            "/api/v1/social/personality",
+            "/api/v1/macro/process",
+            "/api/v1/macro/inject",
+            "/api/v1/macro/list",
+            "/api/v1/macro/stats",
+            "/api/v1/macro/health",
+            "/api/v1/macro/train",
+            "/api/v1/macro/optimize/{macro_name}",
+            "/api/v1/macro/report/{session_id}"
         ]
     }
 
 if __name__ == "__main__":
-    logger.info("OpenKore AI Service v1.0.0-phase8")
+    logger.info("OpenKore AI Service v1.0.0-phase9")
     logger.info("Starting HTTP server on http://127.0.0.1:9902")
-    logger.info("Phase 8: Social Interaction System Complete")
+    logger.info("Phase 9: Three-Layer Adaptive Macro System Complete")
     
     uvicorn.run(
         app,
