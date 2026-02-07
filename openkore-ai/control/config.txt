@@ -39,7 +39,7 @@ XKore_ID
 
 # It is not advised to set secureAdminPassword if you're using Xkore 2
 secureAdminPassword 1
-adminPassword
+adminPassword yochotwa
 callSign
 commandPrefix ;
 callSignGM 0
@@ -591,8 +591,8 @@ attackSkillSlot {
 	mercenary_whenIdle
 	mercenary_whenNotIdle
 	onAction
-    inQueue
-    notInQueue
+	inQueue
+	notInQueue
 	whenStatusActive
 	whenStatusInactive
 	whenFollowing
@@ -675,8 +675,8 @@ doCommand {
 	mercenary_whenIdle
 	mercenary_whenNotIdle
 	onAction
-    inQueue
-    notInQueue
+	inQueue
+	notInQueue
 	whenStatusActive
 	whenStatusInactive
 	whenFollowing
@@ -729,8 +729,8 @@ useSelf_skill {
 	mercenary_whenIdle
 	mercenary_whenNotIdle
 	onAction
-    inQueue
-    notInQueue
+	inQueue
+	notInQueue
 	whenStatusActive
 	whenStatusInactive
 	whenFollowing
@@ -787,8 +787,8 @@ partySkill {
 	mercenary_whenIdle
 	mercenary_whenNotIdle
 	onAction
-    inQueue
-    notInQueue
+	inQueue
+	notInQueue
 	whenStatusActive
 	whenStatusInactive
 	whenFollowing
@@ -891,8 +891,8 @@ equipAuto {
 	mercenary_whenIdle
 	mercenary_whenNotIdle
 	onAction
-    inQueue
-    notInQueue
+	inQueue
+	notInQueue
 	whenStatusActive
 	whenStatusInactive
 	whenFollowing
@@ -936,8 +936,8 @@ useSelf_item {
 	mercenary_whenIdle
 	mercenary_whenNotIdle
 	onAction
-    inQueue
-    notInQueue
+	inQueue
+	notInQueue
 	whenStatusActive
 	whenStatusInactive
 	whenFollowing
@@ -1016,12 +1016,12 @@ getAuto {
 
 ######## Debugging options; only useful for developers ########
 
-debug 0
+debug 2
 debugPacket_unparsed 0
 debugPacket_received 0
 debugPacket_ro_sent 0
 debugPacket_sent 0
-debugPacket_exclude
+debugPacket_exclude 0BF6
 debugPacket_include
 debugPacket_include_dumpMethod
 debugDomains
@@ -1030,3 +1030,4 @@ logToFile_Errors
 logToFile_Messages
 logToFile_Warnings
 history_max 50
+macro_orphans terminate

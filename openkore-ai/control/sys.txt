@@ -74,6 +74,7 @@ loadPlugins 2
 # - LatamChecksum: LATAM server checksum support
 # - LATAMTranslate: LATAM translation support
 #
+# Note: eventMacro re-enabled with fixed condition module syntax
 loadPlugins_list eventMacro,MacroHotReload,godtier-ai,macro,alertSound,raiseSkill,raiseStat,reconnect,map,breakTime,item_weight_recorder,xconf,OTP,teleToDest,AdventureAgency,LatamChecksum,LATAMTranslate
 
 # skipPlugins_list <list>

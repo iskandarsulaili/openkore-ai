@@ -1,0 +1,224 @@
+# Autonomous Self-Healing System Configuration
+
+# Monitoring Settings
+monitoring:
+  enabled: true
+  log_directory: "../../logs"
+  poll_interval_seconds: 2
+  max_log_size_mb: 10
+  
+  # Which logs to monitor
+  watch_patterns:
+    - "*_console_*.txt"
+    - "console.txt"
+    - "dead_log_*.txt"
+    - "errors.txt"
+
+# Detection Settings
+detection:
+  # Issue patterns to detect (regex)
+  patterns:
+    packet_unknown: "Packet Parser: Unknown switch: (0x[0-9A-F]+)"
+    npc_not_found: "Could not find an NPC"
+    npc_no_response: "Npc did not respond"
+    stuck_route: "We are out of our route for a long time, recalculating"
+    position_desync: "Your pos \\((\\d+) (\\d+)\\).*pos_to \\((\\d+) (\\d+)\\)"
+    death: "\\[DEAD\\]"
+    ai_stuck_loop: "AI: (\\w+) .* \\| \\d+"
+    
+  # Thresholds for issue escalation
+  thresholds:
+    npc_not_found_max: 3          # After 3 failures, escalate
+    stuck_route_max: 5             # After 5 recalculations, escalate
+    ai_loop_same_state_max: 10     # Same AI state 10 times = stuck
+    death_within_minutes: 5        # Death within 5 min needs analysis
+
+# Analysis Settings
+analysis:
+  enabled: true
+  
+  # Context files to analyze
+  context_files:
+    config: "../../control/config.txt"
+    mon_control: "../../control/mon_control.txt"
+    npcs: "../../tables/npcs.txt"
+    recvpackets: "../../tables/kRO/Ragexe_2021_11_03/recvpackets.txt"
+    monsters: "../../tables/monsters.txt"
+    maps: "../../tables/translated/kRO_english/maps.txt"
+    
+  # Root cause correlation rules
+  correlation_rules:
+    - name: "npc_not_found_invalid_coords"
+      trigger: "npc_not_found"
+      check: "buyAuto npc coordinates not in npcs.txt"
+      confidence_base: 0.95
+      
+    - name: "lockMap_empty_no_farming"
+      trigger: "ai_stuck_loop"
+      check: "lockMap is empty or invalid"
+      confidence_base: 0.90
+      
+    - name: "spawn_outside_lockMap"
+      trigger: "position_desync"
+      check: "spawn position outside lockMap boundaries"
+      confidence_base: 0.85
+
+# Solution Generation Settings
+solution:
+  enabled: true
+  
+  # Solution templates (adaptive, not hardcoded)
+  strategies:
+    npc_missing:
+      actions:
+        - "validate_npc_against_database"
+        - "disable_buyAuto_if_invalid"
+        - "suggest_alternative_npcs"
+      confidence_threshold: 0.80
+      
+    lockMap_invalid:
+      actions:
+        - "detect_character_level_and_class"
+        - "find_appropriate_farming_map"
+        - "calculate_optimal_lockMap_coords"
+        - "validate_monster_spawns"
+      confidence_threshold: 0.85
+      
+    packet_unknown:
+      actions:
+        - "add_to_debugPacket_exclude"
+        - "check_recvpackets_definition"
+        - "log_for_manual_review"
+      confidence_threshold: 0.70
+      
+    death_prevention:
+      actions:
+        - "analyze_death_cause"
+        - "adjust_teleportAuto_hp"
+        - "improve_healing_thresholds"
+        - "add_dangerous_mob_avoidance"
+      confidence_threshold: 0.75
+
+# Execution Settings
+execution:
+  enabled: true
+  safe_mode: true  # Require human approval for critical changes
+  
+  # Critical changes requiring approval
+  require_approval:
+    - "config.txt character settings"
+    - "packet handler code modifications"
+    - "AI core logic changes"
+    
+  # Automatic execution allowed for
+  auto_execute:
+    - "debugPacket_exclude additions"
+    - "lockMap coordinate adjustments"
+    - "buyAuto disable"
+    - "healing threshold tuning"
+    
+  # Backup settings
+  backup:
+    enabled: true
+    directory: "../../control/backups"
+    keep_last_n: 10
+    
+  # Rollback settings
+  rollback:
+    enabled: true
+    auto_rollback_on_error: true
+    validation_time_seconds: 60
+
+# Learning Settings
+learning:
+  enabled: true
+  knowledge_base_path: "../data/healing_knowledge.db"
+  
+  # Pattern learning
+  learn_from:
+    - "successful_fixes"
+    - "failed_attempts"
+    - "recurring_issues"
+    - "user_overrides"
+    
+  # Confidence adjustment
+  confidence_decay_days: 30       # Reduce confidence of old patterns
+  success_boost: 0.1             # Increase confidence on success
+  failure_penalty: 0.2           # Decrease confidence on failure
+  
+  # Common patterns become high priority
+  pattern_threshold_uses: 5      # After 5 occurrences, elevate priority
+
+# CrewAI Settings
+crewai:
+  llm_provider: "openai"  # or "anthropic", "ollama", etc.
+  model: "gpt-4-turbo-preview"
+  temperature: 0.3  # Lower = more deterministic
+  max_tokens: 2000
+  
+  # Agent configurations
+  agents:
+    monitor:
+      role: "Log Monitor Specialist"
+      goal: "Detect OpenKore errors and anomalies in real-time"
+      backstory: "Expert at pattern recognition in game bot logs"
+      verbose: true
+      
+    analyzer:
+      role: "Root Cause Analysis Expert"
+      goal: "Identify true causes of bot failures by correlating logs with configs"
+      backstory: "Deep knowledge of OpenKore internals and RO game mechanics"
+      verbose: true
+      
+    solver:
+      role: "Intelligent Solution Architect"
+      goal: "Generate context-aware fixes without hardcoded solutions"
+      backstory: "Adaptive problem solver with OpenKore configuration expertise"
+      verbose: true
+      
+    validator:
+      role: "Configuration Validation Specialist"
+      goal: "Verify fixes are syntactically correct and logically sound"
+      backstory: "Prevents breaking changes and validates all modifications"
+      verbose: true
+      
+    executor:
+      role: "Safe Execution Manager"
+      goal: "Apply fixes safely with backup, rollback, and hot-reload support"
+      backstory: "Cautious executor focused on system stability"
+      verbose: true
+      
+    learner:
+      role: "Continuous Learning Agent"
+      goal: "Build knowledge base from successes and failures"
+      backstory: "Pattern recognition expert improving system over time"
+      verbose: true
+
+# Logging Settings
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  file: "../logs/autonomous_healing.log"
+  rotation: "daily"
+  retention_days: 30
+  format: "[%(asctime)s] [%(levelname)s] [%(agent)s] %(message)s"
+
+# Notification Settings
+notifications:
+  enabled: true
+  channels:
+    - type: "console"
+      level: "INFO"
+    - type: "file"
+      level: "DEBUG"
+      path: "../logs/healing_actions.log"
+  
+  # Alert on critical events
+  alerts:
+    - event: "death_detected"
+      severity: "HIGH"
+    - event: "fix_applied"
+      severity: "MEDIUM"
+    - event: "rollback_performed"
+      severity: "HIGH"
+    - event: "approval_required"
+      severity: "MEDIUM"
