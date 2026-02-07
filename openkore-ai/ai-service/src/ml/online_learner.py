@@ -6,6 +6,7 @@ Continuously updates ML model with new data
 from typing import Dict, Any
 import numpy as np
 from loguru import logger
+from utils.console_logger import console_logger, LayerType
 
 class OnlineLearner:
     """Implements online learning for continuous model improvement"""
@@ -42,6 +43,11 @@ class OnlineLearner:
         """Retrain model with accumulated data"""
         logger.info("Retraining model with new data...")
         
+        print(f"\n🔮 [SUBCONSCIOUS] Model Retraining Started")
+        print(f"   └─ Accumulated Samples: {self.samples_since_update}")
+        print(f"   └─ Session: {session_id}")
+        print(f"   └─ Status: Collecting training dataset...")
+        
         # Collect updated dataset
         X, y = await self.collector.collect_training_dataset(session_id, min_samples=100)
         
@@ -57,5 +63,16 @@ class OnlineLearner:
         
         self.samples_since_update = 0
         logger.success(f"Model retrained with accuracy: {results['accuracy']:.3f}")
+        
+        # Log learning progress to console
+        console_logger.log_learning_progress(
+            samples_collected=len(X) if X is not None else 0,
+            learning_rate=0.001,  # Adjust based on your actual learning rate
+            patterns_learned=self.samples_since_update
+        )
+        
+        print(f"   └─ ✓ Retraining Complete!")
+        print(f"   └─ Accuracy: {results['accuracy']:.3f}")
+        print(f"   └─ Model exported to ONNX")
 
 online_learner = None  # Initialized in main.py

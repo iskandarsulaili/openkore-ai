@@ -1,0 +1,231 @@
+{
+  "novice": {
+    "default": {
+      "name": "Balanced Novice",
+      "description": "Balanced stats for any future path",
+      "stat_priority": ["STR", "AGI", "VIT", "DEX", "INT", "LUK"],
+      "stat_targets": {
+        "str": 9, "agi": 9, "vit": 9, "dex": 9, "int": 9, "luk": 9
+      },
+      "skills_priority": [
+        {"name": "NV_BASIC", "level": 9, "priority": 1, "description": "Basic Skill"}
+      ],
+      "equipment_preference": {
+        "weapon_type": "any",
+        "armor_type": "light"
+      }
+    }
+  },
+  "swordsman": {
+    "agi_knight": {
+      "name": "AGI Knight (ASPD/Dodge)",
+      "description": "High attack speed, evasion-based tank",
+      "stat_priority": ["AGI", "STR", "VIT", "DEX"],
+      "stat_allocation_pattern": "2 AGI, 1 STR, 1 VIT, 1 DEX per 5 points",
+      "stat_targets": {
+        "str": 70, "agi": 99, "vit": 50, "dex": 30, "int": 1, "luk": 1
+      },
+      "skills_priority": [
+        {"name": "SM_RECOVERY", "level": 10, "priority": 1, "description": "Increase HP Recovery"},
+        {"name": "SM_BASH", "level": 10, "priority": 2, "description": "Bash - Main Attack"},
+        {"name": "SM_SWORD", "level": 10, "priority": 3, "description": "Sword Mastery"},
+        {"name": "SM_PROVOKE", "level": 10, "priority": 4, "description": "Provoke"},
+        {"name": "SM_MAGNUM", "level": 10, "priority": 5, "description": "Magnum Break"}
+      ],
+      "equipment_preference": {
+        "weapon_type": "one_handed_sword",
+        "armor_type": "light",
+        "stat_bonus_priority": ["AGI", "STR", "DEX"]
+      }
+    },
+    "vit_knight": {
+      "name": "VIT Knight (Tank)",
+      "description": "High defense and HP, pure tanking",
+      "stat_priority": ["VIT", "STR", "DEX", "AGI"],
+      "stat_allocation_pattern": "2 VIT, 1 STR, 1 DEX, 1 AGI per 5 points",
+      "stat_targets": {
+        "str": 70, "agi": 30, "vit": 99, "dex": 40, "int": 1, "luk": 1
+      },
+      "skills_priority": [
+        {"name": "SM_RECOVERY", "level": 10, "priority": 1, "description": "Increase HP Recovery"},
+        {"name": "SM_PROVOKE", "level": 10, "priority": 2, "description": "Provoke"},
+        {"name": "SM_BASH", "level": 10, "priority": 3, "description": "Bash"},
+        {"name": "SM_ENDURE", "level": 10, "priority": 4, "description": "Endure"},
+        {"name": "SM_SWORD", "level": 10, "priority": 5, "description": "Sword Mastery"}
+      ],
+      "equipment_preference": {
+        "weapon_type": "one_handed_sword",
+        "armor_type": "heavy",
+        "stat_bonus_priority": ["VIT", "DEF", "STR"]
+      }
+    },
+    "str_knight": {
+      "name": "STR Knight (Pure DPS)",
+      "description": "Maximum damage output, glass cannon",
+      "stat_priority": ["STR", "DEX", "AGI", "VIT"],
+      "stat_allocation_pattern": "3 STR, 1 DEX, 1 AGI per 5 points",
+      "stat_targets": {
+        "str": 99, "agi": 40, "vit": 30, "dex": 50, "int": 1, "luk": 1
+      },
+      "skills_priority": [
+        {"name": "SM_BASH", "level": 10, "priority": 1, "description": "Bash"},
+        {"name": "SM_SWORD", "level": 10, "priority": 2, "description": "Sword Mastery"},
+        {"name": "SM_MAGNUM", "level": 10, "priority": 3, "description": "Magnum Break"},
+        {"name": "SM_RECOVERY", "level": 10, "priority": 4, "description": "Increase HP Recovery"},
+        {"name": "SM_PROVOKE", "level": 5, "priority": 5, "description": "Provoke"}
+      ],
+      "equipment_preference": {
+        "weapon_type": "two_handed_sword",
+        "armor_type": "medium",
+        "stat_bonus_priority": ["STR", "ATK", "DEX"]
+      }
+    }
+  },
+  "mage": {
+    "magic_dps": {
+      "name": "High Wizard (Magic DPS)",
+      "description": "Pure magic damage, glass cannon mage",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI"],
+      "stat_allocation_pattern": "3 INT, 1 DEX, 1 VIT per 5 points",
+      "stat_targets": {
+        "str": 1, "agi": 20, "vit": 30, "dex": 60, "int": 99, "luk": 1
+      },
+      "skills_priority": [
+        {"name": "MG_SRECOVERY", "level": 10, "priority": 1, "description": "Increase SP Recovery"},
+        {"name": "MG_FIREBOLT", "level": 10, "priority": 2, "description": "Fire Bolt"},
+        {"name": "MG_FIREWALL", "level": 10, "priority": 3, "description": "Fire Wall"},
+        {"name": "MG_SIGHT", "level": 1, "priority": 4, "description": "Sight"},
+        {"name": "MG_STONECURSE", "level": 10, "priority": 5, "description": "Stone Curse"}
+      ],
+      "equipment_preference": {
+        "weapon_type": "staff",
+        "armor_type": "cloth",
+        "stat_bonus_priority": ["INT", "MATK", "DEX"]
+      }
+    }
+  },
+  "archer": {
+    "dex_hunter": {
+      "name": "Sniper (Ranged DPS)",
+      "description": "High damage ranged physical DPS",
+      "stat_priority": ["DEX", "AGI", "STR", "VIT"],
+      "stat_allocation_pattern": "3 DEX, 1 AGI, 1 STR per 5 points",
+      "stat_targets": {
+        "str": 40, "agi": 50, "vit": 30, "dex": 99, "int": 1, "luk": 1
+      },
+      "skills_priority": [
+        {"name": "AC_OWL", "level": 10, "priority": 1, "description": "Owl's Eye"},
+        {"name": "AC_DOUBLE", "level": 10, "priority": 2, "description": "Double Strafe"},
+        {"name": "AC_SHOWER", "level": 10, "priority": 3, "description": "Arrow Shower"},
+        {"name": "AC_CONCENTRATION", "level": 10, "priority": 4, "description": "Improve Concentration"}
+      ],
+      "equipment_preference": {
+        "weapon_type": "bow",
+        "armor_type": "light",
+        "stat_bonus_priority": ["DEX", "AGI", "ATK"]
+      }
+    }
+  },
+  "acolyte": {
+    "support_priest": {
+      "name": "High Priest (Support/Healer)",
+      "description": "Party support and healing specialist",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI"],
+      "stat_allocation_pattern": "2 INT, 2 VIT, 1 DEX per 5 points",
+      "stat_targets": {
+        "str": 1, "agi": 20, "vit": 70, "dex": 50, "int": 99, "luk": 1
+      },
+      "skills_priority": [
+        {"name": "AL_DP", "level": 10, "priority": 1, "description": "Divine Protection"},
+        {"name": "AL_HEAL", "level": 10, "priority": 2, "description": "Heal"},
+        {"name": "AL_INCAGI", "level": 10, "priority": 3, "description": "Increase AGI"},
+        {"name": "AL_BLESSING", "level": 10, "priority": 4, "description": "Blessing"},
+        {"name": "AL_ANGELUS", "level": 10, "priority": 5, "description": "Angelus"}
+      ],
+      "equipment_preference": {
+        "weapon_type": "mace",
+        "armor_type": "medium",
+        "stat_bonus_priority": ["INT", "VIT", "DEX"]
+      }
+    }
+  },
+  "thief": {
+    "crit_assassin": {
+      "name": "Assassin Cross (Burst DPS)",
+      "description": "Critical hit specialist, high burst damage",
+      "stat_priority": ["LUK", "AGI", "STR", "DEX"],
+      "stat_allocation_pattern": "2 LUK, 2 AGI, 1 STR per 5 points",
+      "stat_targets": {
+        "str": 50, "agi": 80, "vit": 20, "dex": 30, "int": 1, "luk": 99
+      },
+      "skills_priority": [
+        {"name": "TF_DOUBLE", "level": 10, "priority": 1, "description": "Double Attack"},
+        {"name": "TF_MISS", "level": 10, "priority": 2, "description": "Improve Dodge"},
+        {"name": "TF_STEAL", "level": 10, "priority": 3, "description": "Steal"},
+        {"name": "TF_HIDING", "level": 10, "priority": 4, "description": "Hiding"},
+        {"name": "TF_POISON", "level": 10, "priority": 5, "description": "Envenom"}
+      ],
+      "equipment_preference": {
+        "weapon_type": "dagger",
+        "armor_type": "light",
+        "stat_bonus_priority": ["LUK", "AGI", "CRIT"]
+      }
+    }
+  },
+  "merchant": {
+    "tank_blacksmith": {
+      "name": "Whitesmith (Tank/Utility)",
+      "description": "High HP, utility support, economy focus",
+      "stat_priority": ["VIT", "STR", "DEX", "AGI"],
+      "stat_allocation_pattern": "2 VIT, 1 STR, 1 DEX, 1 AGI per 5 points",
+      "stat_targets": {
+        "str": 70, "agi": 30, "vit": 99, "dex": 40, "int": 1, "luk": 1
+      },
+      "skills_priority": [
+        {"name": "MC_INCCARRY", "level": 10, "priority": 1, "description": "Enlarge Weight Limit"},
+        {"name": "MC_DISCOUNT", "level": 10, "priority": 2, "description": "Discount"},
+        {"name": "MC_OVERCHARGE", "level": 10, "priority": 3, "description": "Overcharge"},
+        {"name": "MC_PUSHCART", "level": 10, "priority": 4, "description": "Pushcart"}
+      ],
+      "equipment_preference": {
+        "weapon_type": "axe",
+        "armor_type": "heavy",
+        "stat_bonus_priority": ["VIT", "STR", "DEF"]
+      }
+    }
+  },
+  "playstyles": {
+    "aggressive": {
+      "description": "Kill fast, risk death - high damage, low defense",
+      "teleport_hp_threshold": 0.20,
+      "heal_threshold": 0.40,
+      "aggressive_range": 8,
+      "risk_tolerance": "high",
+      "prioritize_damage": true
+    },
+    "balanced": {
+      "description": "Medium risk, medium reward - balanced approach",
+      "teleport_hp_threshold": 0.35,
+      "heal_threshold": 0.50,
+      "aggressive_range": 5,
+      "risk_tolerance": "medium",
+      "prioritize_damage": false
+    },
+    "safe": {
+      "description": "Never die, slower leveling - maximum survival",
+      "teleport_hp_threshold": 0.50,
+      "heal_threshold": 0.70,
+      "aggressive_range": 3,
+      "risk_tolerance": "low",
+      "prioritize_damage": false
+    },
+    "efficient": {
+      "description": "Optimal XP/hour - calculated risk management",
+      "teleport_hp_threshold": 0.40,
+      "heal_threshold": 0.60,
+      "aggressive_range": 6,
+      "risk_tolerance": "medium",
+      "prioritize_damage": true
+    }
+  }
+}

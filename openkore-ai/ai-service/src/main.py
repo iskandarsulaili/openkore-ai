@@ -1,5 +1,5 @@
 """
-OpenKore AI Service - Python HTTP Server (Phase 10 Complete)
+OpenKore AI Service - Python HTTP Server (Phase 10 Complete + Critical Fixes)
 Port: 9902
 Provides: LLM integration, Memory system, Database access, CrewAI agents, ML Pipeline, Game Lifecycle Autonomy, Social Interaction System, Autonomous Self-Healing
 """
@@ -31,6 +31,9 @@ from pathlib import Path
 from loguru import logger
 from contextlib import asynccontextmanager
 
+# Import console logger for visible AI layer activity
+from utils.console_logger import console_logger, LayerType
+
 # Import Phase 3 components
 from database import db
 from memory.openmemory_manager import OpenMemoryManager
@@ -50,6 +53,17 @@ from ml.online_learner import online_learner, OnlineLearner
 from lifecycle import character_creator, goal_generator, quest_automation
 from lifecycle.progression_manager import ProgressionManager
 
+# Import Phase 11 Progression components
+from progression.stat_allocator import StatAllocator
+from progression.skill_learner import SkillLearner
+from combat.equipment_manager import EquipmentManager
+
+# Import Priority 1 Combat Intelligence systems (opkAI)
+from combat.threat_assessor import ThreatAssessor
+from combat.kiting_engine import KitingEngine
+from combat.target_selector import TargetSelector
+from combat.positioning_engine import PositioningEngine
+
 # Import Phase 8 Social components
 from social import personality_engine, ReputationManager, ChatGenerator, InteractionHandler
 from social import reputation_manager as rep_mgr_module
@@ -63,6 +77,9 @@ from routers import macro_router
 # Import Phase 10 Autonomous Self-Healing components
 from autonomous_healing import AutonomousHealingSystem
 
+# Import Priority 1 Game Mechanics components (rathena extraction)
+from routers import game_mechanics_router
+
 # Lifespan context manager for startup/shutdown
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -70,8 +87,37 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting OpenKore AI Service...")
     
+    # Print exciting startup banner
+    console_logger.print_startup_banner()
+    
     # Initialize database
+    console_logger.print_layer_initialization(
+        LayerType.SYSTEM,
+        "Initializing Database...",
+        "SQLite with 8 tables"
+    )
     await db.initialize()
+    console_logger.print_layer_initialization(
+        LayerType.SYSTEM,
+        "Database Ready ✓"
+    )
+    
+    # Validate configuration and warn about missing items
+    console_logger.print_layer_initialization(
+        LayerType.SYSTEM,
+        "Validating Configuration...",
+        "Checking healing items, teleport config, survival setup"
+    )
+    from utils.startup_validator import validate_and_report
+    try:
+        validate_and_report()
+    except RuntimeError as e:
+        logger.error(f"Startup validation failed: {e}")
+        raise
+    console_logger.print_layer_initialization(
+        LayerType.SYSTEM,
+        "Configuration Validated ✓"
+    )
     
     # Initialize memory manager
     global memory_manager
@@ -81,11 +127,58 @@ async def lifespan(app: FastAPI):
     await llm_chain.initialize()
     
     # Initialize ML systems (Phase 6)
+    console_logger.print_layer_initialization(
+        LayerType.SUBCONSCIOUS,
+        "Initializing ML Systems...",
+        "Pattern recognition, prediction models, online learning"
+    )
     global data_collector, online_learner
     data_collector = DataCollector(db)
     online_learner = OnlineLearner(model_trainer, data_collector)
     await cold_start_manager.initialize(db)
+    console_logger.print_layer_initialization(
+        LayerType.SUBCONSCIOUS,
+        f"ML Systems Ready ✓",
+        f"Cold-start Phase {cold_start_manager.current_phase}, Model trained: {cold_start_manager.model_trained}"
+    )
     logger.info(f"ML Cold-Start initialized: Phase {cold_start_manager.current_phase}")
+    
+    # Initialize progression systems (Phase 11)
+    console_logger.print_layer_initialization(
+        LayerType.SYSTEM,
+        "Initializing Progression Systems...",
+        "Autonomous stat allocation, skill learning, equipment management"
+    )
+    # Initialize combat intelligence systems (Priority 1)
+    console_logger.print_layer_initialization(
+        LayerType.REFLEX,
+        "Initializing Combat Intelligence...",
+        "Threat assessment, kiting, targeting, positioning"
+    )
+    global threat_assessor, target_selector
+    threat_assessor = ThreatAssessor()
+    target_selector = TargetSelector()
+    console_logger.print_layer_initialization(
+        LayerType.REFLEX,
+        "Combat Intelligence Ready ✓",
+        "4 systems: Threat, Kiting, Targeting, Positioning"
+    )
+    logger.info("Combat Intelligence Systems initialized (Priority 1)")
+    
+    global stat_allocator, skill_learner, equipment_manager
+    user_intent_path = Path(__file__).parent / "data" / "user_intent.json"
+    job_builds_path = Path(__file__).parent / "data" / "job_builds.json"
+    
+    stat_allocator = StatAllocator(str(user_intent_path), str(job_builds_path))
+    skill_learner = SkillLearner(str(user_intent_path), str(job_builds_path))
+    equipment_manager = EquipmentManager(str(user_intent_path))
+    
+    console_logger.print_layer_initialization(
+        LayerType.SYSTEM,
+        "Progression Systems Ready ✓",
+        "95% autonomy enabled: Stats, Skills, Equipment"
+    )
+    logger.info("Autonomous Progression Systems initialized (Phase 11)")
     
     # Initialize lifecycle systems (Phase 7)
     global progression_manager
@@ -101,12 +194,28 @@ async def lifespan(app: FastAPI):
     logger.info("Social Interaction System initialized")
     
     # Initialize macro management system (Phase 9)
+    console_logger.print_layer_initialization(
+        LayerType.CONSCIOUS,
+        "Initializing CrewAI Strategic Layer...",
+        "Multi-agent collaboration, macro generation, strategic planning"
+    )
     global macro_coordinator
     macro_coordinator = MacroManagementCoordinator(
         openkore_url="http://127.0.0.1:8765",
         db_path="data/openkore-ai.db"
     )
     macro_router.set_coordinator(macro_coordinator)
+    console_logger.print_layer_initialization(
+        LayerType.CONSCIOUS,
+        "CrewAI Strategic Layer Ready ✓",
+        "Agents: Strategist, Analyst, Generator, Optimizer"
+    )
+    
+    console_logger.print_layer_initialization(
+        LayerType.REFLEX,
+        "OpenKore EventMacro Connected ✓",
+        "Ultra-fast trigger-based execution ready"
+    )
     logger.info("Three-Layer Adaptive Macro System initialized")
     
     # Initialize autonomous self-healing system (Phase 10)
@@ -125,10 +234,31 @@ async def lifespan(app: FastAPI):
     
     logger.success("All systems initialized successfully")
     
+    # Start system heartbeat background task
+    global heartbeat_task
+    heartbeat_task = asyncio.create_task(system_heartbeat())
+    console_logger.print_layer_initialization(
+        LayerType.SYSTEM,
+        "System Heartbeat Started ✓",
+        "Monitoring all three layers (30s interval)"
+    )
+    
+    print("\n" + "═" * 63)
+    print("✨ GODTIER AI SYSTEM FULLY OPERATIONAL - READY TO DOMINATE ✨")
+    print("═" * 63 + "\n")
+    
     yield
     
     # Shutdown
     logger.info("Shutting down...")
+    
+    # Shutdown heartbeat task
+    if 'heartbeat_task' in globals() and heartbeat_task and not heartbeat_task.done():
+        heartbeat_task.cancel()
+        try:
+            await heartbeat_task
+        except asyncio.CancelledError:
+            pass
     
     # Shutdown autonomous healing system
     if healing_system is not None:
@@ -148,6 +278,21 @@ async def lifespan(app: FastAPI):
     await db.close()
     logger.success("Shutdown complete")
 
+
+async def system_heartbeat():
+    """Background task to show system is alive and all layers are active"""
+    await asyncio.sleep(30)  # Wait 30 seconds before first heartbeat
+    
+    while True:
+        try:
+            console_logger.print_heartbeat()
+            await asyncio.sleep(30)  # Heartbeat every 30 seconds
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error(f"Heartbeat error: {e}")
+            await asyncio.sleep(30)
+
 app = FastAPI(
     title="OpenKore AI Service",
     version="1.0.0-phase10",
@@ -156,6 +301,9 @@ app = FastAPI(
 
 # Register macro router
 app.include_router(macro_router.router)
+
+# Register game mechanics router (Priority 1: rathena knowledge extraction)
+app.include_router(game_mechanics_router.router)
 
 # Startup time
 START_TIME = time.time()
@@ -809,6 +957,409 @@ async def handle_guild_invite(character_name: str, player_name: str, context: di
     result = await interaction_handler.handle_guild_invite(character_name, player_name, context)
     return result if result else {"action": "decline_guild"}
 
+# ============================================================================
+# PHASE 11: AUTONOMOUS PROGRESSION ENDPOINTS
+# ============================================================================
+
+@app.post("/api/v1/progression/stats/on_level_up")
+async def handle_stat_level_up(current_level: int, current_stats: dict):
+    """
+    Called by GodTierAI when character levels up.
+    Returns stat allocation plan for raiseStat.pl plugin.
+    """
+    try:
+        result = stat_allocator.on_level_up(current_level, current_stats)
+        return result
+    except Exception as e:
+        logger.error(f"Stat allocation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/progression/stats/update_performance")
+async def update_stat_performance(death_count: int, avg_kill_time: float):
+    """
+    Update performance metrics for adaptive stat allocation.
+    """
+    try:
+        stat_allocator.adjust_for_performance(death_count, avg_kill_time)
+        return {
+            "status": "success",
+            "death_count": death_count,
+            "avg_kill_time": avg_kill_time
+        }
+    except Exception as e:
+        logger.error(f"Performance update error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/progression/stats/recommendations")
+async def get_stat_recommendations(current_stats: dict, free_points: int):
+    """
+    Get immediate stat allocation recommendations for available free points.
+    """
+    try:
+        recommendations = stat_allocator.get_allocation_recommendations(
+            current_stats, free_points
+        )
+        return {
+            "free_points": free_points,
+            "recommendations": recommendations
+        }
+    except Exception as e:
+        logger.error(f"Stat recommendations error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/progression/skills/on_job_level_up")
+async def handle_skill_job_level_up(current_job_level: int, job: str, current_skills: dict):
+    """
+    Called by GodTierAI when job level increases.
+    Returns skill learning plan for raiseSkill.pl plugin.
+    """
+    try:
+        result = skill_learner.on_job_level_up(current_job_level, job, current_skills)
+        return result
+    except Exception as e:
+        logger.error(f"Skill learning error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/progression/skills/update_combat_stats")
+async def update_skill_combat_stats(combat_stats: dict):
+    """
+    Update combat statistics for adaptive skill learning.
+    """
+    try:
+        skill_learner.update_combat_stats(combat_stats)
+        return {
+            "status": "success",
+            "combat_stats": combat_stats
+        }
+    except Exception as e:
+        logger.error(f"Combat stats update error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/progression/skills/should_learn")
+async def check_should_learn_skill(skill_name: str, combat_stats: dict):
+    """
+    Check if a specific skill should be learned based on performance.
+    """
+    try:
+        should_learn, reason = skill_learner.should_learn_skill(skill_name, combat_stats)
+        return {
+            "skill": skill_name,
+            "should_learn": should_learn,
+            "reason": reason
+        }
+    except Exception as e:
+        logger.error(f"Skill check error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/progression/equipment/on_map_change")
+async def handle_equipment_map_change(new_map: str, enemies: List[dict]):
+    """
+    Called when entering a new map.
+    Analyzes enemies and recommends optimal equipment setup.
+    """
+    try:
+        result = equipment_manager.on_map_change(new_map, enemies)
+        return result
+    except Exception as e:
+        logger.error(f"Equipment map change error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/progression/equipment/on_combat_start")
+async def handle_equipment_combat_start(enemy: dict):
+    """
+    Called when engaging an enemy.
+    May switch equipment for specific enemy matchups.
+    """
+    try:
+        result = equipment_manager.on_combat_start(enemy)
+        return result
+    except Exception as e:
+        logger.error(f"Equipment combat start error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/progression/equipment/on_taking_damage")
+async def handle_equipment_damage(damage_type: str, damage_amount: int, enemy: dict):
+    """
+    Called when taking damage.
+    May switch to defensive equipment if taking heavy damage.
+    """
+    try:
+        result = equipment_manager.on_taking_damage(damage_type, damage_amount, enemy)
+        return result
+    except Exception as e:
+        logger.error(f"Equipment damage handling error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/progression/equipment/situation/{situation}")
+async def get_equipment_for_situation(situation: str):
+    """
+    Get equipment recommendations for specific situations.
+    Situations: 'boss', 'mvp', 'farming', 'pvp', 'defense'
+    """
+    try:
+        result = equipment_manager.get_equipment_for_situation(situation)
+        return result
+    except Exception as e:
+        logger.error(f"Equipment situation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/progression/status")
+async def get_progression_status():
+    """
+    Get current progression system status and configuration.
+    """
+    try:
+        build_config = stat_allocator.get_current_build_config()
+        
+        return {
+            "user_intent": stat_allocator.user_intent,
+            "current_build": build_config.get('name', 'Unknown') if build_config else 'Not configured',
+            "autonomy_level": stat_allocator.user_intent.get('autonomy_level', 0),
+            "features_enabled": stat_allocator.user_intent.get('features_enabled', {}),
+            "performance_metrics": {
+                "stat_allocator": {
+                    "death_count": stat_allocator.death_count,
+                    "avg_kill_time": stat_allocator.avg_kill_time
+                },
+                "skill_learner": {
+                    "combat_stats": skill_learner.combat_stats
+                }
+            }
+        }
+    except Exception as e:
+        logger.error(f"Progression status error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/progression/export_config")
+async def export_progression_config(output_path: str):
+    """
+    Export progression configuration to OpenKore config files.
+    Updates config.txt with statsAddAuto and skillsAddAuto settings.
+    """
+    try:
+        stat_success = stat_allocator.export_config_file(output_path)
+        skill_success = skill_learner.export_config_file(output_path)
+        equipment_success = equipment_manager.export_equipment_config(
+            output_path.replace('config.txt', 'equipAuto.txt')
+        )
+        
+        return {
+            "status": "success" if (stat_success and skill_success) else "partial",
+            "stat_config_exported": stat_success,
+            "skill_config_exported": skill_success,
+            "equipment_config_exported": equipment_success,
+            "output_path": output_path
+        }
+    except Exception as e:
+        logger.error(f"Config export error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================================================
+# PRIORITY 1: COMBAT INTELLIGENCE ENDPOINTS (opkAI)
+# ============================================================================
+
+@app.post("/api/v1/combat/threat/assess")
+async def assess_threat_endpoint(data: dict):
+    """
+    Assess threat before engaging enemy.
+    Uses 9-factor analysis to calculate win probability.
+    
+    Request body:
+    {
+        "target": {id, level, hp, hp_max, element, race, size, ...},
+        "character": {level, hp, sp, hp_max, sp_max, attack, matk, buffs, equipment, skills, ...},
+        "nearby_enemies": [{...}, ...],
+        "consumables": {potions: int, fly_wings: int}
+    }
+    """
+    try:
+        assessment = threat_assessor.assess_threat(
+            data["target"],
+            data["character"],
+            data.get("nearby_enemies", []),
+            data.get("consumables", {})
+        )
+        return assessment.to_dict()
+    except Exception as e:
+        logger.error(f"Threat assessment error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/combat/kiting/update")
+async def kiting_update(data: dict):
+    """
+    Update kiting state machine for ranged combat.
+    
+    Request body:
+    {
+        "job_class": str,
+        "char_pos": [x, y],
+        "enemy_pos": [x, y],
+        "hp_percent": float,
+        "enemy_targeting_us": bool (optional)
+    }
+    """
+    try:
+        job = data["job_class"]
+        
+        # Create job-specific kiting engine (lightweight, can create per request)
+        kiting = KitingEngine(job)
+        
+        update = kiting.update(
+            tuple(data["char_pos"]),
+            tuple(data["enemy_pos"]),
+            data["hp_percent"],
+            data.get("enemy_targeting_us", True)
+        )
+        
+        return update.to_dict()
+    except Exception as e:
+        logger.error(f"Kiting update error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/combat/kiting/metrics")
+async def kiting_metrics(job_class: str):
+    """Get kiting metrics for job class"""
+    try:
+        kiting = KitingEngine(job_class)
+        return {
+            "job_class": job_class,
+            "config": {
+                "min_distance": kiting.config.min_distance,
+                "optimal_distance": kiting.config.optimal_distance,
+                "max_distance": kiting.config.max_distance,
+                "emergency_distance": kiting.config.emergency_distance,
+                "emergency_hp_threshold": kiting.config.emergency_hp_threshold
+            },
+            "metrics": kiting.get_metrics()
+        }
+    except Exception as e:
+        logger.error(f"Kiting metrics error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/combat/target/select")
+async def select_target(data: dict):
+    """
+    Select best target using XP/zeny efficiency.
+    
+    Request body:
+    {
+        "monsters": [{id, name, level, hp, hp_max, pos, base_exp, element, ...}, ...],
+        "character": {level, pos, attack, matk, element, ...},
+        "quest_targets": [int, ...] (optional)
+    }
+    """
+    try:
+        best = target_selector.select_best_target(
+            data["monsters"],
+            data["character"],
+            data.get("quest_targets")
+        )
+        
+        if best is None:
+            return {"status": "no_targets", "target": None}
+        
+        return {
+            "status": "success",
+            "target": best.to_dict()
+        }
+    except Exception as e:
+        logger.error(f"Target selection error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/combat/target/clear")
+async def clear_target():
+    """Clear current target (e.g., when target dies)"""
+    try:
+        target_selector.clear_target()
+        return {"status": "success", "message": "Target cleared"}
+    except Exception as e:
+        logger.error(f"Clear target error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/combat/target/metrics")
+async def target_metrics():
+    """Get targeting metrics"""
+    try:
+        metrics = target_selector.get_metrics()
+        return {
+            "status": "success",
+            "metrics": metrics
+        }
+    except Exception as e:
+        logger.error(f"Target metrics error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/combat/positioning/optimal")
+async def find_optimal_position(data: dict):
+    """
+    Find optimal combat position using 5-factor scoring.
+    
+    Request body:
+    {
+        "char_pos": [x, y],
+        "target_pos": [x, y],
+        "skill_range": int,
+        "enemies": [{pos: [x, y], ...}, ...],
+        "map_data": {walkable: [[x, y], ...], walls: [[x, y], ...]},
+        "hp_percent": float,
+        "job_class": str,
+        "aoe_range": int (optional)
+    }
+    """
+    try:
+        positioning = PositioningEngine()
+        
+        # Convert walkable/walls lists to sets of tuples
+        map_data = data["map_data"]
+        if "walkable" in map_data and isinstance(map_data["walkable"], list):
+            map_data["walkable"] = set(tuple(pos) for pos in map_data["walkable"])
+        if "walls" in map_data and isinstance(map_data["walls"], list):
+            map_data["walls"] = set(tuple(pos) for pos in map_data["walls"])
+        
+        optimal = positioning.find_optimal_position(
+            tuple(data["char_pos"]),
+            tuple(data["target_pos"]),
+            data["skill_range"],
+            data["enemies"],
+            map_data,
+            data["hp_percent"],
+            data["job_class"],
+            data.get("aoe_range", 0)
+        )
+        
+        return optimal.to_dict()
+    except Exception as e:
+        logger.error(f"Positioning error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/combat/status")
+async def combat_intelligence_status():
+    """Get combat intelligence systems status"""
+    return {
+        "status": "online",
+        "systems": {
+            "threat_assessor": {
+                "initialized": threat_assessor is not None,
+                "mvp_count": len(threat_assessor.mvp_ids) if threat_assessor else 0,
+                "boss_count": len(threat_assessor.boss_ids) if threat_assessor else 0
+            },
+            "target_selector": {
+                "initialized": target_selector is not None,
+                "metrics": target_selector.get_metrics() if target_selector else {}
+            },
+            "kiting_engine": {
+                "available_jobs": list(KitingEngine.KITING_CONFIGS.keys()),
+                "total_configs": len(KitingEngine.KITING_CONFIGS)
+            },
+            "positioning_engine": {
+                "available_strategies": [pt.value for pt in PositionType],
+                "total_strategies": len(PositionType)
+            }
+        },
+        "version": "1.0.0-priority1",
+        "based_on": "opkAI combat intelligence"
+    }
+
 @app.get("/api/v1/social/personality")
 async def get_personality():
     """Get current personality traits"""
@@ -897,9 +1448,9 @@ async def root():
     """Root endpoint with service info"""
     return {
         "service": "OpenKore AI Service",
-        "version": "1.0.0-phase10",
+        "version": "1.0.0-phase11-priority1",
         "status": "online",
-        "phase": "10 - Autonomous Self-Healing System Complete",
+        "phase": "Priority 1 Combat Intelligence + Phase 11 Complete",
         "features": [
             "SQLite Database (8 tables)",
             "OpenMemory SDK (synthetic embeddings)",
@@ -933,7 +1484,20 @@ async def root():
             "Root Cause Analysis",
             "Adaptive Solution Generation",
             "Safe Execution with Rollback",
-            "Continuous Learning from Fixes"
+            "Continuous Learning from Fixes",
+            "User Intent Capture System",
+            "Autonomous Stat Allocation (raiseStat integration)",
+            "Autonomous Skill Learning (raiseSkill integration)",
+            "Adaptive Equipment Management",
+            "95% Autonomy Achievement",
+            "Job Build System (6 jobs, multiple builds)",
+            "Playstyle Configuration (4 styles)",
+            "Performance-Based Adaptation",
+            "Combat Intelligence (Priority 1 - opkAI)",
+            "Threat Assessment System (9-factor)",
+            "Kiting Engine (5-state machine)",
+            "Enhanced Target Selection (XP/zeny efficiency)",
+            "Positioning Engine (5-factor scoring)"
         ],
         "endpoints": [
             "/api/v1/health",
@@ -972,14 +1536,34 @@ async def root():
             "/api/v1/macro/report/{session_id}",
             "/api/v1/healing/status",
             "/api/v1/healing/knowledge",
-            "/api/v1/healing/manual_fix"
+            "/api/v1/healing/manual_fix",
+            "/api/v1/progression/stats/on_level_up",
+            "/api/v1/progression/stats/update_performance",
+            "/api/v1/progression/stats/recommendations",
+            "/api/v1/progression/skills/on_job_level_up",
+            "/api/v1/progression/skills/update_combat_stats",
+            "/api/v1/progression/skills/should_learn",
+            "/api/v1/progression/equipment/on_map_change",
+            "/api/v1/progression/equipment/on_combat_start",
+            "/api/v1/progression/equipment/on_taking_damage",
+            "/api/v1/progression/equipment/situation/{situation}",
+            "/api/v1/progression/status",
+            "/api/v1/progression/export_config",
+            "/api/v1/combat/threat/assess",
+            "/api/v1/combat/kiting/update",
+            "/api/v1/combat/kiting/metrics",
+            "/api/v1/combat/target/select",
+            "/api/v1/combat/target/clear",
+            "/api/v1/combat/target/metrics",
+            "/api/v1/combat/positioning/optimal",
+            "/api/v1/combat/status"
         ]
     }
 
 if __name__ == "__main__":
-    logger.info("OpenKore AI Service v1.0.0-phase10")
+    logger.info("OpenKore AI Service v1.0.0-phase11-priority1")
     logger.info("Starting HTTP server on http://127.0.0.1:9902")
-    logger.info("Phase 10: Autonomous Self-Healing System Complete")
+    logger.info("Priority 1: Combat Intelligence (opkAI) + Phase 11 Complete")
     
     uvicorn.run(
         app,

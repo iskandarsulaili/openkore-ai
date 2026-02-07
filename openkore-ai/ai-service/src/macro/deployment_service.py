@@ -8,6 +8,7 @@ import logging
 from typing import Dict, List, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
+from utils.console_logger import console_logger, LayerType
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +65,12 @@ class MacroDeploymentService:
             
             logger.debug(f"Injecting macro '{macro.name}' with priority {macro.priority}")
             
+            # Log deployment attempt to console
+            print(f"\n⚡ [DEPLOYMENT] Deploying to OpenKore...")
+            print(f"   └─ Macro: {macro.name}")
+            print(f"   └─ Priority: {macro.priority}")
+            print(f"   └─ Target: EventMacro Engine")
+            
             response = await self.client.post(
                 f"{self.openkore_url}/macro/inject",
                 json=payload
@@ -86,10 +93,23 @@ class MacroDeploymentService:
                 f"(latency: {result['injection_time_ms']}ms)"
             )
             
+            # Log successful deployment to console
+            console_logger.log_macro_deployment(
+                macro_name=macro.name,
+                deployment_status=f"✓ Deployed Successfully ({result['injection_time_ms']}ms)"
+            )
+            
             return result
             
         except httpx.HTTPStatusError as e:
             logger.error(f"✗ Macro injection failed: {e.response.status_code} - {e.response.text}")
+            
+            # Log deployment failure to console
+            console_logger.log_macro_deployment(
+                macro_name=macro.name,
+                deployment_status=f"✗ Deployment Failed (HTTP {e.response.status_code})"
+            )
+            
             self._injection_history.append({
                 'macro_name': macro.name,
                 'timestamp': datetime.now().isoformat(),
@@ -137,6 +157,13 @@ class MacroDeploymentService:
             f"{len(results['failed'])} failed "
             f"({results['total_time_ms']}ms total)"
         )
+        
+        # Log batch deployment to console
+        if len(macros) > 1:
+            print(f"\n⚡ [DEPLOYMENT] Batch Deployment Complete")
+            print(f"   └─ Successful: {len(results['successful'])}")
+            print(f"   └─ Failed: {len(results['failed'])}")
+            print(f"   └─ Total Time: {results['total_time_ms']}ms")
         
         return results
     

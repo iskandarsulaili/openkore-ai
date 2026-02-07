@@ -10,6 +10,7 @@ from crewai import Agent, Task, Crew
 from pydantic import BaseModel, Field
 from llm.provider_chain import llm_chain
 from .reference_loader import MacroReferenceLoader
+from utils.console_logger import console_logger, LayerType
 
 logger = logging.getLogger(__name__)
 
@@ -332,6 +333,12 @@ macro skill_rotation_sequence {{
         """
         logger.info(f"Generating macro of type: {strategic_intent.get('macro_type')}")
         
+        # Log macro generation start to console
+        print(f"\n🧠 [CONSCIOUS] Macro Generation Started")
+        print(f"   └─ Type: {strategic_intent.get('macro_type', 'farming')}")
+        print(f"   └─ Priority: {strategic_intent.get('priority', 50)}")
+        print(f"   └─ Reason: {strategic_intent.get('reason', 'Strategic requirement')}")
+        
         macro_type = strategic_intent.get('macro_type', 'farming')
         parameters = strategic_intent.get('parameters', {})
         priority = strategic_intent.get('priority', 50)
@@ -356,9 +363,12 @@ macro skill_rotation_sequence {{
         
         if not validation['valid']:
             logger.warning(f"Generated macro has validation errors: {validation['errors']}")
+            print(f"   └─ ⚠️  Validation errors detected, attempting auto-fix...")
             # Attempt automatic fixes
             macro_text = self._attempt_fixes(macro_text, validation['errors'])
             validation = self.validate_syntax_tool(macro_text)
+            if validation['valid']:
+                print(f"   └─ ✓ Auto-fix successful!")
         
         result = GeneratedMacro(
             macro_text=macro_text,
@@ -374,6 +384,22 @@ macro skill_rotation_sequence {{
         logger.info(
             f"✓ Generated macro '{macro_name}' "
             f"({'VALID' if validation['valid'] else 'INVALID'})"
+        )
+        
+        # Count triggers and actions in the generated macro
+        trigger_count = len(re.findall(r'^\s*(hp|sp|weight|monster|aggressives|map)', macro_text, re.MULTILINE))
+        action_count = len(re.findall(r'^\s*(do|log|pause|call)', macro_text, re.MULTILINE))
+        
+        # Log macro generation completion to console
+        console_logger.log_macro_generation(
+            macro_name=macro_name,
+            macro_type=macro_type,
+            generation_details={
+                'trigger_count': trigger_count,
+                'action_count': action_count,
+                'status': 'Generated' if validation['valid'] else 'Generated (with warnings)',
+                'validation_passed': validation['valid']
+            }
         )
         
         return result

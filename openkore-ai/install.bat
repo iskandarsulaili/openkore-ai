@@ -362,24 +362,422 @@ echo ========================================================================
 echo   API Key Configuration
 echo ========================================================================
 echo.
-echo Please enter your OpenAI API key (or press Enter to skip):
-set /p "API_KEY="
+echo Please enter your DeepSeek API key (or press Enter to skip):
+echo (Get your key from: https://platform.deepseek.com/)
+set /p "API_KEY=DeepSeek API Key: "
 
 if not "!API_KEY!"=="" (
     echo [INFO] Configuring API key...
     echo [INFO] Configuring API key... >> "%LOG_FILE%"
     
-    :: Save API key to config file
-    if exist "%SCRIPT_DIR%\ai-service\config.py" (
-        powershell -NoProfile -Command ^
-            "$content = Get-Content '%SCRIPT_DIR%\ai-service\config.py' -Raw; " ^
-            "$content = $content -replace 'OPENAI_API_KEY = .*', 'OPENAI_API_KEY = ''!API_KEY!'''; " ^
-            "$content | Set-Content '%SCRIPT_DIR%\ai-service\config.py'"
-        echo [SUCCESS] API key configured
+    :: Create ai-service directory if it doesn't exist
+    if not exist "%SCRIPT_DIR%\ai-service" mkdir "%SCRIPT_DIR%\ai-service"
+    
+    :: Save API key to .env file
+    echo DEEPSEEK_API_KEY=!API_KEY!> "%SCRIPT_DIR%\ai-service\.env"
+    if !errorlevel! equ 0 (
+        echo [SUCCESS] API key configured in ai-service\.env
+        echo [SUCCESS] API key configured in ai-service\.env >> "%LOG_FILE%"
     ) else (
-        echo [WARNING] Config file not found, skipping API key configuration
+        echo [WARNING] Failed to create .env file
+        echo [WARNING] Failed to create .env file >> "%LOG_FILE%"
     )
 )
+
+:: ============================================================================
+:: USER INTENT WIZARD - Character Build Configuration
+:: ============================================================================
+
+echo.
+echo ========================================================================
+echo   Character Build Configuration Wizard
+echo ========================================================================
+echo.
+echo This wizard will configure your autonomous bot for optimal performance.
+echo Your choices will enable 95%% autonomy with automatic stat allocation,
+echo skill learning, and equipment management.
+echo.
+pause
+
+:: JOB PATH SELECTION
+:job_selection
+cls
+echo.
+echo ========================================================================
+echo   Step 1: Select Your Job Path
+echo ========================================================================
+echo.
+echo Which job path do you want to follow?
+echo.
+echo   1. Swordsman ^> Knight ^> Lord Knight (Tank/Melee DPS)
+echo   2. Mage ^> Wizard ^> High Wizard (Magic DPS)
+echo   3. Archer ^> Hunter ^> Sniper (Ranged Physical DPS)
+echo   4. Acolyte ^> Priest ^> High Priest (Support/Healer)
+echo   5. Thief ^> Assassin ^> Assassin Cross (Burst DPS)
+echo   6. Merchant ^> Blacksmith ^> Whitesmith (Tank/Utility)
+echo.
+set /p "JOB_CHOICE=Enter your choice (1-6): "
+
+if "%JOB_CHOICE%"=="1" (
+    set "JOB_PATH=Swordsman"
+    set "JOB_PATH_FULL=Novice,Swordsman,Knight,Lord Knight"
+    goto build_selection_swordsman
+)
+if "%JOB_CHOICE%"=="2" (
+    set "JOB_PATH=Mage"
+    set "JOB_PATH_FULL=Novice,Mage,Wizard,High Wizard"
+    goto build_selection_mage
+)
+if "%JOB_CHOICE%"=="3" (
+    set "JOB_PATH=Archer"
+    set "JOB_PATH_FULL=Novice,Archer,Hunter,Sniper"
+    goto build_selection_archer
+)
+if "%JOB_CHOICE%"=="4" (
+    set "JOB_PATH=Acolyte"
+    set "JOB_PATH_FULL=Novice,Acolyte,Priest,High Priest"
+    goto build_selection_acolyte
+)
+if "%JOB_CHOICE%"=="5" (
+    set "JOB_PATH=Thief"
+    set "JOB_PATH_FULL=Novice,Thief,Assassin,Assassin Cross"
+    goto build_selection_thief
+)
+if "%JOB_CHOICE%"=="6" (
+    set "JOB_PATH=Merchant"
+    set "JOB_PATH_FULL=Novice,Merchant,Blacksmith,Whitesmith"
+    goto build_selection_merchant
+)
+echo [ERROR] Invalid choice. Please try again.
+timeout /t 2 /nobreak >nul
+goto job_selection
+
+:: BUILD SELECTION - SWORDSMAN
+:build_selection_swordsman
+cls
+echo.
+echo ========================================================================
+echo   Step 2: Select Your Swordsman Build
+echo ========================================================================
+echo.
+echo   1. AGI Knight (High ASPD, Dodge) - Fast attacks, evasion tank
+echo   2. VIT Knight (Tank) - Maximum HP and defense, pure tanking
+echo   3. STR Knight (Pure DPS) - Maximum damage output, glass cannon
+echo.
+set /p "BUILD_CHOICE=Enter your choice (1-3): "
+
+if "%BUILD_CHOICE%"=="1" (
+    set "BUILD_TYPE=agi_knight"
+    set "BUILD_NAME=AGI Knight"
+    set "STAT_PRIORITY=AGI,STR,VIT,DEX"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="2" (
+    set "BUILD_TYPE=vit_knight"
+    set "BUILD_NAME=VIT Knight"
+    set "STAT_PRIORITY=VIT,STR,DEX,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="3" (
+    set "BUILD_TYPE=str_knight"
+    set "BUILD_NAME=STR Knight"
+    set "STAT_PRIORITY=STR,DEX,AGI,VIT"
+    goto playstyle_selection
+)
+echo [ERROR] Invalid choice. Please try again.
+timeout /t 2 /nobreak >nul
+goto build_selection_swordsman
+
+:: BUILD SELECTION - MAGE
+:build_selection_mage
+cls
+echo.
+echo ========================================================================
+echo   Step 2: Select Your Mage Build
+echo ========================================================================
+echo.
+echo   1. Magic DPS (High Wizard) - Pure magic damage, glass cannon
+echo.
+set /p "BUILD_CHOICE=Enter your choice (1): "
+
+if "%BUILD_CHOICE%"=="1" (
+    set "BUILD_TYPE=magic_dps"
+    set "BUILD_NAME=High Wizard"
+    set "STAT_PRIORITY=INT,DEX,VIT,AGI"
+    goto playstyle_selection
+)
+echo [ERROR] Invalid choice. Please try again.
+timeout /t 2 /nobreak >nul
+goto build_selection_mage
+
+:: BUILD SELECTION - ARCHER
+:build_selection_archer
+cls
+echo.
+echo ========================================================================
+echo   Step 2: Select Your Archer Build
+echo ========================================================================
+echo.
+echo   1. DEX Hunter (Sniper) - High damage ranged physical DPS
+echo.
+set /p "BUILD_CHOICE=Enter your choice (1): "
+
+if "%BUILD_CHOICE%"=="1" (
+    set "BUILD_TYPE=dex_hunter"
+    set "BUILD_NAME=Sniper"
+    set "STAT_PRIORITY=DEX,AGI,STR,VIT"
+    goto playstyle_selection
+)
+echo [ERROR] Invalid choice. Please try again.
+timeout /t 2 /nobreak >nul
+goto build_selection_archer
+
+:: BUILD SELECTION - ACOLYTE
+:build_selection_acolyte
+cls
+echo.
+echo ========================================================================
+echo   Step 2: Select Your Acolyte Build
+echo ========================================================================
+echo.
+echo   1. Support Priest (High Priest) - Party support and healing
+echo.
+set /p "BUILD_CHOICE=Enter your choice (1): "
+
+if "%BUILD_CHOICE%"=="1" (
+    set "BUILD_TYPE=support_priest"
+    set "BUILD_NAME=High Priest"
+    set "STAT_PRIORITY=INT,VIT,DEX,AGI"
+    goto playstyle_selection
+)
+echo [ERROR] Invalid choice. Please try again.
+timeout /t 2 /nobreak >nul
+goto build_selection_acolyte
+
+:: BUILD SELECTION - THIEF
+:build_selection_thief
+cls
+echo.
+echo ========================================================================
+echo   Step 2: Select Your Thief Build
+echo ========================================================================
+echo.
+echo   1. Critical Assassin (Assassin Cross) - Crit specialist, burst DPS
+echo.
+set /p "BUILD_CHOICE=Enter your choice (1): "
+
+if "%BUILD_CHOICE%"=="1" (
+    set "BUILD_TYPE=crit_assassin"
+    set "BUILD_NAME=Assassin Cross"
+    set "STAT_PRIORITY=LUK,AGI,STR,DEX"
+    goto playstyle_selection
+)
+echo [ERROR] Invalid choice. Please try again.
+timeout /t 2 /nobreak >nul
+goto build_selection_thief
+
+:: BUILD SELECTION - MERCHANT
+:build_selection_merchant
+cls
+echo.
+echo ========================================================================
+echo   Step 2: Select Your Merchant Build
+echo ========================================================================
+echo.
+echo   1. Tank Blacksmith (Whitesmith) - High HP, utility support
+echo.
+set /p "BUILD_CHOICE=Enter your choice (1): "
+
+if "%BUILD_CHOICE%"=="1" (
+    set "BUILD_TYPE=tank_blacksmith"
+    set "BUILD_NAME=Whitesmith"
+    set "STAT_PRIORITY=VIT,STR,DEX,AGI"
+    goto playstyle_selection
+)
+echo [ERROR] Invalid choice. Please try again.
+timeout /t 2 /nobreak >nul
+goto build_selection_merchant
+
+:: PLAYSTYLE SELECTION
+:playstyle_selection
+cls
+echo.
+echo ========================================================================
+echo   Step 3: Select Your Playstyle
+echo ========================================================================
+echo.
+echo   1. Aggressive (Kill fast, risk death) - High damage, low defense
+echo   2. Balanced (Medium risk, medium reward) - Recommended for most
+echo   3. Safe (Never die, slower leveling) - Maximum survival focus
+echo   4. Efficient (Optimal XP/hour) - Calculated risk management
+echo.
+set /p "PLAYSTYLE_CHOICE=Enter your choice (1-4): "
+
+if "%PLAYSTYLE_CHOICE%"=="1" (
+    set "PLAYSTYLE=aggressive"
+    set "PLAYSTYLE_NAME=Aggressive"
+    set "HP_THRESHOLD=20"
+    set "HEAL_THRESHOLD=40"
+    goto save_user_intent
+)
+if "%PLAYSTYLE_CHOICE%"=="2" (
+    set "PLAYSTYLE=balanced"
+    set "PLAYSTYLE_NAME=Balanced"
+    set "HP_THRESHOLD=35"
+    set "HEAL_THRESHOLD=50"
+    goto save_user_intent
+)
+if "%PLAYSTYLE_CHOICE%"=="3" (
+    set "PLAYSTYLE=safe"
+    set "PLAYSTYLE_NAME=Safe"
+    set "HP_THRESHOLD=50"
+    set "HEAL_THRESHOLD=70"
+    goto save_user_intent
+)
+if "%PLAYSTYLE_CHOICE%"=="4" (
+    set "PLAYSTYLE=efficient"
+    set "PLAYSTYLE_NAME=Efficient"
+    set "HP_THRESHOLD=40"
+    set "HEAL_THRESHOLD=60"
+    goto save_user_intent
+)
+echo [ERROR] Invalid choice. Please try again.
+timeout /t 2 /nobreak >nul
+goto playstyle_selection
+
+:: SAVE USER INTENT
+:save_user_intent
+cls
+echo.
+echo ========================================================================
+echo   Configuration Summary
+echo ========================================================================
+echo.
+echo Job Path: %JOB_PATH_FULL%
+echo Build: %BUILD_NAME%
+echo Playstyle: %PLAYSTYLE_NAME%
+echo.
+echo [INFO] Saving configuration...
+echo [INFO] Saving configuration... >> "%LOG_FILE%"
+
+:: Create ai-service\data directory if it doesn't exist
+if not exist "%SCRIPT_DIR%\ai-service\data" mkdir "%SCRIPT_DIR%\ai-service\data"
+
+:: Generate user_intent.json using PowerShell
+powershell -NoProfile -Command ^
+    "$json = @{" ^
+    "    job_path = @('%JOB_PATH_FULL%'.Split(','));" ^
+    "    current_job = 'novice';" ^
+    "    build = '%BUILD_TYPE%';" ^
+    "    build_name = '%BUILD_NAME%';" ^
+    "    stat_priority = '%STAT_PRIORITY%';" ^
+    "    playstyle = '%PLAYSTYLE%';" ^
+    "    playstyle_config = @{" ^
+    "        teleport_hp_threshold = [decimal]0.%HP_THRESHOLD%;" ^
+    "        heal_threshold = [decimal]0.%HEAL_THRESHOLD%;" ^
+    "        aggressive_range = 5;" ^
+    "        risk_tolerance = '%PLAYSTYLE%'" ^
+    "    };" ^
+    "    autonomy_level = 95;" ^
+    "    features_enabled = @{" ^
+    "        auto_stat_allocation = $true;" ^
+    "        auto_skill_learning = $true;" ^
+    "        adaptive_equipment = $true;" ^
+    "        autonomous_healing = $true" ^
+    "    }" ^
+    "};" ^
+    "$json | ConvertTo-Json -Depth 10 | Out-File -FilePath '%SCRIPT_DIR%\ai-service\data\user_intent.json' -Encoding UTF8"
+
+if !errorlevel! equ 0 (
+    echo [SUCCESS] Configuration saved to ai-service\data\user_intent.json
+    echo [SUCCESS] Configuration saved >> "%LOG_FILE%"
+) else (
+    echo [WARNING] Failed to save configuration
+    echo [WARNING] Failed to save configuration >> "%LOG_FILE%"
+)
+
+echo.
+echo [SUCCESS] Character configuration saved!
+echo.
+
+:: ============================================================================
+:: STEP 6: AUTO-CONFIGURE OPENKORE BOT
+:: ============================================================================
+
+echo.
+echo ========================================================================
+echo   STEP 6: Auto-Configuring OpenKore Bot
+echo ========================================================================
+echo.
+
+echo [INFO] Applying configuration to OpenKore config.txt...
+echo [INFO] Applying configuration to OpenKore config.txt... >> "%LOG_FILE%"
+
+REM Set absolute paths to avoid context issues
+set "OPENKORE_ROOT=%SCRIPT_DIR%"
+set "AI_SERVICE_ROOT=%OPENKORE_ROOT%\ai-service"
+set "TOOLS_PATH=%AI_SERVICE_ROOT%\tools"
+set "CONFIG_PATH=%OPENKORE_ROOT%\control\config.txt"
+set "INTENT_PATH=%AI_SERVICE_ROOT%\data\user_intent.json"
+
+REM Activate venv and run auto-configure from correct directory
+cd /d "%AI_SERVICE_ROOT%"
+if exist "venv\Scripts\activate.bat" (
+    call venv\Scripts\activate.bat
+    python "%TOOLS_PATH%\auto_configure.py" "%CONFIG_PATH%" "%INTENT_PATH%"
+    set AUTO_CONFIG_RESULT=!errorlevel!
+    deactivate
+) else (
+    "%PYTHON_CMD%" "%TOOLS_PATH%\auto_configure.py" "%CONFIG_PATH%" "%INTENT_PATH%"
+    set AUTO_CONFIG_RESULT=!errorlevel!
+)
+
+cd /d "%OPENKORE_ROOT%"
+
+if !AUTO_CONFIG_RESULT! neq 0 (
+    echo [WARNING] Auto-configuration encountered issues
+    echo [WARNING] Auto-configuration encountered issues >> "%LOG_FILE%"
+    echo [WARNING] You may need to configure config.txt manually
+    echo.
+) else (
+    echo [SUCCESS] Config.txt auto-configured successfully!
+    echo [SUCCESS] Config.txt auto-configured successfully! >> "%LOG_FILE%"
+)
+
+:: ============================================================================
+:: AUTONOMOUS ITEM PURCHASING CONFIGURED
+:: ============================================================================
+
+echo.
+echo ========================================================================
+echo   ✅ Autonomous Item Purchasing Enabled
+echo ========================================================================
+echo.
+echo   Your bot is configured for FULL AUTONOMY:
+echo.
+echo   🤖 AUTOMATIC ITEM PURCHASING:
+echo   • Bot will auto-buy Red Potions (healing)
+echo   • Bot will auto-buy Fly Wings (emergency teleport)
+echo   • No manual item purchasing needed!
+echo.
+echo   💰 Initial Zeny Requirement:
+echo   • Your character needs ~20,000 zeny to start buying items
+echo   • If you have less: Bot will farm first, then buy items automatically
+echo   • If you have more: Bot starts buying items immediately
+echo.
+echo   📍 NPC Location: Prontera Tool Shop (152, 29)
+echo   • Bot knows where to go automatically
+echo   • Bot will walk there when items run low
+echo.
+echo   ✅ 95%% AUTONOMOUS OPERATION:
+echo   1. Farm monsters for zeny and exp
+echo   2. Auto-buy healing items when low
+echo   3. Auto-heal when HP drops
+echo   4. Emergency teleport when in danger
+echo   5. Return to farming automatically
+echo.
+echo ========================================================================
+echo.
 
 :: ============================================================================
 :: COMPLETE
@@ -387,7 +785,7 @@ if not "!API_KEY!"=="" (
 
 echo.
 echo ========================================================================
-echo   Installation Complete!
+echo   ✅ Installation Complete!
 echo ========================================================================
 echo.
 echo [SUCCESS] Installation completed successfully
@@ -397,13 +795,33 @@ echo Installed components:
 echo   - Python: %PYTHON_VERSION%
 echo   - Perl: %PERL_VERSION%
 echo   - PyTorch: GPU Support = !HAS_GPU!
+echo   - Character Build: %BUILD_NAME% (%PLAYSTYLE_NAME%)
+echo   - Bot Configuration: Auto-applied to config.txt
 echo.
 echo Log file: %LOG_FILE%
 echo.
-echo Next steps:
-echo   1. Configure your settings in ai-service\config.py
-echo   2. Start OpenKore with your desired interface
-echo   3. The AI service will start automatically
+echo ========================================================================
+echo   ⚡ NEXT STEPS (IN ORDER):
+echo ========================================================================
+echo.
+echo   1. ✅ API Key: Configured automatically during installation
+echo      • If you skipped API key entry, you can add it manually to ai-service\.env
+echo      • Format: DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxx
+echo.
+echo   2. 💰 Optional - Give Character Zeny:
+echo      • If your character has ^<20k zeny, consider giving some zeny
+echo      • Bot can farm first, but 20k+ zeny allows immediate item buying
+echo      • Bot will AUTO-BUY items - no manual purchasing needed!
+echo.
+echo   3. 🚀 Start the system:
+echo      • Run: start.bat
+echo      • AI Engine will start first (port 9901)
+echo      • AI Service will start second (port 9902)
+echo      • OpenKore will start last
+echo.
+echo ========================================================================
+echo   ✅ FULL AUTONOMY ACHIEVED - Let the bot do its job!
+echo ========================================================================
 echo.
 
 pause

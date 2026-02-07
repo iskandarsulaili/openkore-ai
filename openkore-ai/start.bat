@@ -20,7 +20,7 @@ set "LOGS_DIR=%SCRIPT_DIR%\logs"
 set "SECRET_FILE=%SCRIPT_DIR%\..\secret.txt"
 
 :: Process configuration
-set "AI_ENGINE_EXE=%AI_ENGINE_DIR%\build\Release\ai-engine.exe"
+set "AI_ENGINE_EXE=%SCRIPT_DIR%\ai-engine.exe"
 set "AI_SERVICE_MAIN=%AI_SERVICE_DIR%\src\main.py"
 
 :: Port configuration
@@ -32,8 +32,8 @@ set "AI_ENGINE_PID="
 set "AI_SERVICE_PID="
 
 :: Health check configuration
-set "ENGINE_RETRY_COUNT=3"
-set "SERVICE_RETRY_COUNT=10"
+set "ENGINE_RETRY_COUNT=10"
+set "SERVICE_RETRY_COUNT=15"
 set "RETRY_DELAY=2"
 set "ENGINE_START_DELAY=5"
 set "SERVICE_START_DELAY=30"
@@ -213,35 +213,19 @@ if not exist "%SCRIPT_DIR%\openkore.pl" (
 
 call :log_success "OpenKore script found"
 
-:: Check if ports are available
+:: Check if ports are available (informational only)
 call :log_info "Checking port availability..."
 
 netstat -ano | findstr ":%AI_ENGINE_PORT%" >nul 2>&1
 if !errorlevel! equ 0 (
-    call :log_warning "Port %AI_ENGINE_PORT% is already in use"
-    echo.
-    echo Port %AI_ENGINE_PORT% ^(AI Engine^) is already in use.
-    echo Do you want to continue anyway? ^(Y/N^)
-    set /p "CONTINUE=Continue? "
-    if /i "!CONTINUE!" neq "Y" (
-        call :log_info "Startup cancelled by user"
-        goto :cleanup_exit
-    )
+    call :log_warning "Port %AI_ENGINE_PORT% is currently in use (will be cleaned up)"
 ) else (
     call :log_success "Port %AI_ENGINE_PORT% is available"
 )
 
 netstat -ano | findstr ":%AI_SERVICE_PORT%" >nul 2>&1
 if !errorlevel! equ 0 (
-    call :log_warning "Port %AI_SERVICE_PORT% is already in use"
-    echo.
-    echo Port %AI_SERVICE_PORT% ^(AI Service^) is already in use.
-    echo Do you want to continue anyway? ^(Y/N^)
-    set /p "CONTINUE=Continue? "
-    if /i "!CONTINUE!" neq "Y" (
-        call :log_info "Startup cancelled by user"
-        goto :cleanup_exit
-    )
+    call :log_warning "Port %AI_SERVICE_PORT% is currently in use (will be cleaned up)"
 ) else (
     call :log_success "Port %AI_SERVICE_PORT% is available"
 )
@@ -258,16 +242,60 @@ echo.
 if /i "%~1"=="child" goto :start_services
 
 :: ============================================================================
+:: CLEANUP: Terminate zombie processes from previous runs
+:: ============================================================================
+
+call :log_step "5" "Cleanup"
+call :log_info "Terminating any existing AI processes..."
+echo.
+
+:: Kill all ai-engine.exe instances
+taskkill /F /IM ai-engine.exe >nul 2>&1
+if !errorlevel! equ 0 (
+    call :log_warning "Terminated existing ai-engine.exe processes"
+) else (
+    call :log_info "No existing ai-engine.exe processes found"
+)
+
+:: Kill processes using port 9901
+set "PORT_9901_KILLED=0"
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":9901.*LISTENING" 2^>nul') do (
+    call :log_warning "Killing process on port 9901 (PID: %%a)"
+    taskkill /F /PID %%a >nul 2>&1
+    set "PORT_9901_KILLED=1"
+)
+if !PORT_9901_KILLED! equ 0 (
+    call :log_info "Port 9901 is not in use"
+)
+
+:: Kill processes using port 9902
+set "PORT_9902_KILLED=0"
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":9902.*LISTENING" 2^>nul') do (
+    call :log_warning "Killing process on port 9902 (PID: %%a)"
+    taskkill /F /PID %%a >nul 2>&1
+    set "PORT_9902_KILLED=1"
+)
+if !PORT_9902_KILLED! equ 0 (
+    call :log_info "Port 9902 is not in use"
+)
+
+:: Wait for ports to release
+ping 127.0.0.1 -n 3 > nul 2>&1
+
+call :log_success "Cleanup complete - all previous instances terminated"
+echo.
+
+:: ============================================================================
 :: START SERVICES
 :: ============================================================================
 
 :start_services
 
-call :log_step "Starting AI Engine (Port %AI_ENGINE_PORT%)..."
+call :log_step "6" "Starting AI Engine (Port %AI_ENGINE_PORT%)..."
 echo.
 
-:: Start C++ AI Engine in NEW WINDOW
-call :log_info "Launching ai-engine.exe in separate window..."
+:: Start C++ AI Engine in NEW WINDOW using verified executable path
+call :log_info "Launching ai-engine.exe in separate window from %SCRIPT_DIR%..."
 start "AI Engine (Port %AI_ENGINE_PORT%)" cmd /k "%AI_ENGINE_EXE%"
 
 :: Get the PID of ai-engine.exe
@@ -306,7 +334,7 @@ if !errorlevel! neq 0 (
 )
 
 echo.
-call :log_step "Starting AI Service (Port %AI_SERVICE_PORT%)..."
+call :log_step "7" "Starting AI Service (Port %AI_SERVICE_PORT%)..."
 echo.
 
 :: Start Python AI Service in NEW WINDOW
@@ -374,7 +402,7 @@ pause >nul
 :: ============================================================================
 
 echo.
-call :log_step "Launching OpenKore..."
+call :log_step "8" "Launching OpenKore..."
 echo.
 
 :: Check for Perl
@@ -421,7 +449,7 @@ goto :cleanup_exit
 :: ============================================================================
 
 :health_check_engine
-set "HEALTH_URL=http://127.0.0.1:%AI_ENGINE_PORT%/health"
+set "HEALTH_URL=http://127.0.0.1:%AI_ENGINE_PORT%/api/v1/health"
 set "RETRY=0"
 
 :engine_health_retry

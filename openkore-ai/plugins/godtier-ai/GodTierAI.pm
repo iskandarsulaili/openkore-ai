@@ -18,6 +18,12 @@ my $ai_service_url = "http://127.0.0.1:9902";
 my $ua = LWP::UserAgent->new(timeout => 30);
 my $request_counter = 0;
 
+# Hot reload configuration monitoring
+my $config_file_path = "control/config.txt";
+my $last_config_mtime = 0;
+my $config_check_interval = 5;  # Check every 5 seconds
+my $last_config_check = 0;
+
 sub on_unload {
     Plugins::delHooks($hooks);
     message "[GodTierAI] Unloaded\n", "success";
@@ -36,14 +42,60 @@ sub on_load {
         ['packet/party_invite', \&on_party_invite, undef],
         ['packet/party_chat', \&on_party_chat, undef],
         ['packet/guild_chat', \&on_guild_chat, undef],
+        ['base_level', \&on_base_level_up, undef],
+        ['job_level', \&on_job_level_up, undef],
+        ['packet/stat_info', \&on_stat_info, undef],
+        ['packet/skill_update', \&on_skill_update, undef],
     );
 
-    message "[GodTierAI] Loaded successfully (Phase 8 - Social Integration)\n", "success";
+    message "[GodTierAI] Loaded successfully (Phase 11 - Autonomous Progression)\n", "success";
     message "[GodTierAI] AI Engine URL: $ai_engine_url\n", "info";
     message "[GodTierAI] AI Service URL: $ai_service_url\n", "info";
+    message "[GodTierAI] Progression Features: Auto Stats, Auto Skills, Adaptive Equipment\n", "info";
+    
+    # Initialize hot reload monitoring
+    initialize_hot_reload();
     
     # Check AI Service connectivity
     check_ai_service_connectivity();
+}
+
+# Initialize hot reload monitoring for config.txt
+sub initialize_hot_reload {
+    if (-e $config_file_path) {
+        $last_config_mtime = (stat($config_file_path))[9];
+        message "[GodTierAI] 🔄 Hot reload monitoring enabled for config.txt\n", "info";
+        message "[GodTierAI] 💓 Self-healing can modify config without disconnecting\n", "info";
+    } else {
+        warning "[GodTierAI] ⚠ Config file not found at: $config_file_path\n";
+    }
+}
+
+# Check if config.txt has been modified and reload if needed
+sub check_config_reload {
+    my $current_time = time();
+    
+    # Only check every N seconds to avoid excessive disk I/O
+    return if ($current_time - $last_config_check < $config_check_interval);
+    $last_config_check = $current_time;
+    
+    # Check if config file exists and get modification time
+    return unless (-e $config_file_path);
+    my $current_mtime = (stat($config_file_path))[9];
+    
+    # If modified, trigger hot reload
+    if ($current_mtime > $last_config_mtime) {
+        message "[GodTierAI] 🔄 Config change detected, hot reloading...\n", "success";
+        message "[GodTierAI] 💓 Self-healing or Conscious layer updated configuration\n", "info";
+        
+        # Execute OpenKore's built-in reload command
+        Commands::run("reload config");
+        
+        # Update last modification time
+        $last_config_mtime = $current_mtime;
+        
+        message "[GodTierAI] ✅ Config hot reloaded successfully (no disconnect)\n", "success";
+    }
 }
 
 # Check if AI Service is reachable
@@ -411,6 +463,9 @@ sub on_ai_pre {
     return unless $net && $net->getState() == Network::IN_GAME;
     return unless $char && defined $char->{pos_to};
     
+    # Check for config changes and hot reload if needed (self-healing capability)
+    check_config_reload();
+    
     # Only query AI every 2 seconds to avoid spam
     state $last_query_time = 0;
     my $current_time = time();
@@ -431,7 +486,184 @@ sub on_ai_pre {
 
 # Map change hook
 sub on_map_change {
+    my (undef, $args) = @_;
     message "[GodTierAI] Map changed, resetting state\n", "info";
+    
+    # Notify equipment manager about map change
+    notify_equipment_map_change($field->name()) if $field;
+}
+
+# ============================================================================
+# PHASE 11: AUTONOMOUS PROGRESSION EVENT HANDLERS
+# ============================================================================
+
+# Base level up handler
+sub on_base_level_up {
+    my (undef, $args) = @_;
+    return unless $char;
+    
+    my $new_level = $char->{lv};
+    message "[GodTierAI] Level UP! New level: $new_level\n", "success";
+    
+    # Collect current stats
+    my %current_stats = (
+        str => $char->{str} || 1,
+        agi => $char->{agi} || 1,
+        vit => $char->{vit} || 1,
+        int => $char->{int} || 1,
+        dex => $char->{dex} || 1,
+        luk => $char->{luk} || 1
+    );
+    
+    # Request stat allocation from AI Service
+    eval {
+        my %request = (
+            current_level => $new_level,
+            current_stats => \%current_stats
+        );
+        
+        my $json_request = encode_json(\%request);
+        my $response = $ua->post(
+            "$ai_service_url/api/v1/progression/stats/on_level_up",
+            Content_Type => 'application/json',
+            Content => $json_request
+        );
+        
+        if ($response->is_success) {
+            my $data = decode_json($response->decoded_content);
+            
+            if ($data->{config} && $data->{config}{statsAddAuto_list}) {
+                message "[GodTierAI] Stat allocation plan: $data->{config}{statsAddAuto_list}\n", "info";
+                
+                # Update config for raiseStat plugin
+                configModify('statsAddAuto', 1);
+                configModify('statsAddAuto_list', $data->{config}{statsAddAuto_list});
+                
+                message "[GodTierAI] Auto-stat allocation enabled\n", "success";
+            }
+        } else {
+            warning "[GodTierAI] Failed to get stat allocation: " . $response->status_line . "\n";
+        }
+    };
+    if ($@) {
+        warning "[GodTierAI] Stat allocation error: $@\n";
+    }
+}
+
+# Job level up handler
+sub on_job_level_up {
+    my (undef, $args) = @_;
+    return unless $char;
+    
+    my $new_job_level = $char->{lv_job};
+    my $job_class = $jobs_lut{$char->{jobId}} || 'Unknown';
+    message "[GodTierAI] Job Level UP! New job level: $new_job_level ($job_class)\n", "success";
+    
+    # Collect current skills
+    my %current_skills = ();
+    foreach my $skill_handle (keys %{$char->{skills}}) {
+        my $skill = $char->{skills}{$skill_handle};
+        $current_skills{$skill_handle} = $skill->{lv} || 0 if $skill;
+    }
+    
+    # Request skill learning from AI Service
+    eval {
+        my %request = (
+            current_job_level => $new_job_level,
+            job => lc($job_class),
+            current_skills => \%current_skills
+        );
+        
+        my $json_request = encode_json(\%request);
+        my $response = $ua->post(
+            "$ai_service_url/api/v1/progression/skills/on_job_level_up",
+            Content_Type => 'application/json',
+            Content => $json_request
+        );
+        
+        if ($response->is_success) {
+            my $data = decode_json($response->decoded_content);
+            
+            if ($data->{config} && $data->{config}{skillsAddAuto_list}) {
+                message "[GodTierAI] Skill learning plan: $data->{config}{skillsAddAuto_list}\n", "info";
+                
+                # Update config for raiseSkill plugin
+                configModify('skillsAddAuto', 1);
+                configModify('skillsAddAuto_list', $data->{config}{skillsAddAuto_list});
+                
+                message "[GodTierAI] Auto-skill learning enabled\n", "success";
+            }
+        } else {
+            warning "[GodTierAI] Failed to get skill learning: " . $response->status_line . "\n";
+        }
+    };
+    if ($@) {
+        warning "[GodTierAI] Skill learning error: $@\n";
+    }
+}
+
+# Stat info update handler (for tracking)
+sub on_stat_info {
+    my (undef, $args) = @_;
+    return unless $char;
+    
+    # Track stats for performance monitoring
+    # This is called frequently, so we only log important changes
+}
+
+# Skill update handler (for tracking)
+sub on_skill_update {
+    my (undef, $args) = @_;
+    return unless $char;
+    
+    # Track skill updates for adaptive learning
+}
+
+# Notify equipment manager about map change
+sub notify_equipment_map_change {
+    my ($map_name) = @_;
+    return unless $map_name;
+    
+    # Collect enemies in current map
+    my @enemies = ();
+    foreach my $monster (@{$monstersList->getItems()}) {
+        next unless $monster;
+        push @enemies, {
+            name => $monster->{name} || 'Unknown',
+            element => 'neutral',  # Would need monster database lookup
+            race => 'unknown',      # Would need monster database lookup
+            size => 'medium'        # Would need monster database lookup
+        };
+        last if scalar(@enemies) >= 10;  # Sample first 10
+    }
+    
+    eval {
+        my %request = (
+            new_map => $map_name,
+            enemies => \@enemies
+        );
+        
+        my $json_request = encode_json(\%request);
+        my $response = $ua->post(
+            "$ai_service_url/api/v1/progression/equipment/on_map_change",
+            Content_Type => 'application/json',
+            Content => $json_request
+        );
+        
+        if ($response->is_success) {
+            my $data = decode_json($response->decoded_content);
+            
+            if ($data->{commands}) {
+                debug "[GodTierAI] Equipment recommendations for $map_name:\n", "ai";
+                foreach my $cmd (@{$data->{commands}}) {
+                    debug "[GodTierAI]   - $cmd\n", "ai";
+                }
+            }
+        }
+    };
+    if ($@) {
+        debug "[GodTierAI] Equipment notification error: $@\n", "ai";
+    }
 }
 
 1;

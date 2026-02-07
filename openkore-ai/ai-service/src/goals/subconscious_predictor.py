@@ -8,8 +8,10 @@ Response time: 100-500ms
 from typing import Dict, List, Optional, Any
 import logging
 import numpy as np
+import time
 
 from .goal_model import TemporalGoal, ContingencyPlan, PlanType
+from utils.console_logger import console_logger, LayerType
 
 logger = logging.getLogger(__name__)
 
@@ -54,11 +56,15 @@ class SubconsciousGoalPredictor:
         
         logger.debug(f"Subconscious prediction for: {goal.name}")
         
+        start_time = time.time()
+        
         # Extract features
         features = self._extract_features(goal, game_state)
         
         # Make prediction
         prediction = self._predict_with_ml(features, goal.goal_type)
+        
+        response_time_ms = int((time.time() - start_time) * 1000)
         
         if prediction['confidence'] < self.confidence_threshold:
             logger.debug(f"Confidence {prediction['confidence']:.2f} below threshold {self.confidence_threshold}")
@@ -72,6 +78,17 @@ class SubconsciousGoalPredictor:
         execution_plan['fallbacks'] = fallbacks
         
         logger.info(f"Subconscious prediction: {prediction['confidence']:.2f} confidence")
+        
+        # Log ML prediction to console
+        console_logger.log_subconscious_prediction(
+            pattern_type=f"{goal.goal_type.title()} Pattern",
+            prediction={
+                'action': execution_plan['plan']['strategy'],
+                'response_time_ms': response_time_ms,
+                'success_probability': prediction.get('success_probability', 0.75)
+            },
+            confidence=prediction['confidence']
+        )
         
         return execution_plan
     
@@ -99,6 +116,10 @@ class SubconsciousGoalPredictor:
         
         if primary['confidence'] < self.confidence_threshold:
             logger.debug("Primary confidence low - querying historical successes")
+            print(f"\n🔮 [SUBCONSCIOUS] Low Confidence - Querying History")
+            print(f"   └─ Confidence: {primary['confidence']:.2f} < {self.confidence_threshold}")
+            print(f"   └─ Action: Searching learned patterns from past successes")
+            
             fallbacks = self._query_historical_successes(
                 goal_type=goal.goal_type,
                 game_state=game_state,
@@ -313,6 +334,16 @@ class SubconsciousGoalPredictor:
         """
         
         logger.info(f"Learning from execution: {goal.id} - {result.get('status')}")
+        
+        # Log learning to console
+        status = result.get('status')
+        if status == 'success':
+            print(f"\n🔮 [SUBCONSCIOUS] Learning from Success")
+        else:
+            print(f"\n🔮 [SUBCONSCIOUS] Learning from Failure")
+        print(f"   └─ Goal: {goal.name}")
+        print(f"   └─ Outcome: {status}")
+        print(f"   └─ Updating ML Model...")
         
         # Extract features and outcome
         features = self._extract_features(goal, game_state)

@@ -10,6 +10,7 @@ import logging
 from datetime import datetime
 
 from .goal_model import TemporalGoal, ContingencyPlan, PlanType
+from utils.console_logger import console_logger, LayerType
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,12 @@ class ConsciousGoalPlanner:
         
         logger.info(f"Conscious planning for goal: {goal.name}")
         
+        # Log to console - Conscious layer is thinking
+        print(f"\n🧠 [CONSCIOUS] Analyzing Goal: {goal.name}")
+        print(f"   └─ Type: {goal.goal_type}")
+        print(f"   └─ Priority: {goal.priority.name}")
+        print(f"   └─ Strategy Mode: Multi-agent CrewAI")
+        
         start_time = datetime.now()
         
         try:
@@ -72,6 +79,19 @@ class ConsciousGoalPlanner:
             execution_time = (datetime.now() - start_time).total_seconds()
             
             logger.info(f"Conscious planning complete in {execution_time:.2f}s")
+            
+            # Log strategic decision to console
+            console_logger.log_conscious_decision(
+                decision_type="Strategic Goal Planning",
+                details={
+                    'goal': goal.name,
+                    'strategy': primary_strategy.get('strategy', 'N/A'),
+                    'macros_generated': len(contingencies),
+                    'execution_time': f"{execution_time:.2f}s",
+                    'risks_identified': len(risks)
+                },
+                confidence=self._calculate_plan_confidence(validated_plan)
+            )
             
             return {
                 'primary_plan': validated_plan['primary'],
@@ -108,6 +128,12 @@ class ConsciousGoalPlanner:
         
         logger.info(f"Generating contingency plans for: {goal.name}")
         
+        print(f"\n🧠 [CONSCIOUS] Generating Contingency Plans")
+        print(f"   └─ Primary Plan: Optimal strategy")
+        print(f"   └─ Plan B: Alternative approach")
+        print(f"   └─ Plan C: Conservative fallback")
+        print(f"   └─ Plan D: Emergency abort")
+        
         contingencies = []
         
         # Plan B: Alternative Approach
@@ -123,6 +149,8 @@ class ConsciousGoalPlanner:
         contingencies.append(plan_d)
         
         logger.info(f"Generated {len(contingencies)} contingency plans")
+        
+        print(f"   └─ ✓ Generated {len(contingencies)} contingency plans")
         
         return contingencies
     

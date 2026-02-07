@@ -5,11 +5,13 @@ Real-time prediction of macro needs before conscious layer invocation
 
 import logging
 import numpy as np
+import time
 from typing import Dict, Optional
 from pydantic import BaseModel, Field
 
 from .model import MacroPredictionModel
 from .data_collector import DataCollector
+from utils.console_logger import console_logger, LayerType
 
 logger = logging.getLogger(__name__)
 
@@ -77,12 +79,16 @@ class MacroPredictor:
             logger.debug("Model not trained, skipping prediction")
             return None
         
+        start_time = time.time()
+        
         # Extract features from game state
         features = self._extract_features(game_state)
         feature_vector = np.array(features).reshape(1, -1)
         
         # Predict
         predicted_type, confidence = self.model.predict(feature_vector)
+        
+        response_time_ms = int((time.time() - start_time) * 1000)
         
         self._prediction_count += 1
         
@@ -117,6 +123,17 @@ class MacroPredictor:
         logger.info(
             f"✓ ML prediction: {macro_type_name} "
             f"(confidence: {confidence:.2%})"
+        )
+        
+        # Log ML prediction to console
+        console_logger.log_subconscious_prediction(
+            pattern_type=f"Macro Need: {macro_type_name.title()}",
+            prediction={
+                'action': f"Pre-generated {macro_type_name} macro",
+                'response_time_ms': response_time_ms,
+                'macro_ready': True
+            },
+            confidence=confidence
         )
         
         return prediction

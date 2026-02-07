@@ -52,3 +52,4 @@ Desktop.ini
 *.sqlite3
 data/openkore-ai.db-wal
 data/openkore-ai.db-shm
+openkore-ai/ai-service/.env
