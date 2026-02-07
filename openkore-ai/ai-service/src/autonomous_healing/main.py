@@ -10,11 +10,24 @@ from pathlib import Path
 from typing import Optional
 import logging
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
+import time
 
+# CRITICAL: Add parent directory to sys.path BEFORE any local imports
+# This allows the script to work when src/main.py is run directly
+parent_dir = Path(__file__).parent.parent
+if str(parent_dir) not in sys.path:
+    sys.path.insert(0, str(parent_dir))
+
+# Now safe to import third-party and local modules
 from crewai import Crew, Process
 import yaml
 
-from .agents import (
+from llm.provider_chain import LLMProviderChain
+from utils.config_resolver import get_recvpackets_path, get_table_file_path
+
+# Use absolute imports instead of relative imports to avoid "attempted relative import beyond top-level package" errors
+from autonomous_healing.agents import (
     create_monitor_agent,
     create_analysis_agent,
     create_solution_agent,
@@ -22,10 +35,10 @@ from .agents import (
     create_execution_agent,
     create_learning_agent
 )
-from .core.log_monitor import LogMonitor
-from .core.issue_detector import IssueDetector
-from .core.knowledge_base import KnowledgeBase
-from .tasks import (
+from autonomous_healing.core.log_monitor import LogMonitor
+from autonomous_healing.core.issue_detector import IssueDetector
+from autonomous_healing.core.knowledge_base import KnowledgeBase
+from autonomous_healing.tasks import (
     create_monitoring_task,
     create_analysis_task,
     create_solution_task,
@@ -43,6 +56,7 @@ class AutonomousHealingSystem:
     
     def __init__(self, config_path: str = "src/autonomous_healing/config.yaml"):
         self.config_path = Path(config_path)
+        self.logger = None  # Will be set after config is loaded
         self.config = self._load_config()
         self.logger = self._setup_logging()
         
@@ -56,6 +70,9 @@ class AutonomousHealingSystem:
         self.agents = {}
         self.running = False
         
+        # Thread pool executor for running synchronous crew.kickoff() in async context
+        self.executor = ThreadPoolExecutor(max_workers=1)
+        
         self.logger.info("Autonomous Healing System initialized")
     
     def _load_config(self) -> dict:
@@ -64,7 +81,38 @@ class AutonomousHealingSystem:
             raise FileNotFoundError(f"Config not found: {self.config_path}")
         
         with open(self.config_path, 'r', encoding='utf-8') as f:
-            return yaml.safe_load(f)
+            config = yaml.safe_load(f)
+        
+        # Dynamically resolve recvpackets path if set to "dynamic"
+        if 'analysis' in config and 'context_files' in config['analysis']:
+            context_files = config['analysis']['context_files']
+            
+            if context_files.get('recvpackets') == 'dynamic':
+                # Resolve recvpackets path based on servers.txt and current server
+                resolved_path = get_recvpackets_path()
+                if resolved_path:
+                    context_files['recvpackets'] = resolved_path
+                    if self.logger:
+                        self.logger.info(f"Dynamically resolved recvpackets path: {resolved_path}")
+                else:
+                    if self.logger:
+                        self.logger.warning("Failed to resolve recvpackets path dynamically, using fallback")
+                    context_files['recvpackets'] = "../tables/recvpackets.txt"
+            
+            # Optionally resolve other table files dynamically as well
+            for file_key in ['monsters', 'npcs', 'maps']:
+                if file_key in context_files:
+                    current_path = context_files[file_key]
+                    # Only resolve if it's a relative path starting with ../tables/
+                    if current_path.startswith('../tables/') and '/' in current_path[len('../tables/'):]:
+                        filename = Path(current_path).name
+                        resolved_path = get_table_file_path(filename)
+                        if resolved_path:
+                            context_files[file_key] = resolved_path
+                            if self.logger:
+                                self.logger.info(f"Dynamically resolved {file_key}: {resolved_path}")
+        
+        return config
     
     def _setup_logging(self) -> logging.Logger:
         """Configure logging system"""
@@ -98,41 +146,53 @@ class AutonomousHealingSystem:
         """Initialize all CrewAI agents"""
         self.logger.info("Initializing CrewAI agents...")
         
+        # Initialize LLM provider chain (DeepSeek with failover)
+        self.logger.info("Initializing LLM provider chain...")
+        llm_chain = LLMProviderChain()
+        llm = llm_chain.get_crewai_llm()
+        self.logger.info("LLM provider initialized successfully")
+        
         agent_configs = self.config['crewai']['agents']
         
-        # Create agents
+        # Create agents with DeepSeek LLM
         self.agents['monitor'] = create_monitor_agent(
             agent_configs['monitor'],
             self.log_monitor,
-            self.issue_detector
+            self.issue_detector,
+            llm
         )
         
         self.agents['analyzer'] = create_analysis_agent(
             agent_configs['analyzer'],
-            self.config['analysis']
+            self.config['analysis'],
+            llm
         )
         
         self.agents['solver'] = create_solution_agent(
             agent_configs['solver'],
             self.knowledge_base,
-            self.config['solution']
+            self.config['solution'],
+            llm
         )
         
         self.agents['validator'] = create_validation_agent(
-            agent_configs['validator']
+            agent_configs['validator'],
+            llm
         )
         
         self.agents['executor'] = create_execution_agent(
             agent_configs['executor'],
-            self.config['execution']
+            self.config['execution'],
+            llm
         )
         
         self.agents['learner'] = create_learning_agent(
             agent_configs['learner'],
-            self.knowledge_base
+            self.knowledge_base,
+            llm
         )
         
-        self.logger.info(f"Initialized {len(self.agents)} agents")
+        self.logger.info(f"Initialized {len(self.agents)} agents with DeepSeek LLM")
     
     def _create_crew(self):
         """Create CrewAI crew with all agents and tasks"""
@@ -148,13 +208,18 @@ class AutonomousHealingSystem:
             create_learning_task(self.agents['learner'])
         ]
         
+        # Get LLM instance for manager (reuse the same LLM we created for agents)
+        from llm.provider_chain import LLMProviderChain
+        llm_chain = LLMProviderChain()
+        manager_llm = llm_chain.get_crewai_llm()
+        
         # Create crew with hierarchical process
         self.crew = Crew(
             agents=list(self.agents.values()),
             tasks=tasks,
             process=Process.hierarchical,  # Manager coordinates agents
             verbose=True,
-            manager_llm=self.config['crewai']['model']
+            manager_llm=manager_llm  # Use LLM instance, not string
         )
         
         self.logger.info("CrewAI crew created successfully")
@@ -189,17 +254,55 @@ class AutonomousHealingSystem:
         """Main healing loop - continuously monitor and heal"""
         poll_interval = self.config['monitoring']['poll_interval_seconds']
         
+        self.logger.info(f"Starting healing loop (poll interval: {poll_interval}s)")
+        
+        cycle_count = 0
         while self.running:
             try:
-                # Monitor for new issues
-                issues = await self.log_monitor.check_for_issues()
+                cycle_count += 1
+                self.logger.debug(f"Monitoring cycle {cycle_count}")
                 
-                if issues:
-                    self.logger.info(f"Detected {len(issues)} issue(s)")
+                # Scan log files for issues
+                log_issues = await self.log_monitor.check_for_issues()
+                
+                # Also scan config.txt periodically for configuration issues
+                config_path = Path(self.config['analysis']['context_files']['config'])
+                config_issues = []
+                if config_path.exists():
+                    config_issues = self.issue_detector.scan_config_file(str(config_path))
                     
-                    # Process each issue through CrewAI
-                    for issue in issues:
-                        await self._process_issue(issue)
+                    if config_issues:
+                        self.logger.warning(f"Found {len(config_issues)} configuration issues")
+                        for cfg_issue in config_issues:
+                            self.logger.warning(f"  - {cfg_issue['type']}: {cfg_issue['description']}")
+                        
+                        # CRITICAL FIX: Process config issues through CrewAI!
+                        for cfg_issue in config_issues:
+                            await self._process_issue(cfg_issue)
+                
+                # Process log issues
+                if log_issues:
+                    self.logger.info(f"Detected {len(log_issues)} log-based issue(s)")
+                    
+                    # Detect issues from log lines
+                    for log_issue in log_issues:
+                        detected = self.issue_detector.scan_lines(log_issue['new_lines'])
+                        
+                        if detected:
+                            self.logger.info(f"Parsed {len(detected)} specific issues from logs")
+                            
+                            # Log CRITICAL issues prominently
+                            critical_issues = [i for i in detected if i.get('severity') == 'CRITICAL']
+                            if critical_issues:
+                                self.logger.critical("="*60)
+                                self.logger.critical("CRITICAL ISSUES DETECTED (Phase 31)")
+                                for ci in critical_issues:
+                                    self.logger.critical(f"  {ci['type']}: {ci.get('description', ci.get('line_content', 'No description'))}")
+                                self.logger.critical("="*60)
+                            
+                            # Process each detected issue
+                            for issue in detected:
+                                await self._process_issue(issue)
                 
                 # Wait before next check
                 await asyncio.sleep(poll_interval)
@@ -210,7 +313,24 @@ class AutonomousHealingSystem:
     
     async def _process_issue(self, issue: dict):
         """Process a single issue through the CrewAI workflow"""
-        self.logger.info(f"Processing issue: {issue['type']}")
+        issue_type = issue.get('type', 'unknown')
+        severity = issue.get('severity', 'UNKNOWN')
+        
+        self.logger.info("="*60)
+        self.logger.info(f"PROCESSING ISSUE: {issue_type} (Severity: {severity})")
+        self.logger.info("="*60)
+        
+        # Console output for user visibility
+        print("\n" + "="*60)
+        print("🔧 Autonomous Healing: Processing issue...")
+        print(f"   Issue: {issue_type} (Severity: {severity})")
+        print("="*60)
+        
+        # Log issue details
+        if 'description' in issue:
+            self.logger.info(f"Description: {issue['description']}")
+        if 'confidence' in issue:
+            self.logger.info(f"Detection confidence: {issue['confidence']:.2%}")
         
         try:
             # Create context for this specific issue
@@ -218,19 +338,85 @@ class AutonomousHealingSystem:
                 'issue': issue,
                 'timestamp': datetime.now().isoformat(),
                 'openkore_base': str(Path(__file__).parent.parent.parent.parent),
-                'config': self.config
+                'config': self.config,
+                'character_context': {
+                    'level': 6,  # TODO: Extract from logs
+                    'class': 'Novice'  # TODO: Extract from logs
+                }
             }
             
-            # Run CrewAI crew to analyze and fix
-            result = self.crew.kickoff(inputs=context)
+            # Progress logging
+            self.logger.info("🔄 Phase 1/6: Monitor agent analyzing issue...")
+            self.logger.info(f"📋 Processing: {issue_type}")
+            self.logger.info("⏳ This may take 1-3 minutes for multi-agent collaboration...")
+            self.logger.info("🤖 CrewAI agents: Monitor → Analyzer → Solver → Validator → Executor → Learner")
             
-            self.logger.info(f"Issue processed: {result}")
+            # Console output for user visibility
+            print("   ⏳ Please wait 1-3 minutes for AI agents to collaborate...")
+            print("   🤖 AI Agents working...")
+            
+            # Start time tracking
+            start_time = time.time()
+            
+            try:
+                # Run CrewAI crew to analyze and fix (in thread pool to avoid blocking)
+                # crew.kickoff() is SYNCHRONOUS, so we run it in executor
+                loop = asyncio.get_event_loop()
+                
+                # Add timeout protection (300 seconds = 5 minutes)
+                result = await asyncio.wait_for(
+                    loop.run_in_executor(
+                        self.executor,
+                        self.crew.kickoff,
+                        context
+                    ),
+                    timeout=300
+                )
+                
+                # Calculate duration
+                duration = time.time() - start_time
+                self.logger.info(f"⏱️ Completed in {duration:.1f} seconds")
+                
+                # Console output for completion
+                print(f"   ✅ Completed in {duration:.1f}s")
+                
+                # Log result
+                if result.get('success'):
+                    self.logger.info(f"✅ Issue resolved: {issue_type}")
+                    print(f"   ✓ Issue resolved: {issue_type}")
+                    if 'solution' in result:
+                        self.logger.info(f"Solution applied: {result['solution'].get('action', 'N/A')}")
+                        solution_action = result['solution'].get('action', 'N/A')
+                        if solution_action != 'N/A':
+                            print(f"   💾 Solution: {solution_action}")
+                else:
+                    self.logger.warning(f"✗ Issue resolution failed: {issue_type}")
+                    print(f"   ⚠️ Issue resolution incomplete: {issue_type}")
+                    if 'error' in result:
+                        self.logger.error(f"Error: {result['error']}")
+                        
+            except asyncio.TimeoutError:
+                duration = time.time() - start_time
+                self.logger.error(f"⚠️ CrewAI workflow timeout ({duration:.1f}s / 300s max)")
+                self.logger.error(f"Issue may require manual intervention: {issue_type}")
+                
+                # Console output for timeout
+                print(f"   ⏰ Timeout after {duration:.0f}s - Issue may need manual review")
+                print(f"   ℹ️ Check logs for details: {self.config['logging']['file']}")
+                
+                self.logger.info("="*60)
+                print("="*60)
+                return  # Skip to next issue (exit method)
+            
+            self.logger.info("="*60)
+            print("="*60 + "\n")
             
             # Learn from the outcome
             await self._learn_from_result(issue, result)
             
         except Exception as e:
             self.logger.error(f"Failed to process issue: {e}", exc_info=True)
+            self.logger.info("="*60)
     
     async def _learn_from_result(self, issue: dict, result: dict):
         """Update knowledge base based on fix result"""
@@ -253,6 +439,10 @@ class AutonomousHealingSystem:
         """Gracefully shutdown the system"""
         self.logger.info("Shutting down autonomous healing system...")
         self.running = False
+        
+        # Shutdown executor
+        if hasattr(self, 'executor'):
+            self.executor.shutdown(wait=True)
         
         # Close knowledge base
         if hasattr(self, 'knowledge_base'):

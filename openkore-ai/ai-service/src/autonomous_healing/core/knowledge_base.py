@@ -169,6 +169,51 @@ class KnowledgeBase:
         
         return patterns
     
+    async def get_statistics(self) -> Dict[str, Any]:
+        """Get knowledge base statistics"""
+        cursor = self.conn.cursor()
+        
+        # Total fixes
+        cursor.execute("SELECT COUNT(*) as total FROM fixes")
+        total_fixes = cursor.fetchone()['total']
+        
+        # Success rate
+        cursor.execute("SELECT AVG(CAST(success AS FLOAT)) as success_rate FROM fixes")
+        success_rate = cursor.fetchone()['success_rate'] or 0.0
+        
+        # Most common issues
+        cursor.execute("""
+            SELECT issue_type, COUNT(*) as count
+            FROM fixes
+            GROUP BY issue_type
+            ORDER BY count DESC
+            LIMIT 5
+        """)
+        common_issues = [
+            {'issue_type': row['issue_type'], 'count': row['count']}
+            for row in cursor.fetchall()
+        ]
+        
+        # Recent fixes (last 24 hours)
+        cursor.execute("""
+            SELECT COUNT(*) as count
+            FROM fixes
+            WHERE datetime(timestamp) >= datetime('now', '-1 day')
+        """)
+        recent_fixes = cursor.fetchone()['count']
+        
+        # Average confidence
+        cursor.execute("SELECT AVG(confidence) as avg_conf FROM fixes WHERE success = 1")
+        avg_confidence = cursor.fetchone()['avg_conf'] or 0.0
+        
+        return {
+            'total_fixes': total_fixes,
+            'success_rate': round(success_rate * 100, 2),
+            'recent_fixes_24h': recent_fixes,
+            'average_confidence': round(avg_confidence, 2),
+            'common_issues': common_issues
+        }
+    
     async def close(self):
         """Close database connection"""
         if self.conn:

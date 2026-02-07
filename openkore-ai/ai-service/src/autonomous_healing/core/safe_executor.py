@@ -3,7 +3,7 @@
 from pathlib import Path
 import shutil
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 
 class SafeExecutor:

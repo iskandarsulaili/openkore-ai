@@ -23,20 +23,48 @@ sub on_unload {
     message "[GodTierAI] Unloaded\n", "success";
 }
 
-# Initialize plugin
-$hooks = Plugins::addHooks(
-    ['AI_pre', \&on_ai_pre, undef],
-    ['packet_mapChange', \&on_map_change, undef],
-    ['packet/private_message', \&on_private_message, undef],
-    ['packet/public_chat', \&on_public_chat, undef],
-    ['packet/party_invite', \&on_party_invite, undef],
-    ['packet/party_chat', \&on_party_chat, undef],
-    ['packet/guild_chat', \&on_guild_chat, undef],
-);
+# Plugin initialization function - called explicitly by OpenKore
+sub on_load {
+    message "[GodTierAI] Initializing plugin...\n", "info";
+    
+    # Initialize plugin hooks
+    $hooks = Plugins::addHooks(
+        ['AI_pre', \&on_ai_pre, undef],
+        ['packet_mapChange', \&on_map_change, undef],
+        ['packet/private_message', \&on_private_message, undef],
+        ['packet/public_chat', \&on_public_chat, undef],
+        ['packet/party_invite', \&on_party_invite, undef],
+        ['packet/party_chat', \&on_party_chat, undef],
+        ['packet/guild_chat', \&on_guild_chat, undef],
+    );
 
-message "[GodTierAI] Loaded successfully (Phase 8 - Social Integration)\n", "success";
-message "[GodTierAI] AI Engine URL: $ai_engine_url\n", "info";
-message "[GodTierAI] AI Service URL: $ai_service_url\n", "info";
+    message "[GodTierAI] Loaded successfully (Phase 8 - Social Integration)\n", "success";
+    message "[GodTierAI] AI Engine URL: $ai_engine_url\n", "info";
+    message "[GodTierAI] AI Service URL: $ai_service_url\n", "info";
+    
+    # Check AI Service connectivity
+    check_ai_service_connectivity();
+}
+
+# Check if AI Service is reachable
+sub check_ai_service_connectivity {
+    eval {
+        my $response = $ua->get("$ai_service_url/health");
+        if ($response->is_success) {
+            message "[GodTierAI] ✓ AI Service is online and healthy\n", "success";
+        } else {
+            warning "[GodTierAI] ⚠ AI Service is not responding (HTTP " . $response->code . ")\n";
+            warning "[GodTierAI] ⚠ Conscious and Subconscious layers will be offline\n";
+        }
+    };
+    if ($@) {
+        warning "[GodTierAI] ⚠ Cannot connect to AI Service at $ai_service_url\n";
+        warning "[GodTierAI] ⚠ Error: $@\n";
+    }
+}
+
+# Call initialization
+on_load();
 
 # Check if AI Engine is available
 sub check_engine_health {

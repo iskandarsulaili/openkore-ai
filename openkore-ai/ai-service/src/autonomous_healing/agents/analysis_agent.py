@@ -4,14 +4,20 @@ Correlates errors with configuration files to identify true causes
 """
 
 from crewai import Agent
-from crewai_tools import BaseTool, FileReadTool
+from crewai.tools import BaseTool
 from typing import Dict, List, Any, Optional
 from pathlib import Path
 import re
+from pydantic import ConfigDict
 
 
 class ConfigurationAnalysisTool(BaseTool):
     """Tool for analyzing OpenKore configuration files"""
+    
+    model_config = ConfigDict(
+        extra='allow',
+        arbitrary_types_allowed=True
+    )
     
     name: str = "config_analyzer"
     description: str = "Analyze OpenKore config.txt for issues like empty lockMap, invalid NPCs, wrong coordinates"
@@ -91,6 +97,11 @@ class ConfigurationAnalysisTool(BaseTool):
 class NPCDatabaseValidationTool(BaseTool):
     """Tool for validating NPC coordinates against database"""
     
+    model_config = ConfigDict(
+        extra='allow',
+        arbitrary_types_allowed=True
+    )
+    
     name: str = "npc_validator"
     description: str = "Validate NPC coordinates in config against actual NPC database (npcs.txt)"
     
@@ -155,13 +166,14 @@ class AnalysisAgent:
     pass
 
 
-def create_analysis_agent(config: Dict, analysis_config: Dict) -> Agent:
+def create_analysis_agent(config: Dict, analysis_config: Dict, llm) -> Agent:
     """
     Create the Analysis Agent for root cause identification
     
     Args:
         config: Agent configuration
         analysis_config: Analysis-specific configuration
+        llm: LLM instance (DeepSeek via provider chain)
         
     Returns:
         Configured CrewAI Agent
@@ -170,11 +182,10 @@ def create_analysis_agent(config: Dict, analysis_config: Dict) -> Agent:
     # Create tools
     tools = [
         ConfigurationAnalysisTool(analysis_config=analysis_config),
-        NPCDatabaseValidationTool(),
-        FileReadTool()  # Generic file reading
+        NPCDatabaseValidationTool()
     ]
     
-    # Create agent
+    # Create agent with DeepSeek LLM
     agent = Agent(
         role=config['role'],
         goal=config['goal'],
@@ -183,7 +194,8 @@ def create_analysis_agent(config: Dict, analysis_config: Dict) -> Agent:
         verbose=config.get('verbose', True),
         allow_delegation=True,  # Can delegate to other agents
         max_iter=20,
-        memory=True
+        memory=True,
+        llm=llm  # Use DeepSeek LLM
     )
     
     return agent

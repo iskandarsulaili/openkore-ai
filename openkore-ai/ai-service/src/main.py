@@ -1,7 +1,7 @@
 """
-OpenKore AI Service - Python HTTP Server (Phase 8 Complete)
+OpenKore AI Service - Python HTTP Server (Phase 10 Complete)
 Port: 9902
-Provides: LLM integration, Memory system, Database access, CrewAI agents, ML Pipeline, Game Lifecycle Autonomy, Social Interaction System
+Provides: LLM integration, Memory system, Database access, CrewAI agents, ML Pipeline, Game Lifecycle Autonomy, Social Interaction System, Autonomous Self-Healing
 """
 
 import warnings
@@ -26,6 +26,8 @@ from typing import List, Dict, Optional, Any
 import uvicorn
 import time
 import os
+import asyncio
+from pathlib import Path
 from loguru import logger
 from contextlib import asynccontextmanager
 
@@ -57,6 +59,9 @@ from social import interaction_handler as int_handler_module
 # Import Phase 9 Macro Management components
 from macro.coordinator import MacroManagementCoordinator
 from routers import macro_router
+
+# Import Phase 10 Autonomous Self-Healing components
+from autonomous_healing import AutonomousHealingSystem
 
 # Lifespan context manager for startup/shutdown
 @asynccontextmanager
@@ -104,18 +109,48 @@ async def lifespan(app: FastAPI):
     macro_router.set_coordinator(macro_coordinator)
     logger.info("Three-Layer Adaptive Macro System initialized")
     
+    # Initialize autonomous self-healing system (Phase 10)
+    global healing_system, healing_task
+    try:
+        # Use Path(__file__).parent to construct path relative to main.py location
+        config_path = Path(__file__).parent / "autonomous_healing" / "config.yaml"
+        healing_system = AutonomousHealingSystem(config_path=str(config_path))
+        # Start healing system as background task
+        healing_task = asyncio.create_task(healing_system.start())
+        logger.info("Autonomous Self-Healing System initialized and running in background")
+    except Exception as e:
+        logger.warning(f"Autonomous Self-Healing System initialization failed (non-critical): {e}")
+        healing_system = None
+        healing_task = None
+    
     logger.success("All systems initialized successfully")
     
     yield
     
     # Shutdown
     logger.info("Shutting down...")
+    
+    # Shutdown autonomous healing system
+    if healing_system is not None:
+        logger.info("Stopping Autonomous Self-Healing System...")
+        try:
+            await healing_system.stop()
+            if healing_task and not healing_task.done():
+                healing_task.cancel()
+                try:
+                    await healing_task
+                except asyncio.CancelledError:
+                    pass
+            logger.info("Autonomous Self-Healing System stopped")
+        except Exception as e:
+            logger.error(f"Error stopping healing system: {e}")
+    
     await db.close()
     logger.success("Shutdown complete")
 
 app = FastAPI(
     title="OpenKore AI Service",
-    version="1.0.0-phase9",
+    version="1.0.0-phase10",
     lifespan=lifespan
 )
 
@@ -174,11 +209,16 @@ async def health_check():
             "crewai": True
         },
         "uptime_seconds": uptime_seconds,
-        "version": "1.0.0-phase8",
+        "version": "1.0.0-phase10",
         "ml": {
             "cold_start_phase": cold_start_manager.current_phase if cold_start_manager.start_date else 0,
             "model_trained": cold_start_manager.model_trained,
             "training_samples": cold_start_manager.training_samples_collected
+        },
+        "autonomous_healing": {
+            "enabled": healing_system is not None,
+            "running": healing_system.running if healing_system else False,
+            "agents_active": len(healing_system.agents) if healing_system else 0
         }
     }
 
@@ -778,14 +818,88 @@ async def get_personality():
         "emoji_usage_rate": personality_engine.get_emoji_usage_rate()
     }
 
+@app.get("/api/v1/healing/status")
+async def healing_status():
+    """Get autonomous healing system status"""
+    if healing_system is None:
+        return {
+            "enabled": False,
+            "status": "not_initialized",
+            "message": "Autonomous healing system is not available"
+        }
+    
+    return {
+        "enabled": True,
+        "running": healing_system.running,
+        "agents": {
+            "monitor": healing_system.agents.get('monitor') is not None,
+            "analyzer": healing_system.agents.get('analyzer') is not None,
+            "solver": healing_system.agents.get('solver') is not None,
+            "validator": healing_system.agents.get('validator') is not None,
+            "executor": healing_system.agents.get('executor') is not None,
+            "learner": healing_system.agents.get('learner') is not None
+        },
+        "agents_count": len(healing_system.agents),
+        "config": {
+            "monitoring_enabled": healing_system.config['monitoring']['enabled'],
+            "poll_interval": healing_system.config['monitoring']['poll_interval_seconds'],
+            "execution_enabled": healing_system.config['execution']['enabled'],
+            "safe_mode": healing_system.config['execution']['safe_mode'],
+            "learning_enabled": healing_system.config['learning']['enabled']
+        }
+    }
+
+@app.get("/api/v1/healing/knowledge")
+async def healing_knowledge():
+    """Get knowledge base statistics"""
+    if healing_system is None or not hasattr(healing_system, 'knowledge_base'):
+        raise HTTPException(status_code=503, detail="Healing system not available")
+    
+    try:
+        stats = await healing_system.knowledge_base.get_statistics()
+        return stats
+    except Exception as e:
+        logger.error(f"Failed to get knowledge base stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/healing/manual_fix")
+async def trigger_manual_fix(issue_type: str, issue_description: str):
+    """Manually trigger healing system to fix a specific issue"""
+    if healing_system is None:
+        raise HTTPException(status_code=503, detail="Healing system not available")
+    
+    if not healing_system.running:
+        raise HTTPException(status_code=503, detail="Healing system is not running")
+    
+    try:
+        # Create manual issue
+        issue = {
+            'type': issue_type,
+            'description': issue_description,
+            'severity': 'MANUAL',
+            'timestamp': time.time()
+        }
+        
+        # Process through healing system
+        await healing_system._process_issue(issue)
+        
+        return {
+            "status": "success",
+            "message": f"Manual fix triggered for {issue_type}",
+            "issue": issue
+        }
+    except Exception as e:
+        logger.error(f"Manual fix failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/")
 async def root():
     """Root endpoint with service info"""
     return {
         "service": "OpenKore AI Service",
-        "version": "1.0.0-phase9",
+        "version": "1.0.0-phase10",
         "status": "online",
-        "phase": "9 - Three-Layer Adaptive Macro System Complete",
+        "phase": "10 - Autonomous Self-Healing System Complete",
         "features": [
             "SQLite Database (8 tables)",
             "OpenMemory SDK (synthetic embeddings)",
@@ -812,7 +926,14 @@ async def root():
             "Three-Layer Adaptive Macro System",
             "MacroHotReload Integration",
             "ML-Based Macro Prediction",
-            "CrewAI Macro Generation"
+            "CrewAI Macro Generation",
+            "Autonomous Self-Healing System (6 agents)",
+            "Real-time Log Monitoring",
+            "Intelligent Issue Detection",
+            "Root Cause Analysis",
+            "Adaptive Solution Generation",
+            "Safe Execution with Rollback",
+            "Continuous Learning from Fixes"
         ],
         "endpoints": [
             "/api/v1/health",
@@ -848,14 +969,17 @@ async def root():
             "/api/v1/macro/health",
             "/api/v1/macro/train",
             "/api/v1/macro/optimize/{macro_name}",
-            "/api/v1/macro/report/{session_id}"
+            "/api/v1/macro/report/{session_id}",
+            "/api/v1/healing/status",
+            "/api/v1/healing/knowledge",
+            "/api/v1/healing/manual_fix"
         ]
     }
 
 if __name__ == "__main__":
-    logger.info("OpenKore AI Service v1.0.0-phase9")
+    logger.info("OpenKore AI Service v1.0.0-phase10")
     logger.info("Starting HTTP server on http://127.0.0.1:9902")
-    logger.info("Phase 9: Three-Layer Adaptive Macro System Complete")
+    logger.info("Phase 10: Autonomous Self-Healing System Complete")
     
     uvicorn.run(
         app,

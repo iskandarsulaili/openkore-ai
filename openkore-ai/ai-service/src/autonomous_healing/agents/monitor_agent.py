@@ -4,15 +4,21 @@ Continuously watches OpenKore logs for errors, warnings, and behavioral issues
 """
 
 from crewai import Agent
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 from typing import Dict, List, Any, Optional
 from pathlib import Path
 import re
 from datetime import datetime, timedelta
+from pydantic import ConfigDict
 
 
 class LogParsingTool(BaseTool):
     """Tool for parsing OpenKore log files and detecting patterns"""
+    
+    model_config = ConfigDict(
+        extra='allow',
+        arbitrary_types_allowed=True
+    )
     
     name: str = "log_parser"
     description: str = "Parse OpenKore console logs and detect error patterns, stuck loops, and anomalies"
@@ -40,6 +46,11 @@ class LogParsingTool(BaseTool):
 
 class AnomalyDetectionTool(BaseTool):
     """Tool for detecting behavioral anomalies"""
+    
+    model_config = ConfigDict(
+        extra='allow',
+        arbitrary_types_allowed=True
+    )
     
     name: str = "anomaly_detector"
     description: str = "Detect behavioral anomalies like stuck loops, infinite waits, position desyncs"
@@ -107,7 +118,7 @@ class MonitorAgent:
         self.issue_detector = issue_detector
 
 
-def create_monitor_agent(config: Dict, log_monitor, issue_detector) -> Agent:
+def create_monitor_agent(config: Dict, log_monitor, issue_detector, llm) -> Agent:
     """
     Create the Monitor Agent with log parsing and anomaly detection capabilities
     
@@ -115,6 +126,7 @@ def create_monitor_agent(config: Dict, log_monitor, issue_detector) -> Agent:
         config: Agent configuration from YAML
         log_monitor: LogMonitor instance
         issue_detector: IssueDetector instance
+        llm: LLM instance (DeepSeek via provider chain)
         
     Returns:
         Configured CrewAI Agent
@@ -126,7 +138,7 @@ def create_monitor_agent(config: Dict, log_monitor, issue_detector) -> Agent:
         AnomalyDetectionTool()
     ]
     
-    # Create agent
+    # Create agent with DeepSeek LLM
     agent = Agent(
         role=config['role'],
         goal=config['goal'],
@@ -135,7 +147,8 @@ def create_monitor_agent(config: Dict, log_monitor, issue_detector) -> Agent:
         verbose=config.get('verbose', True),
         allow_delegation=False,  # Monitor doesn't delegate
         max_iter=15,
-        memory=True  # Remember previous issues
+        memory=True,  # Remember previous issues
+        llm=llm  # Use DeepSeek LLM
     )
     
     return agent

@@ -4,13 +4,19 @@ Maintains and improves knowledge from successful/failed fixes
 """
 
 from crewai import Agent
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 from typing import Dict, List, Any
 from datetime import datetime, timedelta
+from pydantic import ConfigDict
 
 
 class PatternRecognitionTool(BaseTool):
     """Tool for recognizing recurring patterns in issues"""
+    
+    model_config = ConfigDict(
+        extra='allow',
+        arbitrary_types_allowed=True
+    )
     
     name: str = "pattern_recognizer"
     description: str = "Identify recurring patterns in bot failures to improve future fixes"
@@ -63,6 +69,11 @@ class PatternRecognitionTool(BaseTool):
 class KnowledgeUpdateTool(BaseTool):
     """Tool for updating knowledge base"""
     
+    model_config = ConfigDict(
+        extra='allow',
+        arbitrary_types_allowed=True
+    )
+    
     name: str = "knowledge_updater"
     description: str = "Update knowledge base with success/failure information to improve future solutions"
     
@@ -109,14 +120,25 @@ class LearningAgent:
     pass
 
 
-def create_learning_agent(config: Dict, knowledge_base) -> Agent:
-    """Create the Learning Agent"""
+def create_learning_agent(config: Dict, knowledge_base, llm) -> Agent:
+    """
+    Create the Learning Agent
+    
+    Args:
+        config: Agent configuration
+        knowledge_base: Knowledge base instance
+        llm: LLM instance (DeepSeek via provider chain)
+        
+    Returns:
+        Configured CrewAI Agent
+    """
     
     tools = [
         PatternRecognitionTool(knowledge_base=knowledge_base),
         KnowledgeUpdateTool(knowledge_base=knowledge_base)
     ]
     
+    # Create agent with DeepSeek LLM
     agent = Agent(
         role=config['role'],
         goal=config['goal'],
@@ -125,7 +147,8 @@ def create_learning_agent(config: Dict, knowledge_base) -> Agent:
         verbose=config.get('verbose', True),
         allow_delegation=False,
         max_iter=10,
-        memory=True
+        memory=True,
+        llm=llm  # Use DeepSeek LLM
     )
     
     return agent

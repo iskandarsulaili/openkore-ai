@@ -21,7 +21,10 @@ my %macro_registry;
 my %macro_stats;
 my $dynamic_macro_file = 'control/eventMacros_dynamic.txt';
 
+# Plugin initialization function
 sub on_load {
+	message "[MacroHotReload] Initializing plugin...\n", "info";
+	
 	$hooks = Plugins::addHooks(
 		['mainLoop_pre', \&check_http_requests],
 		['macro_execution', \&track_macro_execution]
@@ -376,5 +379,8 @@ sub on_unload {
 	
 	message "[MacroHotReload] Plugin unloaded\n";
 }
+
+# Call initialization explicitly
+on_load();
 
 1;

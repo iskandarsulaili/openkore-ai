@@ -1,11 +1,13 @@
 """
 Real-time log monitoring with tail-f style watching
+Enhanced for Phase 31 OpenKore critical issues
 """
 
 import asyncio
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import re
+import logging
 from datetime import datetime
 
 
@@ -24,6 +26,10 @@ class LogMonitor:
         # Track file positions for tail-f behavior
         self.file_positions = {}
         self.last_check = datetime.now()
+        
+        # Setup logging
+        self.logger = logging.getLogger('autonomous_healing.log_monitor')
+        self.logger.info(f"Log monitor initialized - watching {self.log_dir}")
     
     async def check_for_issues(self) -> List[Dict]:
         """Check all monitored logs for new issues"""
@@ -32,10 +38,17 @@ class LogMonitor:
         # Find log files matching patterns
         log_files = self._find_log_files()
         
+        if not log_files:
+            self.logger.debug(f"No log files found in {self.log_dir}")
+            return all_issues
+        
+        self.logger.debug(f"Checking {len(log_files)} log files")
+        
         for log_file in log_files:
             new_lines = await self._read_new_lines(log_file)
             
             if new_lines:
+                self.logger.info(f"Found {len(new_lines)} new lines in {log_file.name}")
                 # Return new lines for analysis
                 all_issues.append({
                     'file': str(log_file),
@@ -88,7 +101,7 @@ class LogMonitor:
             return new_lines
             
         except Exception as e:
-            print(f"Error reading {log_file}: {e}")
+            self.logger.error(f"Error reading {log_file}: {e}", exc_info=True)
             return []
     
     def reset_position(self, log_file: Optional[Path] = None):

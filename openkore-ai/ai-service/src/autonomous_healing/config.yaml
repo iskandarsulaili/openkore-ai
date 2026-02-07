@@ -3,7 +3,7 @@
 # Monitoring Settings
 monitoring:
   enabled: true
-  log_directory: "../../logs"
+  log_directory: "../logs"
   poll_interval_seconds: 2
   max_log_size_mb: 10
   
@@ -26,12 +26,24 @@ detection:
     death: "\\[DEAD\\]"
     ai_stuck_loop: "AI: (\\w+) .* \\| \\d+"
     
+    # OpenKore Critical Issue Patterns (Phase 31)
+    teleport_no_skill: "You don't have Teleport skill or Fly Wing"
+    healing_item_in_inventory: "Inventory: (.+?) \\((\\d+)\\)"
+    stat_points_available: "You have (\\d+) status point"
+    hp_percent_status: "HP: (\\d+)/(\\d+) \\((\\d+)%\\)"
+    lockMap_boundary: "lockMap_[xy] (\\d+) (\\d+)"
+    config_teleportAuto_hp: "teleportAuto_hp (\\d+)"
+    config_sitAuto_hp_lower: "sitAuto_hp_lower (\\d+)"
+    config_statsAddAuto: "statsAddAuto (\\d+)"
+    
   # Thresholds for issue escalation
   thresholds:
     npc_not_found_max: 3          # After 3 failures, escalate
     stuck_route_max: 5             # After 5 recalculations, escalate
     ai_loop_same_state_max: 10     # Same AI state 10 times = stuck
     death_within_minutes: 5        # Death within 5 min needs analysis
+    teleport_spam_max: 5           # Teleport error spam threshold
+    death_with_items_max: 1        # Death with healing items = critical
 
 # Analysis Settings
 analysis:
@@ -39,12 +51,14 @@ analysis:
   
   # Context files to analyze
   context_files:
-    config: "../../control/config.txt"
-    mon_control: "../../control/mon_control.txt"
-    npcs: "../../tables/npcs.txt"
-    recvpackets: "../../tables/kRO/Ragexe_2021_11_03/recvpackets.txt"
-    monsters: "../../tables/monsters.txt"
-    maps: "../../tables/translated/kRO_english/maps.txt"
+    config: "../control/config.txt"
+    mon_control: "../control/mon_control.txt"
+    npcs: "../tables/npcs.txt"
+    # recvpackets path is now dynamically resolved based on servers.txt
+    # See utils.config_resolver.get_recvpackets_path()
+    recvpackets: "dynamic"  # Will be resolved at runtime
+    monsters: "../tables/monsters.txt"
+    maps: "../tables/translated/kRO_english/maps.txt"
     
   # Root cause correlation rules
   correlation_rules:
@@ -98,6 +112,42 @@ solution:
         - "improve_healing_thresholds"
         - "add_dangerous_mob_avoidance"
       confidence_threshold: 0.75
+      
+    # OpenKore Critical Issue Solutions (Phase 31)
+    missing_auto_heal:
+      actions:
+        - "detect_healing_items_in_inventory"
+        - "generate_useSelf_item_blocks"
+        - "set_appropriate_heal_thresholds"
+      confidence_threshold: 0.90
+      
+    teleport_spam_fix:
+      actions:
+        - "detect_teleport_skill_availability"
+        - "disable_or_adjust_teleportAuto"
+        - "suggest_fly_wing_purchase"
+      confidence_threshold: 0.95
+      
+    inappropriate_thresholds:
+      actions:
+        - "analyze_character_level_and_class"
+        - "adjust_sitAuto_based_on_level"
+        - "balance_healing_vs_efficiency"
+      confidence_threshold: 0.85
+      
+    inefficient_lockMap:
+      actions:
+        - "analyze_current_lockMap_size"
+        - "calculate_optimal_farming_area"
+        - "reduce_lockMap_range_appropriately"
+      confidence_threshold: 0.80
+      
+    unspent_stat_points:
+      actions:
+        - "detect_character_class"
+        - "enable_statsAddAuto"
+        - "configure_appropriate_stat_priorities"
+      confidence_threshold: 0.90
 
 # Execution Settings
 execution:
@@ -120,7 +170,7 @@ execution:
   # Backup settings
   backup:
     enabled: true
-    directory: "../../control/backups"
+    directory: "../control/backups"
     keep_last_n: 10
     
   # Rollback settings
@@ -200,7 +250,7 @@ logging:
   file: "../logs/autonomous_healing.log"
   rotation: "daily"
   retention_days: 30
-  format: "[%(asctime)s] [%(levelname)s] [%(agent)s] %(message)s"
+  format: "[%(asctime)s] [%(levelname)s] %(message)s"
 
 # Notification Settings
 notifications:

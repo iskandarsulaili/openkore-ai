@@ -4,13 +4,19 @@ Validates proposed fixes before execution
 """
 
 from crewai import Agent
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 from typing import Dict, List, Any
 import re
+from pydantic import ConfigDict
 
 
 class ConfigSyntaxValidatorTool(BaseTool):
     """Tool for validating OpenKore config syntax"""
+    
+    model_config = ConfigDict(
+        extra='allow',
+        arbitrary_types_allowed=True
+    )
     
     name: str = "syntax_validator"
     description: str = "Validate OpenKore configuration syntax before applying changes"
@@ -71,6 +77,11 @@ class ConfigSyntaxValidatorTool(BaseTool):
 class LogicValidatorTool(BaseTool):
     """Tool for validating logical correctness of fixes"""
     
+    model_config = ConfigDict(
+        extra='allow',
+        arbitrary_types_allowed=True
+    )
+    
     name: str = "logic_validator"
     description: str = "Validate that proposed fixes make logical sense for the detected issue"
     
@@ -123,14 +134,24 @@ class ValidationAgent:
     pass
 
 
-def create_validation_agent(config: Dict) -> Agent:
-    """Create the Validation Agent"""
+def create_validation_agent(config: Dict, llm) -> Agent:
+    """
+    Create the Validation Agent
+    
+    Args:
+        config: Agent configuration
+        llm: LLM instance (DeepSeek via provider chain)
+        
+    Returns:
+        Configured CrewAI Agent
+    """
     
     tools = [
         ConfigSyntaxValidatorTool(),
         LogicValidatorTool()
     ]
     
+    # Create agent with DeepSeek LLM
     agent = Agent(
         role=config['role'],
         goal=config['goal'],
@@ -139,7 +160,8 @@ def create_validation_agent(config: Dict) -> Agent:
         verbose=config.get('verbose', True),
         allow_delegation=False,
         max_iter=10,
-        memory=True
+        memory=True,
+        llm=llm  # Use DeepSeek LLM
     )
     
     return agent

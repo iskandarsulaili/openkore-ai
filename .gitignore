@@ -50,3 +50,5 @@ Desktop.ini
 *.db
 *.sqlite
 *.sqlite3
+data/openkore-ai.db-wal
+data/openkore-ai.db-shm
