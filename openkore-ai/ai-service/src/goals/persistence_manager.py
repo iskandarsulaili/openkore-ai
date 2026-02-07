@@ -118,7 +118,7 @@ class GoalPersistenceManager:
             # Atomic rename (replace old file)
             os.replace(temp_filepath, filepath)
             
-            logger.info(f"✅ Successfully saved {len(goals)} goals")
+            logger.info(f"[SUCCESS] Successfully saved {len(goals)} goals")
             
             # Update last_saved_at for each goal
             for goal in goals:
@@ -198,7 +198,7 @@ class GoalPersistenceManager:
                     logger.error(f"Failed to restore goal: {e}")
                     continue
             
-            logger.info(f"✅ Successfully restored {len(restored_goals)} goals")
+            logger.info(f"[SUCCESS] Successfully restored {len(restored_goals)} goals")
             
             return restored_goals
         

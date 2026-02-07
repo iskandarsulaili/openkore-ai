@@ -63,7 +63,7 @@ class MacroManagementCoordinator:
             'deployment_failures': 0
         }
         
-        logger.info("✓ MacroManagementCoordinator initialized successfully")
+        logger.info("[OK] MacroManagementCoordinator initialized successfully")
     
     async def process_game_state(self, game_state: Dict, session_id: str = "default") -> Dict:
         """
@@ -84,7 +84,7 @@ class MacroManagementCoordinator:
         
         # Layer 3: Reflex check (emergency conditions)
         if self._is_emergency(game_state):
-            logger.warning("⚡ EMERGENCY: Reflex layer active (Layer 3)")
+            logger.warning("[REFLEX] EMERGENCY: Reflex layer active (Layer 3)")
             self._processing_stats['layer3_used'] += 1
             return {
                 'layer': 3,
@@ -98,7 +98,7 @@ class MacroManagementCoordinator:
         
         if ml_prediction and ml_prediction.confidence > 0.85:
             logger.info(
-                f"🧠 SUBCONSCIOUS: ML predicted '{ml_prediction.macro_type_name}' "
+                f"[CONSCIOUS] SUBCONSCIOUS: ML predicted '{ml_prediction.macro_type_name}' "
                 f"with {ml_prediction.confidence:.1%} confidence (Layer 2)"
             )
             self._processing_stats['layer2_used'] += 1
@@ -225,7 +225,7 @@ class MacroManagementCoordinator:
             self._processing_stats['macros_deployed'] += 1
             
             logger.info(
-                f"  ✓ Macro deployed successfully "
+                f"  [OK] Macro deployed successfully "
                 f"(latency: {result.get('injection_time_ms', 0)}ms)"
             )
             
@@ -418,7 +418,7 @@ class MacroManagementCoordinator:
         result = await self.trainer.train_from_database(min_samples=min_samples)
         
         if result['status'] == 'success':
-            logger.info("✓ ML model training complete")
+            logger.info("[OK] ML model training complete")
         else:
             logger.warning(f"Training failed: {result.get('status')}")
         

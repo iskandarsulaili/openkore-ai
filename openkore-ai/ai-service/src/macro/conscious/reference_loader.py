@@ -41,7 +41,7 @@ class MacroReferenceLoader:
             with open(ref_path, 'r', encoding='utf-8') as f:
                 cls._cached_reference = f.read()
             
-            logger.info(f"✓ Loaded EventMacro reference document ({len(cls._cached_reference)} chars)")
+            logger.info(f"[OK] Loaded EventMacro reference document ({len(cls._cached_reference)} chars)")
             return cls._cached_reference
             
         except Exception as e:

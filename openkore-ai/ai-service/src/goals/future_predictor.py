@@ -325,10 +325,10 @@ class FuturePredictor:
         primary_success = primary_prediction['success_prob']
         
         if primary_success >= 0.8:
-            return "✅ Primary plan has high success probability. Proceed with Plan A."
+            return "[SUCCESS] Primary plan has high success probability. Proceed with Plan A."
         
         elif primary_success >= 0.6:
-            return "⚠️ Primary plan has moderate success. Consider Plan B if risk-averse."
+            return "[WARNING] Primary plan has moderate success. Consider Plan B if risk-averse."
         
         elif primary_success >= 0.4:
             # Check if any fallback is significantly better
@@ -338,12 +338,12 @@ class FuturePredictor:
                 default=None
             )
             if best_fallback and best_fallback['success_prob'] > primary_success + 0.15:
-                return f"⚠️ Low primary success. Recommend starting with {best_fallback['plan_name']} instead."
+                return f"[WARNING] Low primary success. Recommend starting with {best_fallback['plan_name']} instead."
             else:
-                return "⚠️ Moderate-low success rate. Prepare contingency plans."
+                return "[WARNING] Moderate-low success rate. Prepare contingency plans."
         
         else:
-            return "❌ Low success probability. Consider postponing or using Plan C conservative approach."
+            return "[ERROR] Low success probability. Consider postponing or using Plan C conservative approach."
     
     def predict_contingency_activation(
         self,
@@ -653,10 +653,10 @@ class FuturePredictor:
         
         # Add warnings
         if forecast['potions']['hp_potions'] > game_state.get('inventory', {}).get('red_potion', 0):
-            forecast['warnings'].append(f"⚠️ Need {forecast['potions']['hp_potions']} HP potions, have {game_state.get('inventory', {}).get('red_potion', 0)}")
+            forecast['warnings'].append(f"[WARNING] Need {forecast['potions']['hp_potions']} HP potions, have {game_state.get('inventory', {}).get('red_potion', 0)}")
         
         if forecast['zeny']['estimated'] > game_state.get('zeny', 0):
-            forecast['warnings'].append(f"⚠️ Need {forecast['zeny']['estimated']} zeny, have {game_state.get('zeny', 0)}")
+            forecast['warnings'].append(f"[WARNING] Need {forecast['zeny']['estimated']} zeny, have {game_state.get('zeny', 0)}")
         
         logger.info(f"Resource forecast: {forecast['time']['estimated_minutes']}min, "
                    f"{forecast['potions']['hp_potions']} potions, "
@@ -828,14 +828,14 @@ class FuturePredictor:
         
         # Success rate recommendation
         if success_analysis['overall_success_rate'] < 0.6:
-            recommendations.append(f"⚠️ Low historical success rate ({success_analysis['overall_success_rate']:.0%}). Consider alternative approach.")
+            recommendations.append(f"[WARNING] Low historical success rate ({success_analysis['overall_success_rate']:.0%}). Consider alternative approach.")
         else:
-            recommendations.append(f"✅ Good historical success rate ({success_analysis['overall_success_rate']:.0%}).")
+            recommendations.append(f"[SUCCESS] Good historical success rate ({success_analysis['overall_success_rate']:.0%}).")
         
         # Strategy recommendation
         if best_strategies:
             best = best_strategies[0]
-            recommendations.append(f"📊 Best strategy: {best['strategy']} ({best['success_rate']:.0%} success)")
+            recommendations.append(f"[DATA] Best strategy: {best['strategy']} ({best['success_rate']:.0%} success)")
         
         # Timing recommendation
         recommendations.append(timing_analysis['recommendation'])

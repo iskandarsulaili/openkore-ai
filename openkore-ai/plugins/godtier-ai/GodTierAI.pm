@@ -64,10 +64,10 @@ sub on_load {
 sub initialize_hot_reload {
     if (-e $config_file_path) {
         $last_config_mtime = (stat($config_file_path))[9];
-        message "[GodTierAI] 🔄 Hot reload monitoring enabled for config.txt\n", "info";
-        message "[GodTierAI] 💓 Self-healing can modify config without disconnecting\n", "info";
+        message "[GodTierAI] [RELOAD] Hot reload monitoring enabled for config.txt\n", "info";
+        message "[GodTierAI] [SYSTEM] Self-healing can modify config without disconnecting\n", "info";
     } else {
-        warning "[GodTierAI] ⚠ Config file not found at: $config_file_path\n";
+        warning "[GodTierAI] [WARNING] Config file not found at: $config_file_path\n";
     }
 }
 
@@ -85,8 +85,8 @@ sub check_config_reload {
     
     # If modified, trigger hot reload
     if ($current_mtime > $last_config_mtime) {
-        message "[GodTierAI] 🔄 Config change detected, hot reloading...\n", "success";
-        message "[GodTierAI] 💓 Self-healing or Conscious layer updated configuration\n", "info";
+        message "[GodTierAI] [RELOAD] Config change detected, hot reloading...\n", "success";
+        message "[GodTierAI] [SYSTEM] Self-healing or Conscious layer updated configuration\n", "info";
         
         # Execute OpenKore's built-in reload command
         Commands::run("reload config");
@@ -94,7 +94,7 @@ sub check_config_reload {
         # Update last modification time
         $last_config_mtime = $current_mtime;
         
-        message "[GodTierAI] ✅ Config hot reloaded successfully (no disconnect)\n", "success";
+        message "[GodTierAI] [SUCCESS] Config hot reloaded successfully (no disconnect)\n", "success";
     }
 }
 
@@ -103,15 +103,15 @@ sub check_ai_service_connectivity {
     eval {
         my $response = $ua->get("$ai_service_url/health");
         if ($response->is_success) {
-            message "[GodTierAI] ✓ AI Service is online and healthy\n", "success";
+            message "[GodTierAI] [OK] AI Service is online and healthy\n", "success";
         } else {
-            warning "[GodTierAI] ⚠ AI Service is not responding (HTTP " . $response->code . ")\n";
-            warning "[GodTierAI] ⚠ Conscious and Subconscious layers will be offline\n";
+            warning "[GodTierAI] [WARNING] AI Service is not responding (HTTP " . $response->code . ")\n";
+            warning "[GodTierAI] [WARNING] Conscious and Subconscious layers will be offline\n";
         }
     };
     if ($@) {
-        warning "[GodTierAI] ⚠ Cannot connect to AI Service at $ai_service_url\n";
-        warning "[GodTierAI] ⚠ Error: $@\n";
+        warning "[GodTierAI] [WARNING] Cannot connect to AI Service at $ai_service_url\n";
+        warning "[GodTierAI] [WARNING] Error: $@\n";
     }
 }
 

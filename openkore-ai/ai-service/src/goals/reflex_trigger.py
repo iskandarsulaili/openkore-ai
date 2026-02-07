@@ -191,7 +191,7 @@ class ReflexGoalTrigger:
             reverse=True
         ):
             if reflex['trigger'](game_state):
-                logger.warning(f"🚨 REFLEX TRIGGERED: {reflex['name']}")
+                logger.warning(f"[EMERGENCY] REFLEX TRIGGERED: {reflex['name']}")
                 return {
                     'reflex_id': reflex_id,
                     'reflex_name': reflex['name'],
@@ -230,14 +230,14 @@ class ReflexGoalTrigger:
                 result = await plan['action'](game_state)
                 
                 if result.get('success'):
-                    logger.info(f"✅ Reflex succeeded with Plan {plan_letter}")
+                    logger.info(f"[SUCCESS] Reflex succeeded with Plan {plan_letter}")
                     return {
                         'success': True,
                         'plan_used': plan['name'],
                         'result': result
                     }
                 else:
-                    logger.warning(f"❌ Plan {plan_letter} failed: {result.get('reason')}")
+                    logger.warning(f"[ERROR] Plan {plan_letter} failed: {result.get('reason')}")
                     continue
                     
             except Exception as e:

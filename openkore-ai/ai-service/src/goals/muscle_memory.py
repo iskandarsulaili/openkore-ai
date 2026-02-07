@@ -203,7 +203,7 @@ class MuscleMemoryExecutor:
         )
         
         if result['success']:
-            logger.debug(f"✅ Muscle memory succeeded: {sequence_id} (primary)")
+            logger.debug(f"[SUCCESS] Muscle memory succeeded: {sequence_id} (primary)")
             return result
         
         # Try fallbacks
@@ -221,13 +221,13 @@ class MuscleMemoryExecutor:
             )
             
             if result['success']:
-                logger.debug(f"✅ Muscle memory succeeded: {sequence_id} ({fallback_key})")
+                logger.debug(f"[SUCCESS] Muscle memory succeeded: {sequence_id} ({fallback_key})")
                 return result
             
             fallback_num += 1
         
         # All sequences failed
-        logger.warning(f"❌ All muscle memory sequences failed for: {sequence_id}")
+        logger.warning(f"[ERROR] All muscle memory sequences failed for: {sequence_id}")
         return {
             'success': False,
             'reason': 'All sequences exhausted',

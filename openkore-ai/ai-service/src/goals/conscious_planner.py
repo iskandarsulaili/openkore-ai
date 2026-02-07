@@ -53,7 +53,7 @@ class ConsciousGoalPlanner:
         logger.info(f"Conscious planning for goal: {goal.name}")
         
         # Log to console - Conscious layer is thinking
-        print(f"\n🧠 [CONSCIOUS] Analyzing Goal: {goal.name}")
+        print(f"\n[CONSCIOUS] [CONSCIOUS] Analyzing Goal: {goal.name}")
         print(f"   └─ Type: {goal.goal_type}")
         print(f"   └─ Priority: {goal.priority.name}")
         print(f"   └─ Strategy Mode: Multi-agent CrewAI")
@@ -128,7 +128,7 @@ class ConsciousGoalPlanner:
         
         logger.info(f"Generating contingency plans for: {goal.name}")
         
-        print(f"\n🧠 [CONSCIOUS] Generating Contingency Plans")
+        print(f"\n[CONSCIOUS] [CONSCIOUS] Generating Contingency Plans")
         print(f"   └─ Primary Plan: Optimal strategy")
         print(f"   └─ Plan B: Alternative approach")
         print(f"   └─ Plan C: Conservative fallback")
@@ -150,7 +150,7 @@ class ConsciousGoalPlanner:
         
         logger.info(f"Generated {len(contingencies)} contingency plans")
         
-        print(f"   └─ ✓ Generated {len(contingencies)} contingency plans")
+        print(f"   └─ [OK] Generated {len(contingencies)} contingency plans")
         
         return contingencies
     

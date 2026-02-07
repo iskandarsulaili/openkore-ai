@@ -187,7 +187,7 @@ class ResourceAllocator:
         for resource_type, total_needed in total_needs.items():
             capacity = self.total_resources.get(resource_type, 0)
             if total_needed > capacity:
-                logger.warning(f"⚠️ Resource oversubscription: {resource_type} needs {total_needed}, have {capacity}")
+                logger.warning(f"[WARNING] Resource oversubscription: {resource_type} needs {total_needed}, have {capacity}")
                 
                 # Mark all goals as conflicting on this resource
                 for i, goal1 in enumerate(goals):

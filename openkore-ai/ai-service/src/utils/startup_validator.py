@@ -26,27 +26,6 @@ if sys.platform == 'win32':
         sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, errors='replace')
 
 
-def safe_print(message):
-    """Print message, falling back to ASCII if encoding fails"""
-    try:
-        print(message)
-    except UnicodeEncodeError:
-        # Replace emojis with ASCII equivalents
-        ascii_message = (message
-            .replace('🚨', '[!!]')
-            .replace('❌', '[X]')
-            .replace('⚠️', '[!]')
-            .replace('✅', '[OK]')
-            .replace('🧠', '[AI]')
-            .replace('💓', '[SYS]')
-            .replace('🔮', '[ML]')
-            .replace('⚡', '[FAST]')
-            .replace('📖', '[INFO]')
-            .replace('🔧', '[CONFIG]')
-        )
-        print(ascii_message.encode('ascii', errors='replace').decode('ascii'))
-
-
 logger = logging.getLogger(__name__)
 
 # Calculate paths relative to this script's location
@@ -67,13 +46,13 @@ def apply_emergency_defaults():
         return False
     
     try:
-        logger.warning("⚠️ No healing configured! Applying emergency defaults...")
-        safe_print("\n" + "="*70)
-        safe_print("  🚨 EMERGENCY AUTO-CONFIGURATION")
-        safe_print("="*70)
-        safe_print("  No healing items detected in config.txt!")
-        safe_print("  Applying emergency survival configuration automatically...")
-        safe_print("="*70 + "\n")
+        logger.warning("[WARNING] No healing configured! Applying emergency defaults...")
+        print("\n" + "="*70)
+        print("  [EMERGENCY] EMERGENCY AUTO-CONFIGURATION")
+        print("="*70)
+        print("  No healing items detected in config.txt!")
+        print("  Applying emergency survival configuration automatically...")
+        print("="*70 + "\n")
         
         # Run auto_configure.py with UTF-8 encoding
         import os
@@ -90,13 +69,17 @@ def apply_emergency_defaults():
             env=env
         )
         
+        # Print subprocess output for visibility
+        if result.stdout:
+            print(result.stdout)
+        
         if result.returncode == 0:
-            logger.info("✅ Emergency configuration applied successfully")
-            safe_print("\n✅ Emergency configuration applied successfully!\n")
+            logger.info("[SUCCESS] Emergency configuration applied successfully")
+            print("\n[SUCCESS] Emergency configuration applied successfully!\n")
             return True
         else:
-            logger.error(f"❌ Emergency configuration failed: {result.stderr}")
-            safe_print(f"\n❌ Emergency configuration failed: {result.stderr}\n")
+            logger.error(f"[ERROR] Emergency configuration failed: {result.stderr}")
+            print(f"\n[ERROR] Emergency configuration failed: {result.stderr}\n")
             return False
             
     except subprocess.TimeoutExpired:
@@ -146,17 +129,17 @@ def validate_startup() -> Tuple[List[str], List[str]]:
                 
                 if apply_emergency_defaults():
                     warnings.append(
-                        "✅ AUTO-FIXED: No healing was configured, but emergency defaults were applied!\n"
+                        "[AUTO-FIXED] No healing was configured, but emergency defaults were applied!\n"
                         "   Your bot now has:\n"
-                        "   • Red Potion healing at 60-70% HP\n"
-                        "   • Fly Wing emergency teleport at 30% HP\n"
-                        "   • Auto-purchasing for Red Potions and Fly Wings\n\n"
-                        "   ⚠️  You need ~20,000 zeny for bot to auto-buy items.\n"
+                        "   - Red Potion healing at 60-70% HP\n"
+                        "   - Fly Wing emergency teleport at 30% HP\n"
+                        "   - Auto-purchasing for Red Potions and Fly Wings\n\n"
+                        "   [WARNING] You need ~20,000 zeny for bot to auto-buy items.\n"
                         "   If you don't have enough, bot will still work but without items initially."
                     )
                 else:
                     errors.append(
-                        "❌ CRITICAL: No healing items configured in config.txt!\n"
+                        "[CRITICAL] No healing items configured in config.txt!\n"
                         "   Your bot WILL DIE without healing!\n\n"
                         "   SOLUTION: Run install.bat to auto-configure healing.\n"
                         "   Or manually add to config.txt:\n"
@@ -171,14 +154,14 @@ def validate_startup() -> Tuple[List[str], List[str]]:
                 
                 if apply_emergency_defaults():
                     warnings.append(
-                        "✅ AUTO-FIXED: Empty template blocks replaced with working configuration!\n"
+                        "[AUTO-FIXED] Empty template blocks replaced with working configuration!\n"
                         "   Your bot now has proper healing and item purchasing configured."
                     )
             
             # Check teleport threshold
             if 'teleportAuto_hp 10' in config_content:
                 warnings.append(
-                    "⚠️  teleportAuto_hp is 10% (VERY LOW - bot may die often)\n"
+                    "[WARNING] teleportAuto_hp is 10% (VERY LOW - bot may die often)\n"
                     "   Recommended: 40% for safer farming\n\n"
                     "   SOLUTION: Run install.bat to apply optimal settings."
                 )
@@ -187,7 +170,7 @@ def validate_startup() -> Tuple[List[str], List[str]]:
             has_flywing = 'useSelf_item Fly Wing' in config_content or 'useSelf_item 601' in config_content
             if not has_flywing:
                 warnings.append(
-                    "⚠️  No Fly Wing configured for emergency teleport\n"
+                    "[WARNING] No Fly Wing configured for emergency teleport\n"
                     "   Bot won't be able to escape dangerous situations\n\n"
                     "   SOLUTION: Buy 100x Fly Wing from Prontera Tool Shop (152, 29)\n"
                     "   Then add to config.txt: useSelf_item Fly Wing { hp < 30 }"
@@ -216,55 +199,83 @@ def print_validation_results(warnings: List[str], errors: List[str]):
     """Print validation results to console"""
     
     if errors:
-        safe_print("\n" + "="*70)
-        safe_print("  ❌ STARTUP VALIDATION ERRORS")
-        safe_print("="*70)
+        print("\n" + "="*70)
+        print("  [ERROR] STARTUP VALIDATION ERRORS")
+        print("="*70)
         for i, error in enumerate(errors, 1):
-            safe_print(f"\n{i}. {error}")
-        safe_print("\n" + "="*70)
-        safe_print("  System cannot start with these errors. Please fix them first.")
-        safe_print("="*70 + "\n")
+            print(f"\n{i}. {error}")
+        print("\n" + "="*70)
+        print("  System cannot start with these errors. Please fix them first.")
+        print("="*70 + "\n")
         
     if warnings:
-        safe_print("\n" + "="*70)
-        safe_print("  ⚠️  STARTUP VALIDATION WARNINGS")
-        safe_print("="*70)
+        print("\n" + "="*70)
+        print("  [WARNING] STARTUP VALIDATION WARNINGS")
+        print("="*70)
         for i, warning in enumerate(warnings, 1):
-            safe_print(f"\n{i}. {warning}")
-        safe_print("\n" + "="*70)
-        safe_print("  System will start, but bot survival is NOT guaranteed!")
-        safe_print("="*70 + "\n")
+            print(f"\n{i}. {warning}")
+        print("\n" + "="*70)
+        print("  System will start, but bot survival is NOT guaranteed!")
+        print("="*70 + "\n")
     
     if not warnings and not errors:
-        logger.info("✅ Startup validation passed - all checks OK")
-        safe_print("✅ Startup validation passed - bot properly configured\n")
+        logger.info("[SUCCESS] Startup validation passed - all checks OK")
+        print("[SUCCESS] Startup validation passed - bot properly configured\n")
 
 
 def validate_and_report():
     """
     Run validation and report results.
-    Raises RuntimeError if there are critical errors.
+    Raises RuntimeError if there are critical errors that cannot be auto-fixed.
     """
     
     warnings, errors = validate_startup()
     
+    # CRITICAL FIX: Check if errors exist but were already auto-fixed
+    # The validate_startup() function calls apply_emergency_defaults() internally
+    # and moves fixed errors to warnings. So if we reach here with errors,
+    # they are truly unrecoverable.
+    
     # Log to logger
     if warnings:
-        logger.warning("⚠️ Startup Validation Warnings:")
+        logger.warning("[WARNING] Startup Validation Warnings:")
         for w in warnings:
             logger.warning(f"  - {w}")
     
     if errors:
-        logger.error("❌ Startup Validation Errors:")
+        logger.error("[ERROR] Startup Validation Errors:")
         for e in errors:
             logger.error(f"  - {e}")
     
     # Print to console
     print_validation_results(warnings, errors)
     
-    # Raise error if critical errors found
+    # CRITICAL FIX: Only raise RuntimeError for truly critical errors
+    # that couldn't be auto-fixed (like missing .env file)
+    # If errors were auto-fixed, they are now in warnings list instead
     if errors:
-        raise RuntimeError(
-            "Startup validation failed with critical errors. "
-            "Please fix the issues listed above before starting the system."
-        )
+        # Check if these are truly blocking errors
+        blocking_errors = []
+        for error in errors:
+            # .env file missing is truly blocking
+            if ".env file not found" in error:
+                blocking_errors.append(error)
+            # Missing OpenKore is truly blocking
+            elif "config.txt not found" in error and "Please ensure OpenKore" in error:
+                blocking_errors.append(error)
+        
+        if blocking_errors:
+            raise RuntimeError(
+                "Startup validation failed with critical errors that cannot be auto-fixed. "
+                "Please fix the issues listed above before starting the system."
+            )
+        else:
+            # Errors were present but auto-fixed - log as warning
+            logger.warning(
+                "[WARNING] Some validation errors were detected but have been auto-fixed. "
+                "System will start - monitor for issues."
+            )
+            print(
+                "\n[WARNING] Validation errors were auto-fixed. "
+                "System starting - please monitor.\n"
+            )

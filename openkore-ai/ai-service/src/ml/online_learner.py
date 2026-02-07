@@ -43,7 +43,7 @@ class OnlineLearner:
         """Retrain model with accumulated data"""
         logger.info("Retraining model with new data...")
         
-        print(f"\n🔮 [SUBCONSCIOUS] Model Retraining Started")
+        print(f"\n[SUBCONSCIOUS] [SUBCONSCIOUS] Model Retraining Started")
         print(f"   └─ Accumulated Samples: {self.samples_since_update}")
         print(f"   └─ Session: {session_id}")
         print(f"   └─ Status: Collecting training dataset...")
@@ -71,7 +71,7 @@ class OnlineLearner:
             patterns_learned=self.samples_since_update
         )
         
-        print(f"   └─ ✓ Retraining Complete!")
+        print(f"   └─ [OK] Retraining Complete!")
         print(f"   └─ Accuracy: {results['accuracy']:.3f}")
         print(f"   └─ Model exported to ONNX")
 

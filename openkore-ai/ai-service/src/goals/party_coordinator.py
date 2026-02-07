@@ -147,7 +147,7 @@ class PartyGoalCoordinator:
         # Check if goal completed
         if self._check_party_goal_completion(party_goal, aggregated_progress):
             party_goal.complete_success()
-            logger.info(f"🎉 Party goal completed: {party_goal.name}")
+            logger.info(f"[CELEBRATE] Party goal completed: {party_goal.name}")
         
         sync_report = {
             'party_goal_id': party_goal_id,

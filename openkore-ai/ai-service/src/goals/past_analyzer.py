@@ -511,20 +511,20 @@ class PastAnalyzer:
         
         if success_rate < 0.5:
             recommendations.append(
-                "⚠️ Low success rate detected. Consider using conservative Plan C approach."
+                "[WARNING] Low success rate detected. Consider using conservative Plan C approach."
             )
         
         best_approach = self._identify_best_approach(similar_goals)
         if best_approach and best_approach.get('success_rate', 0) > 0.8:
             recommendations.append(
-                f"✅ Use '{best_approach['strategy']}' strategy "
+                f"[SUCCESS] Use '{best_approach['strategy']}' strategy "
                 f"(success rate: {best_approach['success_rate']:.1%})"
             )
         
         worst_approach = self._identify_worst_approach(similar_goals)
         if worst_approach and worst_approach.get('success_rate', 1) < 0.3:
             recommendations.append(
-                f"❌ Avoid '{worst_approach['strategy']}' strategy "
+                f"[ERROR] Avoid '{worst_approach['strategy']}' strategy "
                 f"(failure rate: {1-worst_approach['success_rate']:.1%})"
             )
         

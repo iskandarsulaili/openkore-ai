@@ -29,28 +29,6 @@ if sys.platform == 'win32':
         sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, errors='replace')
 
 
-def safe_print(message):
-    """Print message, falling back to ASCII if encoding fails"""
-    try:
-        print(message)
-    except UnicodeEncodeError:
-        # Replace emojis with ASCII equivalents
-        ascii_message = (message
-            .replace('🚨', '[!!]')
-            .replace('❌', '[X]')
-            .replace('⚠️', '[!]')
-            .replace('✅', '[OK]')
-            .replace('🧠', '[AI]')
-            .replace('💓', '[SYS]')
-            .replace('🔮', '[ML]')
-            .replace('⚡', '[FAST]')
-            .replace('📖', '[INFO]')
-            .replace('🔧', '[CONFIG]')
-            .replace('ℹ️', '[i]')
-        )
-        print(ascii_message.encode('ascii', errors='replace').decode('ascii'))
-
-
 def load_user_intent(intent_path: str) -> Optional[Dict]:
     """Load user intent from JSON file"""
     try:
@@ -58,10 +36,10 @@ def load_user_intent(intent_path: str) -> Optional[Dict]:
         with open(intent_path, 'r', encoding='utf-8-sig') as f:
             return json.load(f)
     except FileNotFoundError:
-        safe_print(f"❌ user_intent.json not found at: {intent_path}")
+        print(f"[ERROR] user_intent.json not found at: {intent_path}")
         return None
     except json.JSONDecodeError as e:
-        safe_print(f"❌ Invalid JSON in user_intent.json: {e}")
+        print(f"[ERROR] Invalid JSON in user_intent.json: {e}")
         return None
 
 
@@ -73,32 +51,32 @@ def apply_user_intent(config_path: str, user_intent_path: str) -> bool:
         config_path = Path(config_path).resolve()
         user_intent_path = Path(user_intent_path).resolve()
         
-        safe_print("\n" + "="*60)
-        safe_print("  Auto-Configuring OpenKore Bot")
-        safe_print("="*60 + "\n")
+        print("\n" + "="*60)
+        print("  Auto-Configuring OpenKore Bot")
+        print("="*60 + "\n")
         
-        safe_print(f"[DEBUG] Config path: {config_path}")
-        safe_print(f"[DEBUG] Intent path: {user_intent_path}")
+        print(f"[DEBUG] Config path: {config_path}")
+        print(f"[DEBUG] Intent path: {user_intent_path}")
         
         if not user_intent_path.exists():
-            safe_print(f"❌ User intent file not found: {user_intent_path}")
+            print(f"[ERROR] User intent file not found: {user_intent_path}")
             return False
         
         if not config_path.exists():
-            safe_print(f"❌ Config file not found: {config_path}")
+            print(f"[ERROR] Config file not found: {config_path}")
             return False
         
         # Load user intent
-        safe_print(f"\n📖 Loading user preferences from: {user_intent_path}")
+        print(f"\n[INFO] Loading user preferences from: {user_intent_path}")
         user_intent = load_user_intent(str(user_intent_path))
         
         if not user_intent:
-            safe_print("❌ Failed to load user intent. Cannot auto-configure.")
+            print("[ERROR] Failed to load user intent. Cannot auto-configure.")
             return False
         
-        safe_print(f"[DEBUG] Loaded user intent: {user_intent.get('build', 'unknown')}")
+        print(f"[DEBUG] Loaded user intent: {user_intent.get('build', 'unknown')}")
     except Exception as e:
-        safe_print(f"❌ Error initializing configuration: {e}")
+        print(f"[ERROR] Error initializing configuration: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -107,27 +85,27 @@ def apply_user_intent(config_path: str, user_intent_path: str) -> bool:
     build_name = user_intent.get('build_name', 'Unknown')
     playstyle_name = user_intent.get('playstyle', 'balanced')
     
-    safe_print(f"✅ Loaded configuration for: {build_name}")
-    safe_print(f"   Playstyle: {playstyle_name}")
+    print(f"[SUCCESS] Loaded configuration for: {build_name}")
+    print(f"   Playstyle: {playstyle_name}")
     
     # Read current config
-    safe_print(f"\n📖 Reading config from: {config_path}")
+    print(f"\n[INFO] Reading config from: {config_path}")
     try:
         with open(str(config_path), 'r', encoding='utf-8') as f:
             config_lines = f.readlines()
     except FileNotFoundError:
-        safe_print(f"❌ config.txt not found at: {config_path}")
+        print(f"[ERROR] config.txt not found at: {config_path}")
         return False
     except Exception as e:
-        safe_print(f"❌ Error reading config.txt: {e}")
+        print(f"[ERROR] Error reading config.txt: {e}")
         import traceback
         traceback.print_exc()
         return False
     
-    safe_print(f"✅ Read {len(config_lines)} lines from config.txt")
-    
+    print(f"[SUCCESS] Read {len(config_lines)} lines from config.txt")
+
     # Apply fixes
-    safe_print("\n🔧 Applying configuration changes...\n")
+    print("\n[CONFIG] Applying configuration changes...\n")
     
     new_lines = []
     in_useself_block = False
@@ -152,7 +130,7 @@ def apply_user_intent(config_path: str, user_intent_path: str) -> bool:
             new_lines.append(new_line)
             
             if old_value != new_line.strip():
-                changes_made.append(f"✓ Updated teleportAuto_hp: {old_value} → teleportAuto_hp {threshold}")
+                changes_made.append(f"[OK] Updated teleportAuto_hp: {old_value} -> teleportAuto_hp {threshold}")
                 teleport_configured = True
             i += 1
             continue
@@ -164,7 +142,7 @@ def apply_user_intent(config_path: str, user_intent_path: str) -> bool:
             new_lines.append(new_line)
             
             if old_value != new_line.strip():
-                changes_made.append(f"✓ Updated teleportAuto_maxDmg: {old_value} → teleportAuto_maxDmg 300")
+                changes_made.append(f"[OK] Updated teleportAuto_maxDmg: {old_value} -> teleportAuto_maxDmg 300")
                 teleport_maxdmg_configured = True
             i += 1
             continue
@@ -172,7 +150,7 @@ def apply_user_intent(config_path: str, user_intent_path: str) -> bool:
         # Detect EMPTY useSelf_item template block and replace it
         if line.strip().startswith('useSelf_item {'):
             # This is the empty template block - skip it entirely
-            safe_print("[DEBUG] Found empty useSelf_item template block, replacing with real configuration...")
+            print("[DEBUG] Found empty useSelf_item template block, replacing with real configuration...")
             
             # Skip until we find the closing brace
             j = i + 1
@@ -201,8 +179,8 @@ def apply_user_intent(config_path: str, user_intent_path: str) -> bool:
             ]
             
             new_lines.extend(healing_block)
-            changes_made.append(f"✓ Replaced empty useSelf_item template with Red Potion healing at {heal_threshold}% HP")
-            changes_made.append(f"✓ Added Fly Wing emergency teleport at 30% HP")
+            changes_made.append(f"[OK] Replaced empty useSelf_item template with Red Potion healing at {heal_threshold}% HP")
+            changes_made.append(f"[OK] Added Fly Wing emergency teleport at 30% HP")
             heal_configured = True
             
             i = j  # Skip past the entire empty block
@@ -211,7 +189,7 @@ def apply_user_intent(config_path: str, user_intent_path: str) -> bool:
         # Detect EMPTY buyAuto template block and replace it
         if line.strip().startswith('buyAuto {'):
             # This is the empty template block - skip it entirely
-            safe_print("[DEBUG] Found empty buyAuto template block, replacing with real configuration...")
+            print("[DEBUG] Found empty buyAuto template block, replacing with real configuration...")
             
             # Skip until we find the closing brace
             j = i + 1
@@ -239,8 +217,8 @@ def apply_user_intent(config_path: str, user_intent_path: str) -> bool:
             ]
             
             new_lines.extend(buyauto_block)
-            changes_made.append(f"✓ Replaced empty buyAuto template with Red Potion purchasing (min:30, max:100)")
-            changes_made.append(f"✓ Added Fly Wing purchasing (min:10, max:50)")
+            changes_made.append(f"[OK] Replaced empty buyAuto template with Red Potion purchasing (min:30, max:100)")
+            changes_made.append(f"[OK] Added Fly Wing purchasing (min:10, max:50)")
             buyauto_configured = True
             
             i = j  # Skip past the entire empty block
@@ -305,8 +283,8 @@ def apply_user_intent(config_path: str, user_intent_path: str) -> bool:
                 f"    notWhileSitting 1\n",
                 f"}}\n\n"
             ])
-            changes_made.append(f"✓ Added Red Potion healing at {heal_threshold}% HP")
-            changes_made.append(f"✓ Added Fly Wing emergency teleport at 30% HP")
+            changes_made.append(f"[OK] Added Red Potion healing at {heal_threshold}% HP")
+            changes_made.append(f"[OK] Added Fly Wing emergency teleport at 30% HP")
         
         if not buyauto_configured:
             fallback_blocks.extend([
@@ -323,8 +301,8 @@ def apply_user_intent(config_path: str, user_intent_path: str) -> bool:
                 f"    maxAmount 50\n",
                 f"}}\n\n"
             ])
-            changes_made.append(f"✓ Added buyAuto for Red Potion (min:30, max:100)")
-            changes_made.append(f"✓ Added buyAuto for Fly Wing (min:10, max:50)")
+            changes_made.append(f"[OK] Added buyAuto for Red Potion (min:30, max:100)")
+            changes_made.append(f"[OK] Added buyAuto for Fly Wing (min:10, max:50)")
         
         if fallback_blocks:
             new_lines[insert_index:insert_index] = fallback_blocks
@@ -333,37 +311,37 @@ def apply_user_intent(config_path: str, user_intent_path: str) -> bool:
     try:
         with open(str(config_path), 'w', encoding='utf-8') as f:
             f.writelines(new_lines)
-        safe_print(f"✅ Config.txt updated successfully\n")
+        print(f"[SUCCESS] Config.txt updated successfully\n")
     except Exception as e:
-        safe_print(f"❌ Error writing config.txt: {e}")
+        print(f"[ERROR] Error writing config.txt: {e}")
         import traceback
         traceback.print_exc()
         return False
     
     # Summary
-    safe_print("="*60)
-    safe_print("  Configuration Changes Applied")
-    safe_print("="*60)
+    print("="*60)
+    print("  Configuration Changes Applied")
+    print("="*60)
     if changes_made:
         for change in changes_made:
-            safe_print(f"  {change}")
+            print(f"  {change}")
     else:
-        safe_print("  ℹ️  No changes needed (config already optimal)")
-    safe_print("="*60 + "\n")
+        print("  [INFO] No changes needed (config already optimal)")
+    print("="*60 + "\n")
     
     # Add informational note about initial zeny
-    safe_print("⚠️  IMPORTANT INFORMATION:")
-    safe_print("="*60)
-    safe_print("Your character needs ~20,000 zeny for initial item purchases.")
-    safe_print("If you don't have enough zeny:")
-    safe_print("  1. Farm some zeny first (bot can still work without items, just less safe)")
-    safe_print("  2. Or manually give your character some zeny")
-    safe_print("")
-    safe_print("The bot will AUTOMATICALLY buy Red Potions and Fly Wings when it has")
-    safe_print("enough zeny. You don't need to buy items manually!")
-    safe_print("="*60 + "\n")
+    print("[WARNING] IMPORTANT INFORMATION:")
+    print("="*60)
+    print("Your character needs ~20,000 zeny for initial item purchases.")
+    print("If you don't have enough zeny:")
+    print("  1. Farm some zeny first (bot can still work without items, just less safe)")
+    print("  2. Or manually give your character some zeny")
+    print("")
+    print("The bot will AUTOMATICALLY buy Red Potions and Fly Wings when it has")
+    print("enough zeny. You don't need to buy items manually!")
+    print("="*60 + "\n")
     
-    safe_print("[SUCCESS] Configuration applied successfully")
+    print("[SUCCESS] Configuration applied successfully")
     return True
 
 
@@ -386,11 +364,12 @@ def main():
     
     # Handle --emergency flag
     if "--emergency" in sys.argv:
-        safe_print("\n🚨 EMERGENCY MODE: Applying conservative default configuration\n")
+        print("\n[EMERGENCY] EMERGENCY MODE: Applying conservative default configuration\n")
         
         # Get paths from environment or use defaults
         if len(sys.argv) >= 3:
-            config_path = sys.argv[1]
+            # sys.argv[0] = script name, sys.argv[1] = --emergency, sys.argv[2] = config path
+            config_path = sys.argv[2]
         else:
             # Use default paths relative to this script
             script_dir = Path(__file__).parent
@@ -415,11 +394,11 @@ def main():
         success = apply_user_intent(config_path, user_intent_path)
         sys.exit(0 if success else 1)
     else:
-        safe_print("Usage: python auto_configure.py <config.txt> <user_intent.json>")
-        safe_print("   or: python auto_configure.py --emergency [config.txt]")
-        safe_print("\nExample:")
-        safe_print("  python auto_configure.py ../control/config.txt data/user_intent.json")
-        safe_print("  python auto_configure.py --emergency")
+        print("Usage: python auto_configure.py <config.txt> <user_intent.json>")
+        print("   or: python auto_configure.py --emergency [config.txt]")
+        print("\nExample:")
+        print("  python auto_configure.py ../control/config.txt data/user_intent.json")
+        print("  python auto_configure.py --emergency")
         sys.exit(1)
 
 

@@ -67,7 +67,7 @@ class TemporalGoalsCoordinator:
         self.completed_goals = []
         self.failed_goals = []
         
-        logger.info("✅ Temporal Goals Coordinator initialized")
+        logger.info("[SUCCESS] Temporal Goals Coordinator initialized")
     
     async def process_goal(
         self,
@@ -194,7 +194,7 @@ class TemporalGoalsCoordinator:
         # === Layer 4: Muscle Memory ===
         if self.muscle_memory.enabled:
             if self.muscle_memory.has_cached_sequence(goal):
-                logger.info("⚡ Using Layer 4: Muscle Memory")
+                logger.info("[REFLEX] Using Layer 4: Muscle Memory")
                 muscle_result = await self.muscle_memory.try_execute(goal, game_state)
                 
                 if muscle_result and muscle_result.get('success'):
@@ -209,7 +209,7 @@ class TemporalGoalsCoordinator:
         # === Layer 3: Reflex ===
         if self.reflex_layer.enabled:
             if goal.priority == GoalPriority.CRITICAL:
-                logger.info("🚨 Using Layer 3: Reflex")
+                logger.info("[EMERGENCY] Using Layer 3: Reflex")
                 reflex_result = await self.reflex_layer.try_execute(goal, game_state)
                 
                 if reflex_result and reflex_result.get('success'):
@@ -223,7 +223,7 @@ class TemporalGoalsCoordinator:
         
         # === Layer 2: Subconscious (ML) ===
         if self.subconscious_layer.enabled:
-            logger.info("🧠 Trying Layer 2: Subconscious (ML)")
+            logger.info("[CONSCIOUS] Trying Layer 2: Subconscious (ML)")
             ml_prediction = await self.subconscious_layer.predict_execution(goal, game_state)
             
             if ml_prediction and ml_prediction['confidence'] > 0.85:
@@ -250,7 +250,7 @@ class TemporalGoalsCoordinator:
                 logger.warning("ML execution failed, falling through to Conscious layer")
         
         # === Layer 1: Conscious (CrewAI Strategic Planning) ===
-        logger.info("🎯 Using Layer 1: Conscious (CrewAI)")
+        logger.info("[TARGET] Using Layer 1: Conscious (CrewAI)")
         conscious_plan = await self.conscious_layer.plan_execution(goal, game_state)
         
         # Execute with full contingency management
@@ -595,13 +595,13 @@ class TemporalGoalsCoordinator:
         # Check if we should celebrate
         celebrations = []
         if progress_percent == 25:
-            celebrations.append("🎯 25% Complete - Quarter Progress!")
+            celebrations.append("[TARGET] 25% Complete - Quarter Progress!")
         elif progress_percent == 50:
             celebrations.append("🔥 50% Complete - Halfway There!")
         elif progress_percent == 75:
-            celebrations.append("⚡ 75% Complete - Final Stretch!")
+            celebrations.append("[REFLEX] 75% Complete - Final Stretch!")
         elif progress_percent == 100:
-            celebrations.append("🎉 100% Complete - Goal Achieved!")
+            celebrations.append("[CELEBRATE] 100% Complete - Goal Achieved!")
         
         report = {
             'total_milestones': total_count,

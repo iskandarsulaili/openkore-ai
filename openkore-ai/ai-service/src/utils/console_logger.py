@@ -22,10 +22,10 @@ if sys.platform == 'win32':
 
 class LayerType(Enum):
     """Three-layer architecture types"""
-    CONSCIOUS = "🧠 [CONSCIOUS]"
-    SUBCONSCIOUS = "🔮 [SUBCONSCIOUS]"
-    REFLEX = "⚡ [REFLEX]"
-    SYSTEM = "💓 [SYSTEM]"
+    CONSCIOUS = "[CONSCIOUS]"
+    SUBCONSCIOUS = "[SUBCONSCIOUS]"
+    REFLEX = "[REFLEX]"
+    SYSTEM = "[SYSTEM]"
 
 
 class ConsoleLogger:
@@ -46,19 +46,19 @@ class ConsoleLogger:
         """Print exciting startup banner showing three-layer system"""
         banner = """
 ═══════════════════════════════════════════════════════════════
-🎮 OPENKORE GODTIER AI - THREE-LAYER SYSTEM ONLINE 🎮
+[GAME] OPENKORE GODTIER AI - THREE-LAYER SYSTEM ONLINE [GAME]
 ═══════════════════════════════════════════════════════════════
-🧠 Conscious Layer: CrewAI Strategic Planning
+[CONSCIOUS] Conscious Layer: CrewAI Strategic Planning
    └─ Multi-agent collaboration
    └─ Strategic macro generation
    └─ Long-term goal planning
    
-🔮 Subconscious Layer: ML Pattern Recognition
+[SUBCONSCIOUS] Subconscious Layer: ML Pattern Recognition
    └─ Real-time pattern prediction
    └─ Learned behavior execution
    └─ Fast response (<500ms)
    
-⚡ Reflex Layer: OpenKore EventMacro
+[REFLEX] Reflex Layer: OpenKore EventMacro
    └─ Instant muscle memory
    └─ Trigger-based reactions
    └─ Ultra-fast execution (<50ms)
@@ -159,7 +159,7 @@ class ConsoleLogger:
    └─ Type: {macro_type}
    └─ Triggers: {generation_details.get('trigger_count', 0)} conditions
    └─ Actions: {generation_details.get('action_count', 0)} steps
-   └─ Status: {generation_details.get('status', 'Generated')} ✓
+   └─ Status: {generation_details.get('status', 'Generated')} [OK]
 """
         self._thread_safe_print(f"[{timestamp}] {output}")
     
@@ -205,10 +205,10 @@ class ConsoleLogger:
         )
         
         output = f"""
-💓 [SYSTEM HEARTBEAT - {timestamp}]
-   🧠 Conscious: {conscious_status}
-   🔮 Subconscious: {subconscious_status}
-   ⚡ Reflex: {reflex_status}
+[SYSTEM HEARTBEAT - {timestamp}]
+   [CONSCIOUS]: {conscious_status}
+   [SUBCONSCIOUS]: {subconscious_status}
+   [REFLEX]: {reflex_status}
 """
         self._thread_safe_print(output)
     
@@ -233,7 +233,7 @@ class ConsoleLogger:
    └─ Samples: {samples_collected}
    └─ Learning Rate: {learning_rate:.4f}
    └─ Patterns Learned: {patterns_learned}
-   └─ Status: Continuously Learning 🔄
+   └─ Status: Continuously Learning [RELOAD]
 """
         self._thread_safe_print(f"[{timestamp}] {output}")
     

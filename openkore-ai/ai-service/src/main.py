@@ -99,7 +99,7 @@ async def lifespan(app: FastAPI):
     await db.initialize()
     console_logger.print_layer_initialization(
         LayerType.SYSTEM,
-        "Database Ready ✓"
+        "Database Ready [OK]"
     )
     
     # Validate configuration and warn about missing items
@@ -116,7 +116,7 @@ async def lifespan(app: FastAPI):
         raise
     console_logger.print_layer_initialization(
         LayerType.SYSTEM,
-        "Configuration Validated ✓"
+        "Configuration Validated [OK]"
     )
     
     # Initialize memory manager
@@ -138,7 +138,7 @@ async def lifespan(app: FastAPI):
     await cold_start_manager.initialize(db)
     console_logger.print_layer_initialization(
         LayerType.SUBCONSCIOUS,
-        f"ML Systems Ready ✓",
+        f"ML Systems Ready [OK]",
         f"Cold-start Phase {cold_start_manager.current_phase}, Model trained: {cold_start_manager.model_trained}"
     )
     logger.info(f"ML Cold-Start initialized: Phase {cold_start_manager.current_phase}")
@@ -160,7 +160,7 @@ async def lifespan(app: FastAPI):
     target_selector = TargetSelector()
     console_logger.print_layer_initialization(
         LayerType.REFLEX,
-        "Combat Intelligence Ready ✓",
+        "Combat Intelligence Ready [OK]",
         "4 systems: Threat, Kiting, Targeting, Positioning"
     )
     logger.info("Combat Intelligence Systems initialized (Priority 1)")
@@ -175,7 +175,7 @@ async def lifespan(app: FastAPI):
     
     console_logger.print_layer_initialization(
         LayerType.SYSTEM,
-        "Progression Systems Ready ✓",
+        "Progression Systems Ready [OK]",
         "95% autonomy enabled: Stats, Skills, Equipment"
     )
     logger.info("Autonomous Progression Systems initialized (Phase 11)")
@@ -207,13 +207,13 @@ async def lifespan(app: FastAPI):
     macro_router.set_coordinator(macro_coordinator)
     console_logger.print_layer_initialization(
         LayerType.CONSCIOUS,
-        "CrewAI Strategic Layer Ready ✓",
+        "CrewAI Strategic Layer Ready [OK]",
         "Agents: Strategist, Analyst, Generator, Optimizer"
     )
     
     console_logger.print_layer_initialization(
         LayerType.REFLEX,
-        "OpenKore EventMacro Connected ✓",
+        "OpenKore EventMacro Connected [OK]",
         "Ultra-fast trigger-based execution ready"
     )
     logger.info("Three-Layer Adaptive Macro System initialized")
@@ -239,7 +239,7 @@ async def lifespan(app: FastAPI):
     heartbeat_task = asyncio.create_task(system_heartbeat())
     console_logger.print_layer_initialization(
         LayerType.SYSTEM,
-        "System Heartbeat Started ✓",
+        "System Heartbeat Started [OK]",
         "Monitoring all three layers (30s interval)"
     )
     

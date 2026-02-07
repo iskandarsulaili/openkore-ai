@@ -101,7 +101,7 @@ class MacroModelTrainer:
         })
         
         logger.info(
-            f"✓ Model trained successfully: "
+            f"[OK] Model trained successfully: "
             f"train_acc={metrics['train_accuracy']:.3f}, "
             f"val_acc={metrics.get('val_accuracy', 0):.3f}"
         )
@@ -145,7 +145,7 @@ class MacroModelTrainer:
         # Save updated model
         self.model.save_model()
         
-        logger.info(f"✓ Online update complete: acc={metrics['train_accuracy']:.3f}")
+        logger.info(f"[OK] Online update complete: acc={metrics['train_accuracy']:.3f}")
         
         return {
             'status': 'success',

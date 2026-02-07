@@ -66,7 +66,7 @@ class MacroDeploymentService:
             logger.debug(f"Injecting macro '{macro.name}' with priority {macro.priority}")
             
             # Log deployment attempt to console
-            print(f"\n⚡ [DEPLOYMENT] Deploying to OpenKore...")
+            print(f"\n[REFLEX] [DEPLOYMENT] Deploying to OpenKore...")
             print(f"   └─ Macro: {macro.name}")
             print(f"   └─ Priority: {macro.priority}")
             print(f"   └─ Target: EventMacro Engine")
@@ -89,14 +89,14 @@ class MacroDeploymentService:
             })
             
             logger.success(
-                f"✓ Macro '{macro.name}' injected successfully "
+                f"[OK] Macro '{macro.name}' injected successfully "
                 f"(latency: {result['injection_time_ms']}ms)"
             )
             
             # Log successful deployment to console
             console_logger.log_macro_deployment(
                 macro_name=macro.name,
-                deployment_status=f"✓ Deployed Successfully ({result['injection_time_ms']}ms)"
+                deployment_status=f"[OK] Deployed Successfully ({result['injection_time_ms']}ms)"
             )
             
             return result
@@ -160,7 +160,7 @@ class MacroDeploymentService:
         
         # Log batch deployment to console
         if len(macros) > 1:
-            print(f"\n⚡ [DEPLOYMENT] Batch Deployment Complete")
+            print(f"\n[REFLEX] [DEPLOYMENT] Batch Deployment Complete")
             print(f"   └─ Successful: {len(results['successful'])}")
             print(f"   └─ Failed: {len(results['failed'])}")
             print(f"   └─ Total Time: {results['total_time_ms']}ms")
@@ -206,7 +206,7 @@ class MacroDeploymentService:
             response.raise_for_status()
             
             result = response.json()
-            logger.info(f"✓ Macro '{name}' deleted successfully")
+            logger.info(f"[OK] Macro '{name}' deleted successfully")
             
             return result
             

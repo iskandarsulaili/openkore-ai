@@ -69,7 +69,7 @@ class ContingencyManager:
                 result = await self._execute_plan(goal, plan_name, plan_details, game_state)
                 
                 if result['success']:
-                    logger.info(f"✅ Goal {goal.id} succeeded using {plan_name}")
+                    logger.info(f"[SUCCESS] Goal {goal.id} succeeded using {plan_name}")
                     goal.complete_success()
                     
                     return {
@@ -81,7 +81,7 @@ class ContingencyManager:
                     }
                 else:
                     # Plan failed - log and try next
-                    logger.warning(f"❌ {plan_name} failed for goal {goal.id}: {result.get('reason')}")
+                    logger.warning(f"[ERROR] {plan_name} failed for goal {goal.id}: {result.get('reason')}")
                     self._log_plan_failure(goal, plan_name, result)
                     
                     # Check if we should switch to next plan
@@ -114,7 +114,7 @@ class ContingencyManager:
                 continue
         
         # All plans failed (including emergency) - should never happen
-        logger.critical(f"🚨 CRITICAL: All plans failed for goal {goal.id} including emergency!")
+        logger.critical(f"[EMERGENCY] CRITICAL: All plans failed for goal {goal.id} including emergency!")
         return await self._emergency_abort(goal, game_state, "All plans exhausted")
     
     async def _execute_plan(
@@ -287,30 +287,30 @@ class ContingencyManager:
             Emergency abort result (always successful)
         """
         
-        logger.critical(f"🚨 EMERGENCY ABORT: Goal {goal.id} - {reason}")
+        logger.critical(f"[EMERGENCY] EMERGENCY ABORT: Goal {goal.id} - {reason}")
         
         goal.emergency_abort(reason)
         
         try:
             # Step 1: Save character state
             character_state = self._save_character_state(game_state)
-            logger.info("✅ Character state saved")
+            logger.info("[SUCCESS] Character state saved")
             
             # Step 2: Teleport to safety (if in danger)
             if not game_state.get('in_safe_zone', False):
                 teleport_result = await self._emergency_teleport(game_state)
-                logger.info(f"✅ Emergency teleport: {teleport_result}")
+                logger.info(f"[SUCCESS] Emergency teleport: {teleport_result}")
             
             # Step 3: Heal to full
             heal_result = await self._heal_to_full(game_state)
-            logger.info(f"✅ Healed to full: {heal_result}")
+            logger.info(f"[SUCCESS] Healed to full: {heal_result}")
             
             # Step 4: Log comprehensive failure
             self._log_emergency_abort(goal, reason, character_state)
             
             # Step 5: Generate post-mortem
             post_mortem = self._generate_post_mortem(goal, reason, game_state)
-            logger.info("✅ Post-mortem analysis generated")
+            logger.info("[SUCCESS] Post-mortem analysis generated")
             
             # Step 6: Store for ML training
             self._store_for_ml_training(goal, post_mortem)

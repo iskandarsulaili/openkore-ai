@@ -121,7 +121,7 @@ class MacroPredictor:
         )
         
         logger.info(
-            f"✓ ML prediction: {macro_type_name} "
+            f"[OK] ML prediction: {macro_type_name} "
             f"(confidence: {confidence:.2%})"
         )
         

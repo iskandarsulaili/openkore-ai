@@ -60,7 +60,7 @@ class StatusTableResolver:
         # Try server-specific
         server_specific = self.tables_base / server_name / "STATUS_id_handle.txt"
         if server_specific.exists():
-            logger.info(f"✓ Loading server-specific status table: {server_specific}")
+            logger.info(f"[OK] Loading server-specific status table: {server_specific}")
             mapping = self._parse_status_file(server_specific)
             self.status_cache[server_name] = mapping
             logger.info(f"  Loaded {len(mapping)} status effects for {server_name}")
@@ -70,7 +70,7 @@ class StatusTableResolver:
         generic = self.tables_base / "STATUS_id_handle.txt"
         if generic.exists():
             logger.warning(
-                f"⚠ Server-specific status table not found for {server_name}. "
+                f"[WARNING] Server-specific status table not found for {server_name}. "
                 f"Using generic: {generic}"
             )
             mapping = self._parse_status_file(generic)
@@ -80,7 +80,7 @@ class StatusTableResolver:
         
         # Fallback
         logger.error(
-            f"❌ No status table found for server {server_name}. "
+            f"[ERROR] No status table found for server {server_name}. "
             f"Searched:\n"
             f"  1. {server_specific}\n"
             f"  2. {generic}\n"
@@ -261,6 +261,6 @@ if __name__ == "__main__":
         for status in test_statuses:
             status_id = resolver.get_status_id(server, status)
             if status_id:
-                print(f"  ✓ {status}: {status_id}")
+                print(f"  [OK] {status}: {status_id}")
             else:
                 print(f"  ✗ {status}: NOT FOUND")

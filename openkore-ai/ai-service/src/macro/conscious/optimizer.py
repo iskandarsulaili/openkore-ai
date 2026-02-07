@@ -236,7 +236,7 @@ class MacroOptimizer:
         )
         
         logger.info(
-            f"✓ Generated {len(suggestions)} optimization suggestions "
+            f"[OK] Generated {len(suggestions)} optimization suggestions "
             f"(expected improvement: {expected_improvement:.1%})"
         )
         

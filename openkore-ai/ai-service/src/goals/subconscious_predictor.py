@@ -116,7 +116,7 @@ class SubconsciousGoalPredictor:
         
         if primary['confidence'] < self.confidence_threshold:
             logger.debug("Primary confidence low - querying historical successes")
-            print(f"\n🔮 [SUBCONSCIOUS] Low Confidence - Querying History")
+            print(f"\n[SUBCONSCIOUS] [SUBCONSCIOUS] Low Confidence - Querying History")
             print(f"   └─ Confidence: {primary['confidence']:.2f} < {self.confidence_threshold}")
             print(f"   └─ Action: Searching learned patterns from past successes")
             
@@ -338,9 +338,9 @@ class SubconsciousGoalPredictor:
         # Log learning to console
         status = result.get('status')
         if status == 'success':
-            print(f"\n🔮 [SUBCONSCIOUS] Learning from Success")
+            print(f"\n[SUBCONSCIOUS] [SUBCONSCIOUS] Learning from Success")
         else:
-            print(f"\n🔮 [SUBCONSCIOUS] Learning from Failure")
+            print(f"\n[SUBCONSCIOUS] [SUBCONSCIOUS] Learning from Failure")
         print(f"   └─ Goal: {goal.name}")
         print(f"   └─ Outcome: {status}")
         print(f"   └─ Updating ML Model...")

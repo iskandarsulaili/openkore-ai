@@ -222,7 +222,7 @@ class PerformanceAnalyst:
         )
         
         logger.info(
-            f"✓ Performance report generated: "
+            f"[OK] Performance report generated: "
             f"{len(macro_effectiveness)} macros analyzed, "
             f"{len(recommendations)} recommendations"
         )

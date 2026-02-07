@@ -322,7 +322,7 @@ class AutonomousHealingSystem:
         
         # Console output for user visibility
         print("\n" + "="*60)
-        print("🔧 Autonomous Healing: Processing issue...")
+        print("[CONFIG] Autonomous Healing: Processing issue...")
         print(f"   Issue: {issue_type} (Severity: {severity})")
         print("="*60)
         
@@ -346,14 +346,14 @@ class AutonomousHealingSystem:
             }
             
             # Progress logging
-            self.logger.info("🔄 Phase 1/6: Monitor agent analyzing issue...")
-            self.logger.info(f"📋 Processing: {issue_type}")
-            self.logger.info("⏳ This may take 1-3 minutes for multi-agent collaboration...")
-            self.logger.info("🤖 CrewAI agents: Monitor → Analyzer → Solver → Validator → Executor → Learner")
+            self.logger.info("[RELOAD] Phase 1/6: Monitor agent analyzing issue...")
+            self.logger.info(f"[LIST] Processing: {issue_type}")
+            self.logger.info("[WAIT] This may take 1-3 minutes for multi-agent collaboration...")
+            self.logger.info("[AI] CrewAI agents: Monitor → Analyzer → Solver → Validator → Executor → Learner")
             
             # Console output for user visibility
-            print("   ⏳ Please wait 1-3 minutes for AI agents to collaborate...")
-            print("   🤖 AI Agents working...")
+            print("   [WAIT] Please wait 1-3 minutes for AI agents to collaborate...")
+            print("   [AI] AI Agents working...")
             
             # Start time tracking
             start_time = time.time()
@@ -375,15 +375,15 @@ class AutonomousHealingSystem:
                 
                 # Calculate duration
                 duration = time.time() - start_time
-                self.logger.info(f"⏱️ Completed in {duration:.1f} seconds")
+                self.logger.info(f"[TIME] Completed in {duration:.1f} seconds")
                 
                 # Console output for completion
-                print(f"   ✅ Completed in {duration:.1f}s")
+                print(f"   [SUCCESS] Completed in {duration:.1f}s")
                 
                 # Log result
                 if result.get('success'):
-                    self.logger.info(f"✅ Issue resolved: {issue_type}")
-                    print(f"   ✓ Issue resolved: {issue_type}")
+                    self.logger.info(f"[SUCCESS] Issue resolved: {issue_type}")
+                    print(f"   [OK] Issue resolved: {issue_type}")
                     if 'solution' in result:
                         self.logger.info(f"Solution applied: {result['solution'].get('action', 'N/A')}")
                         solution_action = result['solution'].get('action', 'N/A')
@@ -391,18 +391,18 @@ class AutonomousHealingSystem:
                             print(f"   💾 Solution: {solution_action}")
                 else:
                     self.logger.warning(f"✗ Issue resolution failed: {issue_type}")
-                    print(f"   ⚠️ Issue resolution incomplete: {issue_type}")
+                    print(f"   [WARNING] Issue resolution incomplete: {issue_type}")
                     if 'error' in result:
                         self.logger.error(f"Error: {result['error']}")
                         
             except asyncio.TimeoutError:
                 duration = time.time() - start_time
-                self.logger.error(f"⚠️ CrewAI workflow timeout ({duration:.1f}s / 300s max)")
+                self.logger.error(f"[WARNING] CrewAI workflow timeout ({duration:.1f}s / 300s max)")
                 self.logger.error(f"Issue may require manual intervention: {issue_type}")
                 
                 # Console output for timeout
-                print(f"   ⏰ Timeout after {duration:.0f}s - Issue may need manual review")
-                print(f"   ℹ️ Check logs for details: {self.config['logging']['file']}")
+                print(f"   [TIME] Timeout after {duration:.0f}s - Issue may need manual review")
+                print(f"   [INFO] Check logs for details: {self.config['logging']['file']}")
                 
                 self.logger.info("="*60)
                 print("="*60)

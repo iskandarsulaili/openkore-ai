@@ -47,13 +47,13 @@ async def main():
     health = await coordinator.health_check()
     
     if health['deployment_service']:
-        logger.info("✓ MacroHotReload plugin is accessible")
+        logger.info("[OK] MacroHotReload plugin is accessible")
     else:
         logger.warning("✗ MacroHotReload plugin not responding")
         logger.warning("  Make sure OpenKore is running with MacroHotReload plugin")
     
     if health['ml_model_trained']:
-        logger.info("✓ ML model is trained and ready")
+        logger.info("[OK] ML model is trained and ready")
     else:
         logger.warning("✗ ML model not trained yet")
         logger.info("  The system will collect data and train automatically")
@@ -150,7 +150,7 @@ async def main():
         training_result = await coordinator.train_ml_model(min_samples=100)
         
         if training_result['status'] == 'success':
-            logger.info(f"✓ Model trained successfully!")
+            logger.info(f"[OK] Model trained successfully!")
             logger.info(f"  Training Accuracy: {training_result['train_accuracy']:.2%}")
             logger.info(f"  Validation Accuracy: {training_result.get('val_accuracy', 0):.2%}")
         else:
