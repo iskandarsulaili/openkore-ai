@@ -18,6 +18,10 @@ my $ai_service_url = "http://127.0.0.1:9902";
 my $ua = LWP::UserAgent->new(timeout => 30);
 my $request_counter = 0;
 
+# Package-level variable declarations
+my %questList;          # Used in collect_game_state() for tracking active quests
+my $last_query_time = 0; # Used in on_ai_pre() for rate limiting
+
 # Hot reload configuration monitoring
 my $config_file_path = "control/config.txt";
 my $last_config_mtime = 0;
@@ -46,6 +50,7 @@ sub on_load {
         ['job_level', \&on_job_level_up, undef],
         ['packet/stat_info', \&on_stat_info, undef],
         ['packet/skill_update', \&on_skill_update, undef],
+        ['Log::message', \&on_log_message, undef],
     );
 
     message "[GodTierAI] Loaded successfully (Phase 11 - Autonomous Progression)\n", "success";
@@ -101,7 +106,7 @@ sub check_config_reload {
 # Check if AI Service is reachable
 sub check_ai_service_connectivity {
     eval {
-        my $response = $ua->get("$ai_service_url/health");
+        my $response = $ua->get("$ai_service_url/api/v1/health");
         if ($response->is_success) {
             message "[GodTierAI] [OK] AI Service is online and healthy\n", "success";
         } else {
@@ -118,6 +123,11 @@ sub check_ai_service_connectivity {
 # Call initialization
 on_load();
 
+# CRITICAL FIX: Helper function to check if inventory is ready
+sub inventory_ready {
+    return ($char && $char->{inventory}) ? 1 : 0;
+}
+
 # Check if AI Engine is available
 sub check_engine_health {
     my $response = $ua->get("$ai_engine_url/api/v1/health");
@@ -130,39 +140,49 @@ sub check_engine_health {
     return 0;
 }
 
-# Collect game state (enhanced with equipment, quests, guild info)
+# Collect game state (enhanced with equipment, quests, guild info, skills)
 sub collect_game_state {
     my %state = (
         character => {
             name => $char->{name} || 'Unknown',
-            level => $char->{lv} || 1,
-            base_exp => $char->{exp} || 0,
-            job_exp => $char->{exp_job} || 0,
-            hp => $char->{hp} || 0,
-            max_hp => $char->{hp_max} || 1,
-            sp => $char->{sp} || 0,
-            max_sp => $char->{sp_max} || 1,
+            level => int($char->{lv} || 1),
+            job_level => int($char->{lv_job} || 0),
+            base_exp => int($char->{exp} || 0),
+            base_exp_max => int($char->{exp_max} || 0),
+            job_exp => int($char->{exp_job} || 0),
+            job_exp_max => int($char->{exp_job_max} || 0),
+            hp => int($char->{hp} || 0),
+            max_hp => int($char->{hp_max} || 1),
+            sp => int($char->{sp} || 0),
+            max_sp => int($char->{sp_max} || 1),
+            
+            # P0 CRITICAL FIX #1: Add stat and skill points for progression
+            points_free => int($char->{points_free} || 0),
+            points_skill => int($char->{points_skill} || 0),
+            
             position => {
                 map => $field ? $field->name() : 'unknown',
-                x => $char->{pos_to}{x} || 0,
-                y => $char->{pos_to}{y} || 0,
+                x => int($char->{pos_to}{x} || 0),
+                y => int($char->{pos_to}{y} || 0),
             },
-            weight => $char->{weight} || 0,
-            max_weight => $char->{weight_max} || 1,
-            zeny => $char->{zeny} || 0,
-            job_class => $jobs_lut{$char->{jobId}} || 'Unknown',
+            weight => int($char->{weight} || 0),
+            max_weight => int($char->{weight_max} || 1),
+            zeny => int($char->{zeny} || 0),
+            job_class => $::jobs_lut{$char->{jobId}} || 'Novice',
             status_effects => [],
             # Enhanced: Equipment info
             equipment => collect_equipment(),
-            # Enhanced: Guild info
+            # Enhanced: Guild info (safe access)
             guild => {
-                name => $char->{guild}{name} || '',
-                id => $char->{guild}{ID} || '',
-                position => $char->{guild}{title} || '',
+                name => ($char->{guild} && $char->{guild}{name}) || '',
+                id => ($char->{guild} && $char->{guild}{ID}) || '',
+                position => ($char->{guild} && $char->{guild}{title}) || '',
             },
             # Enhanced: Active quests (simplified)
-            active_quests => scalar(keys %questList) || 0,
+            active_quests => int(scalar(keys %questList) || 0),
         },
+        # CRITICAL FIX #1: Add character skills to game state
+        skills => [],
         monsters => [],
         inventory => [],
         nearby_players => [],
@@ -170,30 +190,47 @@ sub collect_game_state {
         timestamp_ms => int(time() * 1000),
     );
     
+    # CRITICAL FIX #1: Collect character skills
+    if ($char->{skills}) {
+        foreach my $skill_name (keys %{$char->{skills}}) {
+            my $skill = $char->{skills}{$skill_name};
+            if ($skill && $skill->{lv} > 0) {
+                push @{$state{skills}}, {
+                    name => $skill_name,
+                    level => int($skill->{lv} || 0),
+                    sp_cost => int($skill->{sp} || 0),
+                };
+            }
+        }
+    }
+    
     # Collect monsters
     foreach my $monster (@{$monstersList->getItems()}) {
         next unless $monster;
         push @{$state{monsters}}, {
-            id => $monster->{binID},
+            id => int($monster->{binID} || 0),
             name => $monster->{name} || 'Unknown',
-            hp => $monster->{hp} || 0,
-            max_hp => $monster->{hp_max} || 0,
+            hp => int($monster->{hp} || 0),
+            max_hp => int($monster->{hp_max} || 0),
             distance => int(distance($char->{pos_to}, $monster->{pos_to})),
             is_aggressive => $monster->{dmgToYou} > 0 ? JSON::true : JSON::false,
         };
     }
     
     # Collect inventory (sample - first 10 items)
-    my $inv_count = 0;
-    foreach my $item (@{$char->inventory->getItems()}) {
-        last if $inv_count++ >= 10;
-        next unless $item;
-        push @{$state{inventory}}, {
-            id => $item->{nameID},
-            name => $item->{name} || 'Unknown',
-            amount => $item->{amount} || 1,
-            type => $item->{type} || 'misc',
-        };
+    # CRITICAL FIX: Check if inventory is ready before accessing
+    if (inventory_ready()) {
+        my $inv_count = 0;
+        foreach my $item (@{$char->inventory->getItems()}) {
+            last if $inv_count++ >= 10;
+            next unless $item;
+            push @{$state{inventory}}, {
+                id => int($item->{nameID} || 0),
+                name => $item->{name} || 'Unknown',
+                amount => int($item->{amount} || 1),
+                type => $item->{type} || 'misc',
+            };
+        }
     }
     
     # Collect nearby players (enhanced)
@@ -201,11 +238,11 @@ sub collect_game_state {
         next unless $player;
         push @{$state{nearby_players}}, {
             name => $player->{name} || 'Unknown',
-            level => $player->{lv} || 1,
+            level => int($player->{lv} || 1),
             guild => $player->{guild}{name} || '',
             distance => int(distance($char->{pos_to}, $player->{pos_to})),
             is_party_member => exists $char->{party}{users}{$player->{ID}} ? JSON::true : JSON::false,
-            job_class => $jobs_lut{$player->{jobId}} || 'Unknown',
+            job_class => $::jobs_lut{$player->{jobId}} || 'Novice',
         };
     }
     
@@ -216,16 +253,45 @@ sub collect_game_state {
 sub collect_equipment {
     my @equipment_list;
     
-    foreach my $item (@{$char->inventory->getItems()}) {
-        next unless $item && $item->{equipped};
-        push @equipment_list, {
-            slot => $item->{type_equip} || 'unknown',
-            name => $item->{name} || 'Unknown',
-            id => $item->{nameID},
-        };
+    # CRITICAL FIX: Check if inventory is ready before accessing
+    if (inventory_ready()) {
+        foreach my $item (@{$char->inventory->getItems()}) {
+            next unless $item && $item->{equipped};
+            push @equipment_list, {
+                slot => $item->{type_equip} || 'unknown',
+                name => $item->{name} || 'Unknown',
+                id => int($item->{nameID} || 0),
+            };
+        }
     }
     
     return \@equipment_list;
+}
+
+# CRITICAL FIX #4: Send action feedback to AI-Service for adaptive learning
+sub send_action_feedback {
+    my ($action, $status, $reason, $message) = @_;
+    
+    $message ||= '';
+    
+    my $payload = encode_json({
+        action => $action,
+        status => $status,
+        reason => $reason,
+        message => $message
+    });
+    
+    my $response = $ua->post(
+        "$ai_service_url/api/v1/action_feedback",
+        'Content-Type' => 'application/json',
+        Content => $payload
+    );
+    
+    if ($response->is_success) {
+        debug "[GodTierAI] [FEEDBACK] Sent: $action -> $status ($reason)\n", "ai";
+    } else {
+        error "[GodTierAI] [FEEDBACK] Failed to send feedback: " . $response->status_line . "\n";
+    }
 }
 
 # Request decision from AI Engine
@@ -244,7 +310,7 @@ sub request_decision {
     my $json_request = encode_json(\%request);
     
     my $response = $ua->post(
-        "$ai_engine_url/api/v1/decide",
+        "$ai_service_url/api/v1/decide",
         Content_Type => 'application/json',
         Content => $json_request,
     );
@@ -262,27 +328,337 @@ sub request_decision {
 sub execute_action {
     my ($action_data) = @_;
     
+    # Safety check
+    unless (ref($action_data) eq 'HASH') {
+        error "[GodTierAI] Invalid action_data: expected HASH, got " . ref($action_data) . "\n";
+        return;
+    }
+    
     my $action = $action_data->{action};
-    my $type = $action->{type};
-    my $params = $action->{parameters};
-    my $reason = $action->{reason};
+    my $params = $action_data->{params} || {};
+    my $reason = $action_data->{reason} || 'no reason provided';
+    
+    # Handle case where action is a string (flat structure) or hash (nested structure)
+    my $type;
+    if (ref($action) eq 'HASH') {
+        # Nested structure: {action: {type: "attack", parameters: {...}}}
+        $type = $action->{type};
+        $params = $action->{params} || $params;
+    } elsif (ref($action) eq '') {
+        # Flat structure: {action: "attack", parameters: {...}}
+        $type = $action;
+    } else {
+        error "[GodTierAI] Invalid action format: " . ref($action) . "\n";
+        return;
+    }
+    
+    unless ($type) {
+        error "[GodTierAI] Missing action type\n";
+        return;
+    }
     
     debug "[GodTierAI] Executing action: $type ($reason)\n", "ai";
     
+    # Core combat and survival actions
     if ($type eq 'attack') {
-        # Attack logic (will be implemented in Phase 2)
-        message "[GodTierAI] Action: Attack\n", "info";
+        my $target = $params->{target} || '';
+        message "[GodTierAI] [ACTION] Attacking target: $target\n", "info";
+        # Attack logic handled by OpenKore's native AI
+    } elsif ($type eq 'use_item') {
+        # Handle use_item action from AI-Service
+        my $item_name = $params->{item} || '';
+        if ($item_name) {
+            message "[GodTierAI] [ACTION] Using item: $item_name\n", "info";
+            Commands::run("is $item_name");
+        } else {
+            error "[GodTierAI] [ERROR] use_item action missing item parameter\n";
+        }
+    } elsif ($type eq 'item') {
+        # Legacy item handler (backward compatibility)
+        my $item_name = $params->{item} || '';
+        if ($item_name) {
+            message "[GodTierAI] [ACTION] Using item: $item_name\n", "info";
+            Commands::run("is $item_name");
+        }
+    } elsif ($type eq 'rest') {
+        message "[GodTierAI] [ACTION] Resting to recover SP\n", "info";
+        
+        # CRITICAL FIX #4: Try to sit and monitor for failure
+        Commands::run("sit");
+        
+        # Give OpenKore a moment to process the command
+        sleep(0.5);
+        
+        # Check if character is actually sitting (sitting status would be set)
+        # Note: In OpenKore, $char->{sitting} is true when sitting
+        if ($char->{sitting}) {
+            send_action_feedback('rest', 'success', 'character_sitting');
+        } else {
+            # Character did not sit - likely due to missing Basic Skill
+            warning "[GodTierAI] [ACTION] Failed to sit - likely missing Basic Skill Lv3\n";
+            send_action_feedback('rest', 'failed', 'basic_skill_not_learned', 'Character does not have Basic Skill Lv3 to sit');
+        }
+    } elsif ($type eq 'idle_recover') {
+        # CRITICAL FIX #1: Idle recovery (stand and wait for natural HP/SP regen)
+        my $duration = $params->{duration} || 10;
+        message "[GodTierAI] [ACTION] Idle recovery for ${duration}s (no Basic Skill for sit)\n", "info";
+        
+        # Stand if sitting
+        if ($char->{sitting}) {
+            Commands::run("stand");
+        }
+        
+        # Just wait - natural HP/SP regen will occur while standing (slower than sitting)
+        AI::queue("wait");
+        AI::args({timeout => $duration});
+    } elsif ($type eq 'attack_monster') {
+        # CRITICAL FIX #3: Attack specific monster by ID
+        my $target_id = $params->{target_id};
+        my $target_name = $params->{target_name} || 'Unknown';
+        
+        if ($target_id) {
+            message "[GodTierAI] [COMBAT] Attacking monster: $target_name (ID: $target_id)\n", "info";
+            Commands::run("attack $target_id");
+        } else {
+            error "[GodTierAI] [ERROR] attack_monster action missing target_id parameter\n";
+        }
+    } elsif ($type eq 'move_to_position') {
+        # NEW FEATURE: Move to specific position for exploration
+        my $x = $params->{x};
+        my $y = $params->{y};
+        my $reason = $params->{reason} || 'exploration';
+        
+        if (defined $x && defined $y) {
+            message "[GodTierAI] [EXPLORE] Moving to ($x, $y) - Reason: $reason\n", "info";
+            Commands::run("move $x $y");
+        } else {
+            error "[GodTierAI] [ERROR] move_to_position action missing x/y parameters\n";
+        }
+    } elsif ($type eq 'teleport') {
+        my $method = $params->{method} || 'fly_wing';
+        message "[GodTierAI] [ACTION] Teleporting via $method\n", "info";
+        if ($method eq 'fly_wing') {
+            Commands::run("is Fly Wing");
+        } else {
+            Commands::run("sl 26");  # Teleport skill
+        }
+    } elsif ($type eq 'continue') {
+        # No action needed - let OpenKore's native AI continue
+        debug "[GodTierAI] [ACTION] Continuing with current behavior\n", "ai";
+    } elsif ($type eq 'continue_combat') {
+        # Continue combat - let OpenKore's combat AI handle it
+        message "[GodTierAI] [ACTION] Continuing combat (will recover after)\n", "info";
+        # No specific command needed - OpenKore's native AI will handle combat
+    } elsif ($type eq 'retreat') {
+        # Retreat from danger (move away from current position)
+        my $reason = $params->{reason} || 'unknown';
+        warning "[GodTierAI] [ACTION] Retreating: $reason\n";
+        
+        # Try to move away from current position (5 cells back)
+        if ($char->{pos_to}) {
+            my $x = int($char->{pos_to}{x}) - 5;
+            my $y = int($char->{pos_to}{y}) - 5;
+            Commands::run("move $x $y");
+        } else {
+            # If position unknown, try random teleport
+            Commands::run("is Fly Wing");
+        }
+    } elsif ($type eq 'auto_buy') {
+        # Auto-buy items (return to town and purchase)
+        my $items = $params->{items} || [];
+        my $priority = $params->{priority} || 'medium';
+        
+        message "[GodTierAI] [ACTION] Auto-buy triggered (priority: $priority)\n", "info";
+        message "[GodTierAI] [ACTION] Items needed: " . join(", ", @{$items}) . "\n", "info";
+        
+        # Let OpenKore's native storageAuto and buyAuto handle this
+        # The bot will automatically return to town and buy when needed
+        # based on config.txt settings (buyAuto_* configurations)
+    } elsif ($type eq 'sell_items') {
+        # Priority 2 Fix: Sell junk items to NPC
+        my $reason = $params->{reason} || 'resource_management';
+        my $priority = $params->{priority} || 'medium';
+        
+        message "[GodTierAI] [ACTION] Selling junk items - Reason: $reason, Priority: $priority\n", "info";
+        
+        # CRITICAL FIX: Safety check - ensure character and inventory exist
+        unless (inventory_ready()) {
+            error "[GodTierAI] [ERROR] Character inventory not initialized, cannot sell items\n";
+            send_action_feedback('sell_items', 'failed', 'inventory_not_ready',
+                'Character inventory not available');
+            return;
+        }
+        
+        # Get inventory for analysis
+        my @inventory_items;
+        foreach my $item (@{$char->{inventory}->getItems()}) {
+            next unless $item;
+            push @inventory_items, {
+                name => $item->name(),
+                amount => $item->{amount},
+                type => $item->{type},
+                id => $item->{nameID}
+            };
+        }
+        
+        # Call AI-Service to categorize items
+        my $payload = encode_json({
+            inventory => \@inventory_items
+        });
+        
+        my $response = $ua->post(
+            "$ai_service_url/api/v1/inventory/sell_junk",
+            'Content-Type' => 'application/json',
+            Content => $payload
+        );
+        
+        if ($response->is_success) {
+            my $result = decode_json($response->decoded_content);
+            
+            if ($result->{success} && @{$result->{sell_commands}}) {
+                message "[GodTierAI] [ACTION] Got " . scalar(@{$result->{sell_commands}}) . " items to sell for ~" . $result->{estimated_zeny} . "z\n", "info";
+                
+                # Navigate to Tool Dealer
+                Commands::run("move prontera 134 88");
+                
+                # Wait a moment for navigation
+                sleep(2);
+                
+                # Execute sell commands
+                foreach my $sell_cmd (@{$result->{sell_commands}}) {
+                    Commands::run($sell_cmd);
+                    sleep(0.5);  # Small delay between sells
+                }
+                
+                message "[GodTierAI] [ACTION] Finished selling items\n", "success";
+            } else {
+                message "[GodTierAI] [ACTION] No items to sell\n", "info";
+            }
+        } else {
+            error "[GodTierAI] [ACTION] Failed to get sell list from AI-Service: " . $response->status_line . "\n";
+        }
+    } elsif ($type eq 'idle') {
+        # CRITICAL FIX #3: New action handler for idle (natural HP/SP regeneration)
+        my $reason = $params->{reason} || 'unknown';
+        my $duration = $params->{duration} || 5;
+        
+        message "[GodTierAI] [ACTION] Idling for ${duration}s - Reason: $reason\n", "info";
+        message "[GodTierAI] [ACTION] Natural HP/SP regeneration will work during this time\n", "info";
+        
+        # Just wait - natural HP/SP regeneration will work
+        sleep($duration);
+        
+        # Report success
+        send_action_feedback('idle', 'success', 'completed_idle_period');
+        
+    } elsif ($type eq 'attack_nearest') {
+        # CRITICAL FIX #3: New action handler for attacking nearest monster
+        my $reason = $params->{reason} || 'farming';
+        
+        message "[GodTierAI] [ACTION] Attacking nearest monster - Reason: $reason\n", "info";
+        
+        # Find nearest monster using OpenKore's built-in function
+        my $monster = getBestTarget();
+        if ($monster) {
+            message "[GodTierAI] [ACTION] Target: " . $monster->name() . " (ID: " . $monster->{binID} . ")\n", "info";
+            Commands::run("attack " . $monster->{binID});
+            send_action_feedback('attack_nearest', 'success', 'monster_targeted');
+        } else {
+            warning "[GodTierAI] [ACTION] No monsters nearby to attack\n";
+            send_action_feedback('attack_nearest', 'failed', 'no_monsters_in_range');
+        }
+        
+    } elsif ($type eq 'return_to_town') {
+        # CRITICAL FIX #3: New action handler for returning to town
+        my $reason = $params->{reason} || 'unknown';
+        my $buy_items = $params->{buy_items} || [];
+        
+        message "[GodTierAI] [ACTION] Returning to town - Reason: $reason\n", "info";
+        
+        # Check if we have Butterfly Wing or Fly Wing
+        my $butterfly_wing = $char->inventory()->getByName("Butterfly Wing");
+        my $fly_wing = $char->inventory()->getByName("Fly Wing");
+        
+        if ($butterfly_wing) {
+            message "[GodTierAI] [ACTION] Using Butterfly Wing to return to save point\n", "info";
+            Commands::run("is Butterfly Wing");
+            send_action_feedback('return_to_town', 'success', 'used_butterfly_wing');
+        } elsif ($fly_wing) {
+            message "[GodTierAI] [ACTION] Using Fly Wing to teleport (will need to walk to town)\n", "info";
+            Commands::run("is Fly Wing");
+            # Note: Fly Wing only random teleports, may need to walk from there
+            send_action_feedback('return_to_town', 'partial', 'used_fly_wing_need_walk');
+        } else {
+            # No teleport items, try to walk to nearest town
+            message "[GodTierAI] [ACTION] No teleport items, walking to town...\n", "info";
+            Commands::run("move prontera");  # Default to Prontera
+            send_action_feedback('return_to_town', 'success', 'walking_to_town');
+        }
+        
+        # If items to buy, queue auto-buy
+        if (@$buy_items) {
+            message "[GodTierAI] [ACTION] Will buy: " . join(", ", @$buy_items) . "\n", "info";
+            # Let OpenKore's buyAuto handle it based on config.txt
+        }
+        
     } elsif ($type eq 'skill') {
         # Skill logic (will be implemented in Phase 2)
         message "[GodTierAI] Action: Use skill\n", "info";
     } elsif ($type eq 'move') {
         # Move logic (will be implemented in Phase 2)
         message "[GodTierAI] Action: Move\n", "info";
-    } elsif ($type eq 'item') {
-        # Item usage logic
-        my $item_name = $params->{item};
-        message "[GodTierAI] Action: Use item '$item_name'\n", "info";
-        Commands::run("is $item_name");
+    }
+    # Strategic Layer Actions (CONSCIOUS Layer - CrewAI)
+    elsif ($type eq 'farm_monsters') {
+        my $reason = $params->{reason} || 'strategic_leveling';
+        my $target_level = $params->{target_level} || ($char->{lv} + 1);
+        
+        message "[GodTierAI] [STRATEGIC] Farming monsters - Reason: $reason (Target: Lv$target_level)\n", "info";
+        
+        # Enable OpenKore's native monster hunting AI
+        Commands::run("conf attackAuto 2");
+        Commands::run("conf route_randomWalk 1");
+        
+        send_action_feedback('farm_monsters', 'success', 'farming_enabled');
+    }
+    elsif ($type eq 'job_change_quest') {
+        my $reason = $params->{reason} || 'ready_for_advancement';
+        my $current_class = $params->{current_class} || $char->{jobName};
+        
+        message "[GodTierAI] [STRATEGIC] Job change quest - Class: $current_class, Reason: $reason\n", "info";
+        
+        # Navigate to job change location based on class
+        if ($current_class eq 'Novice') {
+            message "[GodTierAI] [STRATEGIC] Navigating to job change location (Prontera)\n", "info";
+            Commands::run("move prontera");
+            # Note: Actual quest automation would be handled by quest_automation.py
+        } else {
+            message "[GodTierAI] [STRATEGIC] Already advanced from Novice\n", "info";
+        }
+        
+        send_action_feedback('job_change_quest', 'success', 'navigating_to_job_change');
+    }
+    elsif ($type eq 'find_quest') {
+        my $reason = $params->{reason} || 'strategic_quest';
+        
+        message "[GodTierAI] [STRATEGIC] Finding available quests - Reason: $reason\n", "info";
+        
+        # Navigate to quest board or quest NPC location
+        # This would integrate with quest automation system
+        message "[GodTierAI] [STRATEGIC] Moving to Prontera quest board\n", "info";
+        Commands::run("move prontera");
+        
+        send_action_feedback('find_quest', 'success', 'searching_for_quests');
+    }
+    elsif ($type eq 'move_to_location') {
+        my $reason = $params->{reason} || 'strategic_positioning';
+        my $target_map = $params->{target_map} || 'prontera';
+        
+        message "[GodTierAI] [STRATEGIC] Moving to location: $target_map - Reason: $reason\n", "info";
+        
+        Commands::run("move $target_map");
+        
+        send_action_feedback('move_to_location', 'success', 'navigating');
     }
     # Enhanced: Social actions
     elsif ($type eq 'chat_response') {
@@ -338,7 +714,90 @@ sub execute_action {
     elsif ($type eq 'none') {
         # No action needed
         debug "[GodTierAI] Action: None ($reason)\n", "ai";
-    } else {
+    }
+    # P0 CRITICAL FIX #4: Direct stat allocation (from AI-Service decision layer)
+    elsif ($type eq 'allocate_stats') {
+        my $stats = $params->{stats};  # Hash of stat => points
+        my $reason = $params->{reason} || 'progression';
+        
+        Log::message("[GodTierAI] [PROGRESSION] Allocating stat points (reason: $reason)\n", "ai");
+        
+        my $points_allocated = 0;
+        
+        foreach my $stat_name (keys %$stats) {
+            my $points = $stats->{$stat_name};
+            
+            if ($points > 0) {
+                # Convert to lowercase for OpenKore command syntax
+                # OpenKore expects: "st add <str|agi|vit|int|dex|luk>"
+                my $stat_lower = lc($stat_name);  # "STR" -> "str", "DEX" -> "dex"
+                
+                Log::message("[GodTierAI] [PROGRESSION] Adding $points points to $stat_name\n", "ai");
+                
+                # Execute stat add for each point using CORRECT OpenKore syntax
+                for (my $i = 0; $i < $points; $i++) {
+                    Commands::run("st add $stat_lower");  # FIXED: Was "stat_add $stat_code"
+                    $points_allocated++;
+                    
+                    # Add small delay to prevent command flooding
+                    sleep 0.05 if $i < $points - 1;
+                }
+                
+                Log::message("[GodTierAI] [PROGRESSION] Executed: st add $stat_lower (x$points)\n", "success");
+            }
+        }
+        
+        if ($points_allocated > 0) {
+            Log::message("[GodTierAI] [PROGRESSION] Successfully allocated $points_allocated stat points\n", "success");
+            send_action_feedback('allocate_stats', 'success', 'stats_allocated',
+                "$points_allocated stat points allocated");
+        } else {
+            Log::message("[GodTierAI] [PROGRESSION] Warning: No stat points allocated\n", "warning");
+            send_action_feedback('allocate_stats', 'failed', 'no_points_allocated',
+                'No valid stats to allocate');
+        }
+    }
+    # P0 CRITICAL FIX #5: Direct skill learning (from AI-Service decision layer)
+    elsif ($type eq 'learn_skill') {
+        my $skill_name = $params->{skill_name} || $params->{skill_display_name};
+        my $points_to_add = $params->{points_to_add} || 1;
+        my $reason = $params->{reason} || 'progression';
+        
+        Log::message("[GodTierAI] [PROGRESSION] Learning skill: $skill_name (adding $points_to_add points)\n", "ai");
+        
+        # OpenKore skill learning command requires NUMERIC skill ID (not name/handle)
+        # Format: skills add <skill_id_number>
+        # We need to convert skill handle to skill IDN
+        
+        my $skills_learned = 0;
+        
+        # Create Skill object from handle to get numeric ID
+        my $skill = new Skill(handle => $skill_name);
+        my $skill_idn = $skill->getIDN();
+        
+        if ($skill_idn) {
+            Log::message("[GodTierAI] [PROGRESSION] Skill handle '$skill_name' -> IDN: $skill_idn\n", "ai");
+            
+            for (my $i = 0; $i < $points_to_add; $i++) {
+                # FIXED: OpenKore expects numeric skill ID, not skill name
+                Commands::run("skills add $skill_idn");  # Was: "skills add $skill_name"
+                $skills_learned++;
+                
+                # Add small delay to prevent command flooding
+                sleep 0.05 if $i < $points_to_add - 1;
+            }
+            
+            Log::message("[GodTierAI] [PROGRESSION] Executed: skills add $skill_idn (x$points_to_add)\n", "success");
+            
+            send_action_feedback('learn_skill', 'success', 'skill_learned',
+                "Learned $skill_name (+$skills_learned levels)");
+        } else {
+            Log::message("[GodTierAI] [PROGRESSION] Error: Could not resolve skill handle '$skill_name' to IDN\n", "error");
+            send_action_feedback('learn_skill', 'failed', 'skill_not_found',
+                "Skill '$skill_name' not found in skill database");
+        }
+    }
+    else {
         warning "[GodTierAI] Unknown action type: $type\n";
     }
 }
@@ -353,8 +812,8 @@ sub handle_player_chat {
         player_name => $player_name,
         message => $message,
         message_type => $type,
-        my_level => $char->{lv},
-        my_job => $jobs_lut{$char->{jobId}} || 'Unknown',
+        my_level => int($char->{lv} || 1),
+        my_job => $::jobs_lut{$char->{jobId}} || 'Novice',
     );
     
     my $json_request = encode_json(\%request);
@@ -412,7 +871,7 @@ sub on_party_invite {
     my %request = (
         character_name => $char->{name},
         player_name => $player_name,
-        my_level => $char->{lv},
+        my_level => int($char->{lv} || 1),
     );
     
     my $json_request = encode_json(\%request);
@@ -467,7 +926,6 @@ sub on_ai_pre {
     check_config_reload();
     
     # Only query AI every 2 seconds to avoid spam
-    state $last_query_time = 0;
     my $current_time = time();
     return if $current_time - $last_query_time < 2.0;
     $last_query_time = $current_time;
@@ -476,9 +934,11 @@ sub on_ai_pre {
     my $decision = request_decision();
     
     if ($decision) {
-        my $tier = $decision->{tier_used};
-        my $latency = $decision->{latency_ms};
-        debug "[GodTierAI] Decision received from tier '$tier' in ${latency}ms\n", "ai";
+        my $tier = $decision->{tier_used} || 'unknown';
+        my $latency = $decision->{latency_ms} // 0;
+        my $tier_str = defined($tier) ? $tier : 'unknown';
+        my $latency_str = defined($latency) ? "${latency}ms" : 'N/A';
+        debug "[GodTierAI] Decision received from tier '$tier_str' in $latency_str\n", "ai";
         
         execute_action($decision);
     }
@@ -491,6 +951,65 @@ sub on_map_change {
     
     # Notify equipment manager about map change
     notify_equipment_map_change($field->name()) if $field;
+}
+
+# Log message hook - detects plugin warnings and triggers auto-configuration
+# User requirement: "Never fix config.txt manually, use autonomous self-healing"
+sub on_log_message {
+    my (undef, $args) = @_;
+    my $message = $args->{message} || "";
+    my $domain = $args->{domain} || "";
+    
+    # Detect teleToDest plugin warning about missing configuration
+    if ($message =~ /\[teleToDest\].*config keys not defined.*won't be activated/i) {
+        warning "[GodTierAI] [SELF-HEAL] Detected teleToDest plugin config missing\n";
+        
+        # Only trigger auto-config if character is ready
+        unless (defined $char && $char->{lv}) {
+            debug "[GodTierAI] [SELF-HEAL] Character not ready yet, skipping auto-config\n";
+            return;
+        }
+        
+        # Prepare payload for AI Service
+        my $character_level = $char->{lv} || 1;
+        my $character_class = $char->{jobName} || "Novice";
+        
+        message "[GodTierAI] [SELF-HEAL] Requesting auto-configuration for teleToDest\n", "info";
+        message "[GodTierAI] [SELF-HEAL] Character: Lv$character_level $character_class\n", "info";
+        
+        # Call AI Service self-heal endpoint
+        eval {
+            my $payload = encode_json({
+                plugin_name => 'teleToDest',
+                character_level => $character_level + 0,  # Force numeric
+                character_class => $character_class
+            });
+            
+            my $response = $ua->post(
+                "$ai_service_url/api/v1/self_heal/fix_plugin_config",
+                'Content-Type' => 'application/json',
+                Content => $payload
+            );
+            
+            if ($response->is_success) {
+                my $result = decode_json($response->decoded_content);
+                
+                if ($result->{success}) {
+                    message "[GodTierAI] [SELF-HEAL] teleToDest config auto-generated successfully!\n", "success";
+                    message "[GodTierAI] [SELF-HEAL] Keys added: " . join(", ", @{$result->{config_added}{keys_added}}) . "\n", "info";
+                    message "[GodTierAI] [SELF-HEAL] Hot reload will activate plugin automatically (~5 seconds)\n", "info";
+                } else {
+                    error "[GodTierAI] [SELF-HEAL] Failed to auto-configure: " . ($result->{error} || "Unknown error") . "\n";
+                }
+            } else {
+                error "[GodTierAI] [SELF-HEAL] AI Service request failed: " . $response->status_line . "\n";
+            }
+        };
+        
+        if ($@) {
+            error "[GodTierAI] [SELF-HEAL] Exception during auto-config: $@\n";
+        }
+    }
 }
 
 # ============================================================================
@@ -507,18 +1026,18 @@ sub on_base_level_up {
     
     # Collect current stats
     my %current_stats = (
-        str => $char->{str} || 1,
-        agi => $char->{agi} || 1,
-        vit => $char->{vit} || 1,
-        int => $char->{int} || 1,
-        dex => $char->{dex} || 1,
-        luk => $char->{luk} || 1
+        str => int($char->{str} || 1),
+        agi => int($char->{agi} || 1),
+        vit => int($char->{vit} || 1),
+        int => int($char->{int} || 1),
+        dex => int($char->{dex} || 1),
+        luk => int($char->{luk} || 1)
     );
     
     # Request stat allocation from AI Service
     eval {
         my %request = (
-            current_level => $new_level,
+            current_level => int($new_level || 1),
             current_stats => \%current_stats
         );
         
@@ -556,20 +1075,20 @@ sub on_job_level_up {
     return unless $char;
     
     my $new_job_level = $char->{lv_job};
-    my $job_class = $jobs_lut{$char->{jobId}} || 'Unknown';
+    my $job_class = $::jobs_lut{$char->{jobId}} || 'Novice';
     message "[GodTierAI] Job Level UP! New job level: $new_job_level ($job_class)\n", "success";
     
     # Collect current skills
     my %current_skills = ();
     foreach my $skill_handle (keys %{$char->{skills}}) {
         my $skill = $char->{skills}{$skill_handle};
-        $current_skills{$skill_handle} = $skill->{lv} || 0 if $skill;
+        $current_skills{$skill_handle} = int($skill->{lv} || 0) if $skill;
     }
     
     # Request skill learning from AI Service
     eval {
         my %request = (
-            current_job_level => $new_job_level,
+            current_job_level => int($new_job_level || 1),
             job => lc($job_class),
             current_skills => \%current_skills
         );

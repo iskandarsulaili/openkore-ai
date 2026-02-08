@@ -36,7 +36,7 @@ class StatAllocator:
             logger.warning(f"User intent file not found: {self.user_intent_path}")
             return {}
         
-        with open(self.user_intent_path, 'r') as f:
+        with open(self.user_intent_path, 'r', encoding='utf-8-sig') as f:
             return json.load(f)
     
     def _load_job_builds(self) -> Dict[str, Any]:
@@ -45,7 +45,7 @@ class StatAllocator:
             logger.error(f"Job builds file not found: {self.job_builds_path}")
             return {}
         
-        with open(self.job_builds_path, 'r') as f:
+        with open(self.job_builds_path, 'r', encoding='utf-8-sig') as f:
             return json.load(f)
     
     def get_current_build_config(self) -> Optional[Dict[str, Any]]:

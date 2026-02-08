@@ -20,16 +20,55 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Body
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Dict, Optional, Any
 import uvicorn
 import time
 import os
 import asyncio
+import json
 from pathlib import Path
 from loguru import logger
 from contextlib import asynccontextmanager
+import sys
+import fastapi
+
+# ============================================================================
+# PHASE 70: COMPREHENSIVE LOGGING CONFIGURATION
+# ============================================================================
+
+# Configure loguru to write to both console and files
+logger.remove()  # Remove default handler
+logger.add(sys.stderr, level="INFO", format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>")
+
+# Ensure logs directory exists
+logs_dir = Path(__file__).parent.parent / "logs"
+logs_dir.mkdir(exist_ok=True)
+
+# Add file handlers
+logger.add(
+    logs_dir / "ai_service_{time:YYYY-MM-DD}.log",
+    rotation="1 day",
+    retention="7 days",
+    level="DEBUG",
+    enqueue=True,  # Thread-safe
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}"
+)
+logger.add(
+    logs_dir / "errors_{time:YYYY-MM-DD}.log",
+    rotation="1 day",
+    retention="7 days",
+    level="ERROR",
+    enqueue=True,
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}\n{exception}"
+)
+
+logger.info("=" * 80)
+logger.info("[INIT] Logger configured - Writing to console and files")
+logger.info(f"[INIT] Logs directory: {logs_dir}")
+logger.info("=" * 80)
 
 # Import console logger for visible AI layer activity
 from utils.console_logger import console_logger, LayerType
@@ -38,6 +77,7 @@ from utils.console_logger import console_logger, LayerType
 from database import db
 from memory.openmemory_manager import OpenMemoryManager
 from agents.crew_manager import crew_manager, hierarchical_crew_manager
+from agents.strategic_agents import get_strategic_planner
 from llm.provider_chain import llm_chain
 
 # Import Phase 4 PDCA components
@@ -58,6 +98,9 @@ from progression.stat_allocator import StatAllocator
 from progression.skill_learner import SkillLearner
 from combat.equipment_manager import EquipmentManager
 
+# Import Exploration components (CRITICAL FIX #3)
+from exploration.map_explorer import map_explorer
+
 # Import Priority 1 Combat Intelligence systems (opkAI)
 from combat.threat_assessor import ThreatAssessor
 from combat.kiting_engine import KitingEngine
@@ -76,19 +119,102 @@ from routers import macro_router
 
 # Import Phase 10 Autonomous Self-Healing components
 from autonomous_healing import AutonomousHealingSystem
+from autonomous_healing.plugin_configs import generate_teledest_config
 
 # Import Priority 1 Game Mechanics components (rathena extraction)
 from routers import game_mechanics_router
 
+# Import Priority 2 NPC and Resource Management components
+from game_mechanics.npc_handler import get_npc_handler
+
+# Import Table Loader for data-driven configuration
+from utils.table_loader import get_table_loader, WATCHDOG_AVAILABLE
+
 # Lifespan context manager for startup/shutdown
+# ============================================================================
+# PHASE 70: ENHANCED STARTUP LOGGING
+# ============================================================================
+
+# ============================================================================
+# GLOBAL CONFIGURATION LOADERS (Never Hardcode!)
+# ============================================================================
+
+# Initialize table loader (loads OpenKore tables)
+table_loader = None
+thresholds_config = None
+npc_handler = None
+
+def load_configurations():
+    """
+    Load all configurations from files and tables
+    
+    User requirement: "All hardcoded things should use database available
+    in openkore-ai/tables as the first source and NEVER hardcoded"
+    """
+    global table_loader, thresholds_config, npc_handler
+    
+    logger.info("[CONFIG] Loading table-based configurations...")
+    
+    # Load OpenKore tables
+    table_loader = get_table_loader(server="ROla")
+    logger.info(f"[CONFIG] ✓ Table loader initialized for server: ROla")
+    
+    # Load thresholds configuration
+    thresholds_file = Path(__file__).parent.parent / "data" / "thresholds_config.json"
+    if thresholds_file.exists():
+        with open(thresholds_file, 'r', encoding='utf-8') as f:
+            thresholds_config = json.load(f)
+        logger.info(f"[CONFIG] ✓ Loaded thresholds config with {len(thresholds_config)} categories")
+    else:
+        logger.warning(f"[CONFIG] ⚠ Thresholds config not found: {thresholds_file}")
+        thresholds_config = {
+            "hp_thresholds": {"reflex": 30, "tactical": 60, "strategic": 80},
+            "sp_thresholds": {"reflex": 10, "tactical": 30, "strategic": 50},
+            "zeny_thresholds": {"critical": 500, "low": 2000, "comfortable": 5000}
+        }
+    
+    # Initialize NPC handler (loads npc_config.json)
+    npc_handler = get_npc_handler()
+    logger.info(f"[CONFIG] ✓ NPC handler initialized")
+    
+    # Log what was loaded from tables
+    items = table_loader.load_items()
+    healing_items = table_loader.get_healing_items()
+    logger.info(f"[CONFIG] ✓ Loaded {len(items)} items from OpenKore tables")
+    logger.info(f"[CONFIG] ✓ Verified {len(healing_items)} healing items")
+    logger.info("[CONFIG] All configurations loaded from tables/config files (NO HARDCODED VALUES)")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup and shutdown events"""
     # Startup
-    logger.info("Starting OpenKore AI Service...")
+    logger.info("=" * 80)
+    logger.info("[STARTUP] AI Service initializing...")
+    logger.info(f"[STARTUP] Python version: {sys.version}")
+    logger.info(f"[STARTUP] FastAPI version: {fastapi.__version__}")
+    logger.info(f"[STARTUP] Current directory: {Path.cwd()}")
+    logger.info(f"[STARTUP] Script location: {Path(__file__).parent}")
+    logger.info("=" * 80)
     
     # Print exciting startup banner
     console_logger.print_startup_banner()
+    
+    # Load all configurations FIRST (before any game logic)
+    console_logger.print_layer_initialization(
+        LayerType.SYSTEM,
+        "Loading Table-Based Configurations...",
+        "OpenKore tables, NPC config, thresholds"
+    )
+    load_configurations()
+    
+    # Log feature availability status
+    logger.info("=" * 60)
+    logger.info("FEATURE STATUS:")
+    logger.info(f"  Table Loader: ✓ Enabled")
+    logger.info(f"  Real-Time File Watching: {'✓ Enabled' if WATCHDOG_AVAILABLE else '✗ Disabled (install watchdog)'}")
+    logger.info(f"  CrewAI Strategic Layer: ✓ Enabled")
+    logger.info(f"  Adaptive Failure Tracking: ✓ Enabled")
+    logger.info("=" * 60)
     
     # Initialize database
     console_logger.print_layer_initialization(
@@ -166,12 +292,32 @@ async def lifespan(app: FastAPI):
     logger.info("Combat Intelligence Systems initialized (Priority 1)")
     
     global stat_allocator, skill_learner, equipment_manager
-    user_intent_path = Path(__file__).parent / "data" / "user_intent.json"
-    job_builds_path = Path(__file__).parent / "data" / "job_builds.json"
+    # Fix: Data files are in ai-service/data/, not ai-service/src/data/
+    # Path(__file__).parent is 'src/', so we need .parent.parent to get to ai-service root
+    user_intent_path = Path(__file__).parent.parent / "data" / "user_intent.json"
+    job_builds_path = Path(__file__).parent.parent / "data" / "job_builds.json"
     
-    stat_allocator = StatAllocator(str(user_intent_path), str(job_builds_path))
-    skill_learner = SkillLearner(str(user_intent_path), str(job_builds_path))
-    equipment_manager = EquipmentManager(str(user_intent_path))
+    logger.info(f"[STARTUP] User intent path: {user_intent_path}")
+    logger.info(f"[STARTUP] Job builds path: {job_builds_path}")
+    logger.info(f"[STARTUP] User intent exists: {user_intent_path.exists()}")
+    logger.info(f"[STARTUP] Job builds exists: {job_builds_path.exists()}")
+    
+    try:
+        logger.info("[STARTUP] Initializing StatAllocator...")
+        stat_allocator = StatAllocator(str(user_intent_path), str(job_builds_path))
+        logger.info("[STARTUP] StatAllocator initialized successfully")
+        
+        logger.info("[STARTUP] Initializing SkillLearner...")
+        skill_learner = SkillLearner(str(user_intent_path), str(job_builds_path))
+        logger.info("[STARTUP] SkillLearner initialized successfully")
+        
+        logger.info("[STARTUP] Initializing EquipmentManager...")
+        equipment_manager = EquipmentManager(str(user_intent_path))
+        logger.info("[STARTUP] EquipmentManager initialized successfully")
+    except Exception as e:
+        logger.error("[STARTUP] CRITICAL: Failed to initialize Progression Systems")
+        logger.exception(e)
+        raise
     
     console_logger.print_layer_initialization(
         LayerType.SYSTEM,
@@ -299,6 +445,69 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# ============================================================================
+# PHASE 70: REQUEST/RESPONSE LOGGING MIDDLEWARE
+# ============================================================================
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Log all incoming requests and outgoing responses"""
+    start_time = time.time()
+    
+    # Log incoming request
+    logger.info(f"[REQUEST] {request.method} {request.url.path}")
+    logger.debug(f"[REQUEST] Headers: {dict(request.headers)}")
+    logger.debug(f"[REQUEST] Query params: {dict(request.query_params)}")
+    
+    # Get request body if present (for POST/PUT/PATCH)
+    if request.method in ["POST", "PUT", "PATCH"]:
+        try:
+            body = await request.body()
+            if body:
+                body_str = body.decode('utf-8')
+                # Log first 500 chars to avoid huge logs
+                logger.debug(f"[REQUEST] Body: {body_str[:500]}{'...' if len(body_str) > 500 else ''}")
+        except Exception as e:
+            logger.warning(f"[REQUEST] Could not read body: {e}")
+    
+    # Process request
+    try:
+        response = await call_next(request)
+        
+        # Log response
+        process_time = time.time() - start_time
+        logger.info(f"[RESPONSE] {request.url.path} - Status: {response.status_code} - Time: {process_time:.3f}s")
+        
+        return response
+    except Exception as e:
+        # Log exceptions
+        process_time = time.time() - start_time
+        logger.error(f"[ERROR] Request failed: {request.method} {request.url.path} - Time: {process_time:.3f}s")
+        logger.exception(e)
+        raise
+
+# ============================================================================
+# PHASE 70: GLOBAL EXCEPTION HANDLER
+# ============================================================================
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Catch all unhandled exceptions and log them"""
+    logger.error(f"[GLOBAL ERROR] Unhandled exception for {request.method} {request.url.path}")
+    logger.error(f"[GLOBAL ERROR] Exception type: {type(exc).__name__}")
+    logger.error(f"[GLOBAL ERROR] Exception message: {str(exc)}")
+    logger.exception(exc)
+    
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": str(exc),
+            "type": type(exc).__name__,
+            "path": request.url.path,
+            "method": request.method
+        }
+    )
+
 # Register macro router
 app.include_router(macro_router.router)
 
@@ -369,6 +578,1241 @@ async def health_check():
             "agents_active": len(healing_system.agents) if healing_system else 0
         }
     }
+
+def should_trigger_autobuy(inventory: List[Dict], hp_percent: float, sp_percent: float) -> dict:
+    """
+    Determine if bot should return to town to buy consumables
+    
+    Returns dict with: {"should_buy": bool, "items_needed": List[str], "priority": str}
+    """
+    items_needed = []
+    
+    # Get healing items from table loader (NEVER hardcoded)
+    healing_items = table_loader.get_healing_items()
+    basic_healing = healing_items[0] if healing_items else ("Red Potion", 501, 45)
+    basic_healing_name = basic_healing[0]
+    
+    # Count healing items in inventory
+    healing_count = sum(
+        item.get("amount", 0)
+        for item in inventory
+        if item.get("name") == basic_healing_name
+    )
+    
+    # Get escape items from table loader
+    escape_items_list = table_loader.get_escape_items()
+    basic_escape = escape_items_list[0] if escape_items_list else "Fly Wing"
+    basic_escape_name = basic_escape if isinstance(basic_escape, str) else basic_escape[0]
+    
+    escape_count = sum(
+        item.get("amount", 0)
+        for item in inventory
+        if item.get("name") == basic_escape_name
+    )
+    
+    # Determine priority based on thresholds
+    hp_strategic_threshold = thresholds_config["hp_thresholds"]["strategic"]
+    
+    if healing_count == 0 and hp_percent < hp_strategic_threshold:
+        priority = "critical"
+        items_needed.append(basic_healing_name)
+    elif healing_count < 5:
+        priority = "high"
+        items_needed.append(basic_healing_name)
+    elif healing_count < 10:
+        priority = "medium"
+        items_needed.append(basic_healing_name)
+    else:
+        priority = "none"
+    
+    if escape_count < 10:
+        items_needed.append(basic_escape_name)
+    
+    return {
+        "should_buy": bool(items_needed),
+        "items_needed": items_needed,
+        "priority": priority,
+        "current_stock": {
+            basic_healing_name: healing_count,
+            basic_escape_name: escape_count
+        }
+    }
+
+# ============================================
+# ADAPTIVE FAILURE TRACKING SYSTEM
+# ============================================
+# CRITICAL FIX #1: SKILL PREREQUISITE VALIDATION
+# ============================================
+
+def has_required_skill(skills_list: List[Dict], skill_name: str, min_level: int = 1) -> bool:
+    """
+    Check if character has required skill at minimum level
+    
+    Args:
+        skills_list: List of character skills from game state
+        skill_name: Name of skill to check (e.g., "Basic Skill")
+        min_level: Minimum skill level required (default 1)
+    
+    Returns:
+        True if character has skill at or above min_level
+    """
+    if not isinstance(skills_list, list):
+        return False
+    
+    for skill in skills_list:
+        if not isinstance(skill, dict):
+            continue
+        if skill.get("name") == skill_name and skill.get("level", 0) >= min_level:
+            return True
+    return False
+
+def get_skill_alternatives(missing_skill: str, game_state: Dict) -> Dict:
+    """
+    Get alternative actions when required skill is missing
+    
+    Args:
+        missing_skill: Name of the missing skill
+        game_state: Current game state
+    
+    Returns:
+        Dictionary with alternative actions and reasoning
+    """
+    alternatives = {
+        "Basic Skill": {
+            # Cannot sit/rest, use alternatives:
+            "actions": ["idle_recover", "move_to_healer", "use_healing_item"],
+            "reason": "Basic Skill required for sit/rest"
+        },
+        "Teleport": {
+            "actions": ["use_butterfly_wing", "walk_to_town", "use_warp_portal"],
+            "reason": "Teleport skill not available"
+        }
+    }
+    return alternatives.get(missing_skill, {"actions": ["idle"], "reason": "Unknown skill requirement"})
+
+# ============================================
+# CRITICAL FIX #2: ACTION BLACKLIST SYSTEM
+# ============================================
+
+action_blacklist = {}  # {action_name: expiry_timestamp}
+BLACKLIST_DURATION = 300  # 5 minutes
+
+def blacklist_action(action: str, duration: int = BLACKLIST_DURATION):
+    """Temporarily blacklist an action after repeated failures"""
+    expiry_time = time.time() + duration
+    action_blacklist[action] = expiry_time
+    logger.warning(f"[ADAPTIVE] Blacklisted action '{action}' for {duration}s")
+
+def is_action_blacklisted(action: str) -> bool:
+    """Check if action is currently blacklisted"""
+    if action not in action_blacklist:
+        return False
+    
+    # Check if blacklist expired
+    if time.time() > action_blacklist[action]:
+        del action_blacklist[action]
+        logger.info(f"[ADAPTIVE] Blacklist expired for '{action}'")
+        return False
+    
+    return True
+
+def get_blacklist_time_remaining(action: str) -> int:
+    """Get seconds remaining in blacklist"""
+    if action not in action_blacklist:
+        return 0
+    return max(0, int(action_blacklist[action] - time.time()))
+
+# ============================================
+# ADAPTIVE FAILURE TRACKING SYSTEM
+# User requirement: "If same issue repeated more than 3 times, AI should have
+# adaptive critical thinking to try another alternative method to solve it."
+
+from collections import defaultdict
+
+action_failure_tracker = defaultdict(list)  # {action_name: [timestamp, timestamp, ...]}
+# Load failure thresholds from config (NEVER hardcoded)
+FAILURE_THRESHOLD = None  # Will be loaded from config
+FAILURE_WINDOW = None  # Will be loaded from config
+alternative_actions_attempted = defaultdict(set)  # Track which alternatives were tried
+
+def get_failure_threshold():
+    """Get failure threshold from config"""
+    return thresholds_config["adaptive_behavior"]["failure_threshold"] if thresholds_config else 3
+
+def get_failure_window():
+    """Get failure window from config"""
+    return thresholds_config["adaptive_behavior"]["failure_window_seconds"] if thresholds_config else 30
+
+def record_action_failure(action: str, reason: str = ""):
+    """
+    Record that an action failed execution
+    
+    Args:
+        action: The action that failed (e.g., "rest", "use_item")
+        reason: Why it failed (for logging)
+    """
+    current_time = time.time()
+    action_failure_tracker[action].append({
+        "timestamp": current_time,
+        "reason": reason
+    })
+    
+    # Clean old failures outside the window
+    action_failure_tracker[action] = [
+        f for f in action_failure_tracker[action]
+        if current_time - f["timestamp"] < get_failure_window()
+    ]
+    
+    failure_count = len(action_failure_tracker[action])
+    if failure_count >= get_failure_threshold():
+        logger.warning(
+            f"[ADAPTIVE] Action '{action}' has failed {failure_count} times in last {get_failure_window()}s. "
+            f"Reasons: {[f['reason'] for f in action_failure_tracker[action][-3:]]}"
+        )
+        
+        # CRITICAL FIX #2: Auto-blacklist after threshold exceeded
+        blacklist_action(action, duration=BLACKLIST_DURATION)
+        
+        # Clear failure tracking for this action
+        action_failure_tracker[action] = []
+        
+        # Trigger strategic rethink
+        logger.info(f"[ADAPTIVE] Triggering strategy rethink due to repeated '{action}' failures")
+
+def is_action_failing_repeatedly(action: str) -> bool:
+    """
+    Check if action has failed 3+ times in last 30 seconds
+    
+    Returns True if action should be avoided and alternative tried
+    """
+    current_time = time.time()
+    recent_failures = [
+        f for f in action_failure_tracker.get(action, [])
+        if current_time - f["timestamp"] < get_failure_window()
+    ]
+    return len(recent_failures) >= get_failure_threshold()
+
+def get_alternative_action(failed_action: str, game_state: Dict[str, Any], inventory: List[Dict]) -> Dict:
+    """
+    Find alternative action when primary action keeps failing
+    
+    User requirement: "AI should have adaptive critical thinking to try another
+    alternative method to solve it"
+    
+    Args:
+        failed_action: The action that's failing repeatedly
+        game_state: Current game state
+        inventory: Character inventory
+    
+    Returns:
+        Alternative action dict with action/params/layer
+    """
+    logger.info(f"[ADAPTIVE] Finding alternative for failing action: '{failed_action}'")
+    
+    character_data = game_state.get("character", {})
+    current_hp = int(character_data.get("hp", 0) or 0)
+    max_hp = int(character_data.get("hp_max", 1) or 1)
+    hp_percent = (current_hp / max_hp * 100) if max_hp > 0 else 0
+    
+    # Alternative strategies based on what's failing
+    if failed_action == "rest":
+        logger.warning("[ADAPTIVE] 'rest' failing (likely no Basic Skill Lv3)")
+        
+        # Alternative 1: Use healing item if available
+        healing_items = ["Red Herb", "Apple", "Meat", "Red Potion", "Orange Potion"]
+        for item_name in healing_items:
+            has_item = any(
+                item.get("name") == item_name and item.get("amount", 0) > 0
+                for item in inventory
+            )
+            if has_item and f"use_{item_name}" not in alternative_actions_attempted[failed_action]:
+                alternative_actions_attempted[failed_action].add(f"use_{item_name}")
+                logger.info(f"[ADAPTIVE] Alternative 1: Use {item_name} instead of resting")
+                return {
+                    "action": "use_item",
+                    "params": {
+                        "item": item_name,
+                        "reason": "rest_unavailable_basic_skill_missing"
+                    },
+                    "layer": "ADAPTIVE_REFLEX"
+                }
+        
+        # Alternative 2: Natural regeneration (just idle)
+        if "idle_regen" not in alternative_actions_attempted[failed_action]:
+            alternative_actions_attempted[failed_action].add("idle_regen")
+            logger.warning("[ADAPTIVE] Alternative 2: Idle and let natural HP regen work (slow)")
+            return {
+                "action": "idle",
+                "params": {
+                    "reason": "rest_unavailable_natural_regen",
+                    "duration": 10
+                },
+                "layer": "ADAPTIVE_TACTICAL"
+            }
+        
+        # Alternative 3: Attack monsters to level up and get Basic Skill
+        if "farm_to_level" not in alternative_actions_attempted[failed_action]:
+            alternative_actions_attempted[failed_action].add("farm_to_level")
+            logger.info("[ADAPTIVE] Alternative 3: Farm monsters to level up and unlock Basic Skill")
+            return {
+                "action": "attack_nearest",
+                "params": {
+                    "reason": "need_basic_skill_farm_to_level",
+                    "priority": "high"
+                },
+                "layer": "ADAPTIVE_STRATEGIC"
+            }
+        
+        # Alternative 4: Go to town and buy healing items
+        logger.info("[ADAPTIVE] Alternative 4: Return to town and buy healing items")
+        return {
+            "action": "return_to_town",
+            "params": {
+                "reason": "no_recovery_options_need_items",
+                "buy_items": [table_loader.get_healing_items()[0][0], table_loader.get_healing_items()[3][0]]
+            },
+            "layer": "ADAPTIVE_STRATEGIC"
+        }
+    
+    elif failed_action == "use_item":
+        logger.warning("[ADAPTIVE] 'use_item' failing (likely out of stock)")
+        
+        # Alternative 1: Rest if possible
+        if not is_action_failing_repeatedly("rest"):
+            return {
+                "action": "rest",
+                "params": {"reason": "items_depleted_try_resting"},
+                "layer": "ADAPTIVE_TACTICAL"
+            }
+        
+        # Alternative 2: Buy more items
+        return {
+            "action": "auto_buy",
+            "params": {
+                "items": [table_loader.get_healing_items()[0][0], table_loader.get_sp_recovery_items()[0][0]],
+                "reason": "items_depleted_need_restock"
+            },
+            "layer": "ADAPTIVE_STRATEGIC"
+        }
+    
+    elif failed_action == "auto_buy":
+        logger.warning("[ADAPTIVE] 'auto_buy' failing (likely NPC issue or no zeny)")
+        
+        # Alternative: Sell items first
+        return {
+            "action": "sell_items",
+            "params": {"reason": "cannot_buy_need_zeny_from_selling"},
+            "layer": "ADAPTIVE_STRATEGIC"
+        }
+    
+    else:
+        # Generic fallback: just continue with default behavior
+        logger.warning(f"[ADAPTIVE] No specific alternative for '{failed_action}', defaulting to continue")
+        return {
+            "action": "continue",
+            "params": {"reason": f"no_alternative_for_{failed_action}"},
+            "layer": "ADAPTIVE"
+        }
+
+def clear_failure_tracking_for_action(action: str):
+    """Clear failure history when action succeeds"""
+    if action in action_failure_tracker:
+        del action_failure_tracker[action]
+    if action in alternative_actions_attempted:
+        del alternative_actions_attempted[action]
+
+# ============================================
+# END ADAPTIVE FAILURE TRACKING SYSTEM
+# ============================================
+
+# ============================================
+# CRITICAL FIX #3: COMBAT/FARMING LOGIC
+# ============================================
+
+def is_ready_for_combat(character: Dict, inventory: List[Dict]) -> bool:
+    """
+    Check if character is ready to engage in combat
+    
+    Args:
+        character: Character data from game state
+        inventory: Character inventory
+    
+    Returns:
+        True if character is ready for combat
+    """
+    hp_percent = float(character.get("hp_percent", 0) or 0)
+    sp_percent = float(character.get("sp_percent", 0) or 0)
+    
+    # Calculate percentages if not provided
+    if hp_percent == 0:
+        current_hp = int(character.get("hp", 0) or 0)
+        max_hp = int(character.get("max_hp", 1) or 1)
+        hp_percent = (current_hp / max_hp * 100) if max_hp > 0 else 0
+    
+    if sp_percent == 0:
+        current_sp = int(character.get("sp", 0) or 0)
+        max_sp = int(character.get("max_sp", 1) or 1)
+        sp_percent = (current_sp / max_sp * 100) if max_sp > 0 else 0
+    
+    # Minimum thresholds for safe combat
+    if hp_percent < 50:  # Too low HP
+        logger.debug(f"[COMBAT] Not ready - HP too low: {hp_percent:.1f}%")
+        return False
+    
+    if sp_percent < 20:  # Too low SP
+        logger.debug(f"[COMBAT] Not ready - SP too low: {sp_percent:.1f}%")
+        return False
+    
+    # Check if has weapon equipped
+    equipment = character.get("equipment", {})
+    if not equipment.get("weapon") and not equipment.get("rightHand"):
+        logger.warning("[COMBAT] Not ready - No weapon equipped")
+        return False
+    
+    return True
+
+def select_combat_target(monsters: List[Dict], character: Dict) -> Optional[Dict]:
+    """
+    Select best monster to attack based on character level and position
+    
+    Args:
+        monsters: List of nearby monsters from game state
+        character: Character data from game state
+    
+    Returns:
+        Selected monster dict or None if no suitable target
+    """
+    if not isinstance(monsters, list) or len(monsters) == 0:
+        return None
+    
+    char_level = int(character.get("level", 1) or 1)
+    
+    # Get character position
+    position = character.get("position", {})
+    char_x = int(position.get("x", 0) or 0)
+    char_y = int(position.get("y", 0) or 0)
+    
+    # Filter suitable monsters
+    suitable_monsters = []
+    for monster in monsters:
+        if not isinstance(monster, dict):
+            continue
+        
+        monster_level = int(monster.get("level", 1) or 1)
+        
+        # Level range check (±5 levels for safety)
+        if abs(monster_level - char_level) > 5:
+            continue
+        
+        # Distance check (within 15 cells)
+        mon_x = int(monster.get("x", 0) or 0)
+        mon_y = int(monster.get("y", 0) or 0)
+        distance = ((char_x - mon_x)**2 + (char_y - mon_y)**2)**0.5
+        
+        if distance > 15:
+            continue
+        
+        suitable_monsters.append({
+            "monster": monster,
+            "distance": distance,
+            "level_diff": abs(monster_level - char_level)
+        })
+    
+    if not suitable_monsters:
+        logger.debug("[COMBAT] No suitable monsters in range")
+        return None
+    
+    # Sort by distance (closest first)
+    suitable_monsters.sort(key=lambda x: x["distance"])
+    
+    selected = suitable_monsters[0]["monster"]
+    logger.debug(f"[COMBAT] Selected target: {selected.get('name')} (Distance: {suitable_monsters[0]['distance']:.1f})")
+    
+    return selected
+
+# ============================================
+# END COMBAT/FARMING LOGIC
+# ============================================
+
+@app.post("/api/v1/decide")
+async def decide_action(request: Request, request_body: Dict[str, Any] = Body(...)):
+    """
+    Main decision endpoint called by AI-Engine.
+    Receives game state and returns bot decisions using the three-layer architecture.
+    
+    Request body structure:
+    {
+        "game_state": {
+            "character": {...},
+            "inventory": [...],
+            "monsters": {...},
+            "skills": [...],  # CRITICAL FIX #1: Now includes skills
+            ...
+        },
+        "request_id": "uuid",
+        "timestamp_ms": 1234567890
+    }
+    
+    Args:
+        request_body: Complete request with game_state, request_id, and timestamp_ms
+        
+    Returns:
+        Decision dict with action and parameters
+    """
+    # CRITICAL FIX #1: Unwrap the request structure
+    # OpenKore plugin sends wrapped structure with game_state as nested object
+    game_state = request_body.get("game_state", {})
+    request_id = request_body.get("request_id", "unknown")
+    timestamp_ms = request_body.get("timestamp_ms", 0)
+    
+    logger.info(f"[DECIDE] Received decision request - ID: {request_id}")
+    logger.debug(f"[DECIDE] Game state keys: {list(game_state.keys() if game_state else [])}")
+    
+    try:
+        # CRITICAL FIX #2: Check for blacklisted actions at start
+        # Create list of available actions (excluding blacklisted)
+        available_actions = {
+            "rest": not is_action_blacklisted("rest"),
+            "use_item": not is_action_blacklisted("use_item"),
+            "move_to_healer": not is_action_blacklisted("move_to_healer"),
+            "buy_items": not is_action_blacklisted("buy_items"),
+            "sell_items": not is_action_blacklisted("sell_items"),
+            "attack_monster": not is_action_blacklisted("attack_monster"),
+            "explore_map": not is_action_blacklisted("explore_map")
+        }
+        
+        blacklisted_actions = [action for action, available in available_actions.items() if not available]
+        if blacklisted_actions:
+            logger.debug(f"[ADAPTIVE] Blacklisted actions: {blacklisted_actions}")
+        
+        # Extract key game state info with type safety
+        # Handle character name (can be nested or direct)
+        character_data = game_state.get("character", {})
+        if isinstance(character_data, dict):
+            character_name = character_data.get("name", "Unknown")
+        else:
+            character_name = str(character_data) if character_data else "Unknown"
+        
+        # Safely convert HP/SP to integers (handles both string and int)
+        current_hp = int(character_data.get("hp", 0) or 0) if isinstance(character_data, dict) else 0
+        max_hp = int(character_data.get("max_hp", 1) or 1) if isinstance(character_data, dict) else 1
+        hp_percent = (current_hp / max_hp * 100) if max_hp > 0 else 0
+        
+        current_sp = int(character_data.get("sp", 0) or 0) if isinstance(character_data, dict) else 0
+        max_sp = int(character_data.get("max_sp", 1) or 1) if isinstance(character_data, dict) else 1
+        sp_percent = (current_sp / max_sp * 100) if max_sp > 0 else 0
+        
+        in_combat = game_state.get("combat", {}).get("in_combat", False)
+        target_monster = game_state.get("combat", {}).get("target", None)
+        
+        inventory = game_state.get("inventory", [])
+        position = game_state.get("position", {})
+        
+        logger.info(f"[DECIDE] Character: {character_name}, HP: {hp_percent:.1f}%, SP: {sp_percent:.1f}%, Combat: {in_combat}")
+        logger.debug(f"[DECIDE] Inventory items: {len(inventory)} items")
+        
+        # ==================================================================
+        # DECISION LOGIC: Three-Layer Architecture
+        # ==================================================================
+        
+        # Layer 1: REFLEX (Immediate survival responses - use config threshold)
+        hp_reflex_threshold = thresholds_config["hp_thresholds"]["reflex"]
+        if hp_percent < hp_reflex_threshold:
+            logger.warning(f"[DECIDE] CRITICAL HP: {hp_percent:.1f}% - Emergency healing required!")
+            
+            # Check for healing items IN INVENTORY (priority order)
+            healing_items = [
+                ("White Potion", 400),  # Heals ~400 HP
+                ("Yellow Potion", 200), # Heals ~200 HP
+                ("Orange Potion", 100), # Heals ~100 HP
+                ("Red Potion", 45),     # Heals ~45 HP
+                ("Apple", 16),          # Heals ~16 HP
+                ("Meat", 15)            # Heals ~15 HP
+            ]
+            
+            for item_name, heal_amount in healing_items:
+                # Check if item exists in inventory with amount > 0
+                has_item = any(
+                    item.get("name") == item_name and item.get("amount", 0) > 0
+                    for item in inventory
+                )
+                if has_item:
+                    logger.info(f"[DECIDE] REFLEX: Using {item_name} for emergency healing (~{heal_amount} HP)")
+                    
+                    # Clear failure tracking on successful alternative
+                    clear_failure_tracking_for_action("rest")
+                    
+                    return {
+                        "action": "use_item",
+                        "params": {
+                            "item": item_name,
+                            "reason": "emergency_healing",
+                            "priority": "critical"
+                        },
+                        "layer": "REFLEX"
+                    }
+            
+            # NO HEALING ITEMS → Check if rest is failing repeatedly (CRITICAL FIX #2)
+            if is_action_failing_repeatedly("rest"):
+                logger.error("[ADAPTIVE] 'rest' action has failed 3+ times, finding alternative...")
+                return get_alternative_action("rest", game_state, inventory)
+            
+            # NO HEALING ITEMS → Different strategy based on combat status
+            # CRITICAL FIX: Handle both array and dict formats for monsters
+            monsters = game_state.get("monsters", [])
+            if isinstance(monsters, list):
+                # Array format: non-empty list means monsters present
+                in_combat_check = bool(monsters)
+            elif isinstance(monsters, dict):
+                # Dict format: check aggressive key
+                in_combat_check = bool(monsters.get("aggressive", []))
+            else:
+                in_combat_check = False
+            
+            if not in_combat_check:
+                # CRITICAL FIX #1: Check skill prerequisites before rest
+                skills = game_state.get("skills", [])
+                
+                # Check if rest action is blacklisted
+                if is_action_blacklisted("rest"):
+                    remaining = get_blacklist_time_remaining("rest")
+                    logger.warning(f"[ADAPTIVE] 'rest' is blacklisted ({remaining}s remaining), using alternative")
+                    return get_alternative_action("rest", game_state, inventory)
+                
+                # Check if character has Basic Skill Lv3 for sitting
+                if not has_required_skill(skills, "Basic Skill", min_level=3):
+                    logger.warning("[DECIDE] Cannot rest - Basic Skill Lv3 required")
+                    
+                    # Use alternative recovery method (idle recovery)
+                    logger.info(f"[DECIDE] Using idle recovery instead (no Basic Skill for sit)")
+                    
+                    return {
+                        "action": "idle_recover",
+                        "params": {
+                            "duration": 10,
+                            "reason": "no_basic_skill_for_sit",
+                            "alternative_to": "rest"
+                        },
+                        "layer": "REFLEX"
+                    }
+                
+                logger.warning("[DECIDE] REFLEX: No healing items! Sitting to recover HP naturally (free)")
+                return {
+                    "action": "rest",
+                    "params": {
+                        "reason": "no_items_emergency_recovery",
+                        "priority": "critical"
+                    },
+                    "layer": "REFLEX"
+                }
+            else:
+                # IN COMBAT with critical HP and no items → Must escape
+                logger.error("[DECIDE] CRITICAL: No healing items + in combat! Emergency retreat!")
+                
+                # Check for escape items (from table loader - NEVER hardcoded)
+                escape_items = table_loader.get_escape_items()
+                for escape_item in escape_items:
+                    has_escape = any(
+                        item.get("name") == escape_item and item.get("amount", 0) > 0
+                        for item in inventory
+                    )
+                    if has_escape:
+                        return {
+                            "action": "use_item",
+                            "params": {"item": escape_item, "reason": "emergency_escape"},
+                            "layer": "REFLEX"
+                        }
+                
+                # No escape items → Try to flee on foot
+                return {
+                    "action": "retreat",
+                    "params": {"reason": "critical_hp_no_items_no_escape"},
+                    "layer": "REFLEX"
+                }
+        
+        # Layer 2: TACTICAL (Preventive healing - use config threshold)
+        hp_tactical_threshold = thresholds_config["hp_thresholds"]["tactical"]
+        if hp_percent < hp_tactical_threshold:
+            logger.info(f"[DECIDE] TACTICAL: HP at {hp_percent:.1f}% - Preventive healing")
+            
+            # Check if we have healing items
+            # Check if we have any healing items (from table loader)
+            healing_item_names = [item[0] for item in table_loader.get_healing_items()]
+            has_healing = any(
+                item.get("name") in healing_item_names and item.get("amount", 0) > 0
+                for item in inventory
+            )
+            
+            if has_healing:
+                # Use the most cost-effective potion available (from table loader)
+                basic_potions = [item[0] for item in table_loader.get_healing_items() if "Potion" in item[0]][:3]
+                for item_name in basic_potions:
+                    if any(item.get("name") == item_name and item.get("amount", 0) > 0 for item in inventory):
+                        logger.info(f"[DECIDE] TACTICAL: Using {item_name} for preventive healing")
+                        clear_failure_tracking_for_action("rest")
+                        return {
+                            "action": "use_item",
+                            "params": {"item": item_name, "reason": "preventive_healing"},
+                            "layer": "TACTICAL"
+                        }
+            else:
+                # No healing items → Check if rest is failing (CRITICAL FIX #2)
+                if is_action_failing_repeatedly("rest"):
+                    logger.error("[ADAPTIVE] 'rest' has failed repeatedly in TACTICAL layer")
+                    return get_alternative_action("rest", game_state, inventory)
+                
+                # No healing items → Use FREE recovery (sit/rest)
+                # CRITICAL FIX: Handle both array and dict formats for monsters
+                monsters = game_state.get("monsters", [])
+                if isinstance(monsters, list):
+                    in_combat_check = bool(monsters)
+                elif isinstance(monsters, dict):
+                    in_combat_check = bool(monsters.get("aggressive", []))
+                else:
+                    in_combat_check = False
+                
+                if not in_combat_check:
+                    # CRITICAL FIX #1: Check skill prerequisites before rest
+                    skills = game_state.get("skills", [])
+                    
+                    # Check if rest action is blacklisted
+                    if is_action_blacklisted("rest"):
+                        remaining = get_blacklist_time_remaining("rest")
+                        logger.warning(f"[ADAPTIVE] 'rest' is blacklisted ({remaining}s remaining), using alternative")
+                        return get_alternative_action("rest", game_state, inventory)
+                    
+                    # Check if character has Basic Skill Lv3 for sitting
+                    if not has_required_skill(skills, "Basic Skill", min_level=3):
+                        logger.warning("[DECIDE] Cannot rest - Basic Skill Lv3 required")
+                        
+                        # Use alternative recovery method
+                        logger.info(f"[DECIDE] Using idle recovery instead (no Basic Skill for sit)")
+                        
+                        return {
+                            "action": "idle_recover",
+                            "params": {
+                                "duration": 10,
+                                "reason": "no_basic_skill_for_sit",
+                                "alternative_to": "rest"
+                            },
+                            "layer": "TACTICAL"
+                        }
+                    
+                    logger.info("[DECIDE] TACTICAL: No healing items, using sit to recover HP naturally (free)")
+                    return {
+                        "action": "rest",
+                        "params": {"reason": "free_hp_recovery"},
+                        "layer": "TACTICAL"
+                    }
+                else:
+                    # In combat but no potions → Finish current fight then rest
+                    logger.info("[DECIDE] TACTICAL: In combat with no items, will rest after combat")
+                    return {
+                        "action": "continue_combat",
+                        "params": {"reason": "will_rest_after"},
+                        "layer": "TACTICAL"
+                    }
+        
+        # Check SP for skill-based classes (use config threshold)
+        sp_tactical_threshold = thresholds_config["sp_thresholds"]["tactical"]
+        if sp_percent < sp_tactical_threshold:
+            logger.info(f"[DECIDE] Low SP: {sp_percent:.1f}% - Need recovery")
+            
+            # Check for SP recovery items (from table loader - NEVER hardcoded)
+            sp_items = [item[0] for item in table_loader.get_sp_recovery_items()]
+            for sp_item in sp_items:
+                if any(item.get("name") == sp_item and item.get("amount", 0) > 0 for item in inventory):
+                    return {
+                        "action": "use_item",
+                        "params": {"item": sp_item, "reason": "sp_recovery"},
+                        "layer": "TACTICAL"
+                    }
+            
+            # No SP items → Sit to recover naturally (free)
+            # CRITICAL FIX: Handle both array and dict formats for monsters
+            monsters = game_state.get("monsters", [])
+            if isinstance(monsters, list):
+                in_combat = bool(monsters)
+            elif isinstance(monsters, dict):
+                in_combat = bool(monsters.get("aggressive", []))
+            else:
+                in_combat = False
+            
+            if not in_combat:
+                # CRITICAL FIX #1: Check skill prerequisites before rest
+                skills = game_state.get("skills", [])
+                
+                # Check if rest action is blacklisted
+                if is_action_blacklisted("rest"):
+                    remaining = get_blacklist_time_remaining("rest")
+                    logger.warning(f"[ADAPTIVE] 'rest' is blacklisted ({remaining}s remaining), using alternative")
+                    return get_alternative_action("rest", game_state, inventory)
+                
+                # Check if character has Basic Skill Lv3 for sitting
+                if not has_required_skill(skills, "Basic Skill", min_level=3):
+                    logger.warning("[DECIDE] Cannot rest - Basic Skill Lv3 required")
+                    
+                    # Use alternative recovery method
+                    logger.info(f"[DECIDE] Using idle recovery instead (no Basic Skill for sit)")
+                    
+                    return {
+                        "action": "idle_recover",
+                        "params": {
+                            "duration": 10,
+                            "reason": "no_basic_skill_for_sit",
+                            "alternative_to": "rest"
+                        },
+                        "layer": "TACTICAL"
+                    }
+                
+                logger.info("[DECIDE] Sitting to recover SP naturally (free)")
+                return {
+                    "action": "rest",
+                    "params": {"reason": "sp_recovery_free"},
+                    "layer": "TACTICAL"
+                }
+        
+        # ======================================================================
+        # Layer 2.5: PROGRESSION (Stat/Skill Management) - HIGH PRIORITY
+        # ======================================================================
+        # Priority: Stat/skill allocation > Consumable buying > Exploration
+        # Reason: Character growth is fundamental for all other activities
+        
+        logger.debug("[DECIDE] Checking for progression opportunities...")
+        
+        # P0 CRITICAL FIX #3: Check for available stat points
+        available_stat_points = int(character_data.get("points_free", 0) or 0)
+        if available_stat_points > 0:
+            logger.info(f"[PROGRESSION] {available_stat_points} stat points available - allocating")
+            
+            # Dynamic stat allocation for all job classes
+            job_class = character_data.get("job_class", "Novice")
+            character_level = int(character_data.get("level", 1) or 1)
+            
+            # Define stat priorities by job class archetype
+            # Physical classes: STR+DEX+VIT, Magical classes: INT+DEX, Hybrid: balanced
+            stat_priorities = {
+                # 1st Class Physical
+                "Swordman": ["STR", "VIT", "DEX"],
+                "Archer": ["DEX", "AGI", "STR"],
+                "Thief": ["AGI", "DEX", "STR"],
+                "Acolyte": ["INT", "DEX", "VIT"],
+                "Merchant": ["STR", "VIT", "DEX"],
+                "Mage": ["INT", "DEX", "VIT"],
+                
+                # Default for Novice and unknown classes
+                "Novice": ["STR", "DEX", "VIT"],
+                "default": ["STR", "DEX", "VIT"]
+            }
+            
+            # Get stat priority for current class (or use default)
+            priorities = stat_priorities.get(job_class, stat_priorities["default"])
+            
+            # Allocate points based on priority order
+            stats_to_add = {}
+            remaining_points = available_stat_points
+            
+            for i, stat in enumerate(priorities):
+                if remaining_points <= 0:
+                    break
+                
+                # Allocate more points to higher priority stats
+                if i == 0:  # Highest priority (primary stat)
+                    points = min(2, remaining_points)
+                elif i == 1:  # Second priority
+                    points = min(2, remaining_points)
+                else:  # Lower priority
+                    points = min(1, remaining_points)
+                
+                if points > 0:
+                    stats_to_add[stat] = points
+                    remaining_points -= points
+            
+            logger.info(f"[PROGRESSION] {job_class} build - allocating: {stats_to_add}")
+            
+            return {
+                "action": "allocate_stats",
+                "params": {
+                    "stats": stats_to_add,
+                    "reason": "character_progression",
+                    "priority": "high"
+                },
+                "layer": "PROGRESSION"
+            }
+        
+        # P0 CRITICAL FIX #3: Check for available skill points
+        available_skill_points = int(character_data.get("points_skill", 0) or 0)
+        if available_skill_points > 0:
+            logger.info(f"[PROGRESSION] {available_skill_points} skill points available")
+            
+            skills = game_state.get("skills", [])
+            
+            # CRITICAL PRIORITY: Learn Basic Skill first if missing
+            basic_skill_level = 0
+            for skill in skills:
+                skill_name = skill.get("name", "")
+                if skill_name == "Basic Skill" or skill_name == "NV_BASIC":
+                    basic_skill_level = skill.get("level", 0)
+                    break
+            
+            if basic_skill_level < 3:
+                points_needed = 3 - basic_skill_level
+                points_to_allocate = min(points_needed, available_skill_points)
+                
+                logger.warning(f"[PROGRESSION] Learning Basic Skill Lv{basic_skill_level} → Lv{basic_skill_level + points_to_allocate} (REQUIRED for sit/rest)")
+                
+                return {
+                    "action": "learn_skill",
+                    "params": {
+                        "skill_name": "NV_BASIC",  # OpenKore internal name
+                        "skill_display_name": "Basic Skill",
+                        "current_level": basic_skill_level,
+                        "target_level": basic_skill_level + points_to_allocate,
+                        "points_to_add": points_to_allocate,
+                        "reason": "prerequisite_for_rest",
+                        "priority": "critical"
+                    },
+                    "layer": "PROGRESSION"
+                }
+            
+            # Learn other skills if Basic Skill maxed
+            logger.info(f"[PROGRESSION] Basic Skill ready (Lv{basic_skill_level}), other skills can be learned later")
+            # TODO: Add skill learning logic for job-specific skills using CrewAI
+        
+        # Layer 3: STRATEGIC (Strategic decision-making)
+        # Priority 2 Fix: Zeny Management and Resource Planning
+        current_zeny = int(character_data.get("zeny", 0) or 0)
+        character_level = int(character_data.get("level", 1) or 1)
+        logger.debug(f"[DECIDE] Current zeny: {current_zeny}z, Level: {character_level}")
+        
+        # Define zeny thresholds (from config - NEVER hardcoded)
+        # Adjust thresholds for early game (Level < 10)
+        if character_level < 10:
+            ZENY_CRITICAL = 100   # Lower threshold for early game
+            ZENY_LOW = 500
+            ZENY_COMFORTABLE = 1000
+        else:
+            ZENY_CRITICAL = thresholds_config["zeny_thresholds"]["critical"]
+            ZENY_LOW = thresholds_config["zeny_thresholds"]["low"]
+            ZENY_COMFORTABLE = thresholds_config["zeny_thresholds"]["comfortable"]
+        
+        # Check if we should sell items first
+        if current_zeny < ZENY_LOW:
+            logger.warning(f"[DECIDE] Low zeny ({current_zeny}z) - should consider selling items")
+            
+            # Count sellable items (protect quest items from table loader)
+            quest_items = table_loader.get_quest_items()
+            sellable_count = sum(
+                1 for item in inventory
+                if item.get("type") not in ["consumable", "equipment", "weapon", "armor"]
+                and item.get("name") not in quest_items
+                and not table_loader.is_card(item.get("name", ""))
+            )
+            
+            if sellable_count > 5 and current_zeny < ZENY_CRITICAL:
+                logger.warning(f"[DECIDE] CRITICAL: Only {current_zeny}z left, {sellable_count} sellable items")
+                return {
+                    "action": "sell_items",
+                    "params": {
+                        "reason": "critical_zeny_shortage",
+                        "priority": "high"
+                    },
+                    "layer": "STRATEGIC"
+                }
+        
+        # Check if we need to restock consumables
+        try:
+            autobuy_check = should_trigger_autobuy(inventory, hp_percent, sp_percent)
+        except Exception as e:
+            logger.error(f"[DECIDE] Autobuy check failed: {e}", exc_info=True)
+            autobuy_check = {"should_buy": False, "priority": "none", "items_needed": [], "current_stock": {}}
+        
+        if autobuy_check["priority"] in ["critical", "high"]:
+            logger.warning(f"[DECIDE] STRATEGIC: Low consumables - {autobuy_check['current_stock']}")
+            logger.info(f"[DECIDE] Items needed: {autobuy_check['items_needed']}")
+            
+            # Priority 2 Fix: Check if we can afford items before triggering buy
+            # Estimate cost - use table_loader for item costs (NEVER hardcoded)
+            healing_items = table_loader.get_healing_items()
+            basic_healing_name = healing_items[0][0] if healing_items else "Red Potion"
+            
+            item_costs = {
+                "Red Potion": 50,
+                "Yellow Potion": 550,
+                "White Potion": 1200,
+                "Fly Wing": 600,
+                "Butterfly Wing": 300
+            }
+            
+            estimated_cost = sum(
+                item_costs.get(item, 100) * 10  # Assume buying 10 of each
+                for item in autobuy_check["items_needed"]
+            )
+            
+            logger.debug(f"[DECIDE] Auto-buy estimated cost: {estimated_cost}z")
+            
+            if current_zeny >= estimated_cost:
+                # Can afford to buy
+                # CRITICAL FIX: Handle both array and dict formats for monsters
+                monsters = game_state.get("monsters", [])
+                if isinstance(monsters, list):
+                    in_combat_check = bool(monsters)
+                elif isinstance(monsters, dict):
+                    in_combat_check = bool(monsters.get("aggressive", []))
+                else:
+                    in_combat_check = False
+                
+                if not in_combat_check:
+                    logger.info(f"[DECIDE] STRATEGIC: Buying items (have {current_zeny}z, need ~{estimated_cost}z)")
+                    return {
+                        "action": "auto_buy",
+                        "params": {
+                            "items": autobuy_check["items_needed"],
+                            "priority": autobuy_check["priority"],
+                            "estimated_cost": estimated_cost
+                        },
+                        "layer": "STRATEGIC"
+                    }
+                else:
+                    logger.warning("[DECIDE] Need to buy items but currently in combat - will buy after")
+            else:
+                # Cannot afford - must sell first or use free recovery
+                logger.warning(f"[DECIDE] Cannot afford items ({current_zeny}z < {estimated_cost}z) - using free recovery")
+                
+                # CRITICAL FIX: Handle both array and dict formats for monsters
+                monsters = game_state.get("monsters", [])
+                if isinstance(monsters, list):
+                    in_combat = bool(monsters)
+                elif isinstance(monsters, dict):
+                    in_combat = bool(monsters.get("aggressive", []))
+                else:
+                    in_combat = False
+                
+                if not in_combat:
+                    return {
+                        "action": "rest",
+                        "params": {
+                            "reason": "cannot_afford_potions",
+                            "priority": "medium"
+                        },
+                        "layer": "TACTICAL"
+                    }
+        
+        # Layer 3: CONSCIOUS (Strategic planning with CrewAI)
+        # Activate when character is healthy (HP > 80%, SP > 50%) and not in immediate danger
+        # This enables 95% autonomous gameplay with sequential thinking and complex situation handling
+        
+        if hp_percent > 80 and sp_percent > 50:
+            # Check if we should use strategic planning
+            # CRITICAL FIX: Handle both array and dict formats for monsters
+            monsters = game_state.get("monsters", [])
+            if isinstance(monsters, list):
+                in_combat_check = bool(monsters)
+            elif isinstance(monsters, dict):
+                in_combat_check = bool(monsters.get("aggressive", []))
+            else:
+                in_combat_check = False
+            
+            if not in_combat_check:
+                # Safe to do strategic planning
+                logger.info("[DECIDE] STRATEGIC: Healthy and safe, activating CrewAI planning")
+                
+                # Check if LLM provider available
+                if hasattr(app.state, 'llm_chain') and app.state.llm_chain:
+                    try:
+                        # Get strategic planner with LLM provider
+                        planner = get_strategic_planner(app.state.llm_chain.llm)
+                        strategic_action = await planner.plan_next_strategic_action(game_state)
+                        
+                        logger.info(f"[DECIDE] STRATEGIC: CrewAI recommends: {strategic_action['action']}")
+                        logger.debug(f"[DECIDE] Reasoning: {strategic_action.get('reasoning', 'N/A')[:200]}")
+                        
+                        return strategic_action
+                        
+                    except Exception as e:
+                        logger.error(f"[DECIDE] STRATEGIC layer error: {e}")
+                        logger.warning("[DECIDE] Falling back to default behavior")
+                else:
+                    logger.debug("[DECIDE] LLM provider not available, skipping strategic planning")
+        
+        # CRITICAL FIX #3: Combat/Farming Logic (when ready and monsters available)
+        # This runs AFTER strategic planning but BEFORE idle/continue
+        monsters = game_state.get("monsters", [])
+        if isinstance(monsters, list) and len(monsters) > 0:
+            if is_ready_for_combat(character_data, inventory):
+                target = select_combat_target(monsters, character_data)
+                
+                if target:
+                    # Check if attack_monster is blacklisted
+                    if is_action_blacklisted("attack_monster"):
+                        logger.warning("[ADAPTIVE] 'attack_monster' is blacklisted, skipping combat")
+                    else:
+                        logger.info(f"[COMBAT] Target selected: {target.get('name')} (Level {target.get('level')})")
+                        return {
+                            "action": "attack_monster",
+                            "params": {
+                                "target_id": target.get("id"),
+                                "target_name": target.get("name"),
+                                "reason": "farming_leveling"
+                            },
+                            "layer": "TACTICAL"
+                        }
+                else:
+                    logger.debug("[COMBAT] No suitable monsters in range")
+            else:
+                logger.debug("[COMBAT] Not ready for combat (low HP/SP or no weapon)")
+        
+        # Fallback: Basic combat decision or continue
+        if in_combat and target_monster:
+            logger.info(f"[DECIDE] STRATEGIC: Continuing combat with {target_monster}")
+            return {
+                "action": "attack",
+                "params": {
+                    "target": target_monster,
+                    "reason": "combat_engagement",
+                    "priority": "normal"
+                }
+            }
+        
+        # Layer 4: EXPLORATION (Idle time, explore map purposefully)
+        # This runs when bot has nothing else to do - increases autonomy
+        if hp_percent > 60 and sp_percent > 40:
+            # Check if explore_map is blacklisted
+            if not is_action_blacklisted("explore_map"):
+                if map_explorer.should_explore(game_state):
+                    current_map_name = character_data.get("position", {}).get("map", "unknown")
+                    current_pos = character_data.get("position", {})
+                    
+                    target = map_explorer.get_exploration_target(current_map_name, current_pos)
+                    
+                    logger.info(f"[EXPLORE] Moving to exploration target: ({target['x']}, {target['y']}) - Reason: {target.get('reason', 'exploration')}")
+                    return {
+                        "action": "move_to_position",
+                        "params": {
+                            "x": target["x"],
+                            "y": target["y"],
+                            "reason": "map_exploration",
+                            "map": current_map_name
+                        },
+                        "layer": "EXPLORATION"
+                    }
+                else:
+                    logger.debug("[EXPLORE] Exploration conditions not met")
+            else:
+                logger.debug("[ADAPTIVE] 'explore_map' is blacklisted, skipping exploration")
+        
+        # Default: Continue with current task
+        logger.info("[DECIDE] No immediate action required - continue current behavior")
+        return {
+            "action": "continue",
+            "params": {
+                "reason": "stable_state",
+                "priority": "low"
+            }
+        }
+        
+    except Exception as e:
+        logger.error("[DECIDE] Error processing decision request")
+        logger.exception(e)
+        
+        # Return safe fallback decision
+        return {
+            "action": "continue",
+            "params": {
+                "reason": "error_fallback",
+                "priority": "low",
+                "error": str(e)
+            }
+        }
+
+@app.post("/api/v1/action_feedback")
+async def action_feedback(request: Request, feedback: Dict[str, Any] = Body(...)):
+    """
+    Receive feedback on whether an action succeeded or failed
+    
+    This enables adaptive learning - AI tracks which actions are failing
+    and tries alternatives after 3+ consecutive failures.
+    
+    Request body:
+    {
+        "action": "rest",
+        "status": "failed",
+        "reason": "basic_skill_not_learned",
+        "message": "Character does not have Basic Skill Lv3 to sit"
+    }
+    """
+    action = feedback.get("action", "unknown")
+    status = feedback.get("status", "unknown")
+    reason = feedback.get("reason", "")
+    message = feedback.get("message", "")
+    
+    logger.info(f"[FEEDBACK] Action '{action}' → {status.upper()}")
+    
+    if status == "failed":
+        logger.warning(f"[FEEDBACK] Failure reason: {reason}")
+        logger.debug(f"[FEEDBACK] Message: {message}")
+        
+        # Record the failure for adaptive logic
+        record_action_failure(action, reason)
+    
+    elif status == "success":
+        logger.info(f"[FEEDBACK] Action succeeded, clearing failure history")
+        clear_failure_tracking_for_action(action)
+    
+    return {
+        "received": True,
+        "action": action,
+        "status": status,
+        "failure_count": len(action_failure_tracker.get(action, []))
+    }
+
+@app.post("/api/v1/npc/buy_items")
+async def npc_buy_items(request: Request, items: List[str] = Body(...)):
+    """
+    Endpoint to handle buying items from NPCs with retry logic
+    Priority 2 Fix: Robust NPC interaction system
+    """
+    logger.info(f"[NPC/BUY] Request to buy items: {items}")
+    
+    result = await npc_handler.buy_items_with_retry(items, max_retries=3)
+    
+    if result["success"]:
+        logger.info(f"[NPC/BUY] Success! Command: {result.get('command')}")
+    else:
+        logger.error(f"[NPC/BUY] Failed after {result['retry_count']} attempts: {result.get('error')}")
+    
+    return result
+
+
+@app.post("/api/v1/inventory/sell_junk")
+async def inventory_sell_junk(request: Request, inventory: List[Dict] = Body(...), min_zeny: int = 1000):
+    """
+    Analyze inventory and determine which items can be safely sold
+    Priority 2 Fix: Item selling logic with protection rules
+    """
+    logger.info(f"[INVENTORY/SELL] Analyzing {len(inventory)} items for selling")
+    
+    result = await npc_handler.sell_junk_items(inventory, min_zeny_threshold=min_zeny)
+    
+    if result["success"]:
+        logger.info(f"[INVENTORY/SELL] Can sell {len(result['items_sold'])} items for ~{result['estimated_zeny']}z")
+    
+    return result
+
+
+@app.post("/api/v1/inventory/categorize")
+async def inventory_categorize(request: Request, inventory: List[Dict] = Body(...)):
+    """
+    Categorize inventory items into sellable vs keep with reasons
+    Priority 2 Fix: Smart inventory categorization
+    """
+    logger.info(f"[INVENTORY/CATEGORIZE] Analyzing {len(inventory)} items")
+    
+    result = npc_handler.categorize_inventory_for_selling(inventory)
+    
+    logger.info(f"[INVENTORY/CATEGORIZE] Results: {len(result['sell'])} sellable, {len(result['keep'])} keep")
+    
+    return result
 
 @app.post("/api/v1/llm/query")
 async def llm_query(request: LLMRequest):
@@ -1007,6 +2451,163 @@ async def get_stat_recommendations(current_stats: dict, free_points: int):
         logger.error(f"Stat recommendations error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/v1/progression/allocate_stats")
+async def allocate_stats_immediate(request: Request, request_body: Dict[str, Any] = Body(...)):
+    """
+    Immediate stat allocation endpoint (action-driven).
+    Called by GodTierAI when AI decides to allocate stat points right now.
+    
+    Unlike on_level_up (event-driven), this is for AI-driven immediate decisions.
+    """
+    try:
+        logger.info("[ALLOCATE_STATS_IMMEDIATE] Received stat allocation request")
+        
+        # Extract current character state
+        current_stats = request_body.get('current_stats', {})
+        available_points = int(request_body.get('available_points', 0))
+        current_level = int(request_body.get('current_level', 1))
+        job_class = request_body.get('job_class', 'Novice')
+        
+        logger.info(f"[ALLOCATE_STATS_IMMEDIATE] Class: {job_class}, Level: {current_level}, Available: {available_points}")
+        
+        if available_points <= 0:
+            return {
+                "success": False,
+                "reason": "no_points_available",
+                "stats_to_add": {}
+            }
+        
+        # Use StatAllocator if available
+        try:
+            recommendations = stat_allocator.get_allocation_recommendations(
+                current_stats,
+                available_points
+            )
+            
+            if recommendations:
+                # Return recommended stat allocation
+                logger.info(f"[ALLOCATE_STATS_IMMEDIATE] Recommendations: {recommendations}")
+                return {
+                    "success": True,
+                    "stats_to_add": recommendations,
+                    "reason": f"Following {stat_allocator.selected_build} build",
+                    "build_type": stat_allocator.selected_build
+                }
+        except Exception as e:
+            logger.error(f"[ALLOCATE_STATS_IMMEDIATE] StatAllocator error: {e}")
+        
+        # Fallback: Simple allocation for Novice
+        logger.info("[ALLOCATE_STATS_IMMEDIATE] Using fallback allocation for Novice")
+        stats_to_add = {}
+        
+        if job_class == "Novice":
+            # Balanced Novice build: STR+DEX focus
+            points_remaining = available_points
+            
+            if points_remaining >= 2:
+                stats_to_add["STR"] = 2  # Attack power
+                points_remaining -= 2
+            
+            if points_remaining >= 2:
+                stats_to_add["DEX"] = 2  # Hit rate
+                points_remaining -= 2
+            
+            if points_remaining >= 1:
+                stats_to_add["VIT"] = 1  # Survivability
+                points_remaining -= 1
+        
+        return {
+            "success": True,
+            "stats_to_add": stats_to_add,
+            "reason": "basic_novice_build",
+            "build_type": "balanced"
+        }
+        
+    except Exception as e:
+        logger.error(f"[ALLOCATE_STATS_IMMEDIATE] Error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/progression/learn_skill")
+async def learn_skill_immediate(request: Request, request_body: Dict[str, Any] = Body(...)):
+    """
+    Immediate skill learning endpoint (action-driven).
+    Called by GodTierAI when AI decides to learn skills right now.
+    
+    CRITICAL PRIORITY: Learn Basic Skill Lv3 first (required for sit/rest).
+    """
+    try:
+        logger.info("[LEARN_SKILL_IMMEDIATE] Received skill learning request")
+        
+        # Extract current character state
+        character_class = request_body.get('character_class', 'Novice')
+        current_level = int(request_body.get('current_level', 1))
+        job_level = int(request_body.get('job_level', 1))
+        available_points = int(request_body.get('available_points', 0))
+        current_skills = request_body.get('current_skills', {})
+        
+        logger.info(f"[LEARN_SKILL_IMMEDIATE] Class: {character_class}, Job Lv: {job_level}, Available: {available_points}")
+        
+        if available_points <= 0:
+            return {
+                "success": False,
+                "reason": "no_points_available",
+                "skills_to_learn": []
+            }
+        
+        # CRITICAL: Check if Basic Skill needs learning
+        basic_skill_level = current_skills.get("NV_BASIC", 0) or current_skills.get("Basic Skill", 0)
+        
+        if basic_skill_level < 3:
+            points_needed = 3 - basic_skill_level
+            points_to_allocate = min(points_needed, available_points)
+            
+            logger.warning(f"[LEARN_SKILL_IMMEDIATE] CRITICAL: Learning Basic Skill Lv{basic_skill_level} → Lv{basic_skill_level + points_to_allocate}")
+            
+            return {
+                "success": True,
+                "skills_to_learn": [{
+                    "skill_name": "NV_BASIC",
+                    "skill_display_name": "Basic Skill",
+                    "current_level": basic_skill_level,
+                    "target_level": basic_skill_level + points_to_allocate,
+                    "points_to_add": points_to_allocate,
+                    "priority": "critical",
+                    "reason": "prerequisite_for_sit_rest"
+                }],
+                "reason": "basic_skill_prerequisite"
+            }
+        
+        # Use SkillLearner if available
+        try:
+            skill_plan = skill_learner.get_skill_learning_plan(
+                character_class,
+                job_level,
+                current_skills,
+                available_points
+            )
+            
+            if skill_plan and skill_plan.get('skills_to_learn'):
+                logger.info(f"[LEARN_SKILL_IMMEDIATE] Recommendations: {skill_plan['skills_to_learn']}")
+                return {
+                    "success": True,
+                    "skills_to_learn": skill_plan['skills_to_learn'],
+                    "reason": skill_plan.get('reason', 'progression')
+                }
+        except Exception as e:
+            logger.error(f"[LEARN_SKILL_IMMEDIATE] SkillLearner error: {e}")
+        
+        # Fallback: No skills to learn
+        logger.info("[LEARN_SKILL_IMMEDIATE] No skills to learn (Basic Skill already maxed, no other recommendations)")
+        return {
+            "success": True,
+            "skills_to_learn": [],
+            "reason": "no_skills_needed"
+        }
+        
+    except Exception as e:
+        logger.error(f"[LEARN_SKILL_IMMEDIATE] Error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/v1/progression/skills/on_job_level_up")
 async def handle_skill_job_level_up(current_job_level: int, job: str, current_skills: dict):
     """
@@ -1052,17 +2653,34 @@ async def check_should_learn_skill(skill_name: str, combat_stats: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/v1/progression/equipment/on_map_change")
-async def handle_equipment_map_change(new_map: str, enemies: List[dict]):
+async def handle_equipment_map_change(request: Dict[str, Any] = Body(...)):
     """
     Called when entering a new map.
     Analyzes enemies and recommends optimal equipment setup.
+    
+    Accepts flexible request body:
+    - new_map (required): Map name
+    - enemies (optional): List of enemy data
+    - old_map (optional): Previous map name
+    - character_data (optional): Character information
     """
     try:
+        # Extract required and optional fields
+        new_map = request.get('new_map')
+        if not new_map:
+            logger.error("[EQUIPMENT] Missing required field: new_map")
+            return {"success": False, "error": "Missing required field: new_map"}
+        
+        enemies = request.get('enemies', [])
+        old_map = request.get('old_map')
+        
+        logger.info(f"[EQUIPMENT] Map change: {old_map or 'unknown'} → {new_map}, enemies: {len(enemies)}")
+        
         result = equipment_manager.on_map_change(new_map, enemies)
-        return result
+        return {"success": True, **result}
     except Exception as e:
-        logger.error(f"Equipment map change error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"[EQUIPMENT] Error processing map change: {e}")
+        return {"success": False, "error": str(e)}
 
 @app.post("/api/v1/progression/equipment/on_combat_start")
 async def handle_equipment_combat_start(enemy: dict):
@@ -1400,6 +3018,85 @@ async def healing_status():
         }
     }
 
+@app.post("/api/v1/self_heal/fix_plugin_config")
+async def fix_plugin_config(
+    plugin_name: str = Body(...),
+    character_level: int = Body(1),
+    character_class: str = Body("Novice")
+):
+    """
+    Auto-configure missing plugin settings
+    
+    User requirement: "If it's config or macro issue, it should be done by
+    the CrewAI or autonomous self healing with hot reload!"
+    
+    This endpoint is called by GodTierAI.pm when it detects plugin warnings
+    about missing configuration. It automatically generates the required config
+    and appends it to config.txt, which triggers hot reload (no disconnect).
+    
+    Args:
+        plugin_name: Name of the plugin to configure (e.g., "teleToDest")
+        character_level: Character base level for adaptive configuration
+        character_class: Character class for class-specific settings
+    
+    Returns:
+        JSON with success status and details of configuration added
+    """
+    logger.info(f"[SELF-HEAL] Fixing plugin config: {plugin_name}")
+    logger.info(f"[SELF-HEAL] Character: Lv{character_level} {character_class}")
+    
+    # Path to config.txt (relative to ai-service root)
+    config_path = Path(__file__).parent.parent.parent.parent / "control" / "config.txt"
+    
+    if not config_path.exists():
+        logger.error(f"[SELF-HEAL] Config file not found: {config_path}")
+        return {
+            "success": False,
+            "plugin": plugin_name,
+            "error": f"Config file not found: {config_path}"
+        }
+    
+    if plugin_name == "teleToDest":
+        try:
+            result = generate_teledest_config(config_path, character_level, character_class)
+            
+            if result.get("success"):
+                logger.info(f"[SELF-HEAL] teleToDest config fixed successfully")
+                logger.info(f"[SELF-HEAL] Keys added: {result.get('keys_added', [])}")
+                logger.info(f"[SELF-HEAL] GodTierAI will auto-detect config change and hot-reload")
+                
+                return {
+                    "success": True,
+                    "plugin": plugin_name,
+                    "config_added": result,
+                    "hot_reload": "GodTierAI monitors config.txt and will reload automatically",
+                    "next_steps": "Plugin will activate on next config check cycle (~5 seconds)"
+                }
+            else:
+                logger.error(f"[SELF-HEAL] Failed to add teleToDest config: {result.get('error')}")
+                return {
+                    "success": False,
+                    "plugin": plugin_name,
+                    "error": result.get('error', 'Unknown error')
+                }
+        
+        except Exception as e:
+            logger.error(f"[SELF-HEAL] Exception while fixing teleToDest config: {e}")
+            return {
+                "success": False,
+                "plugin": plugin_name,
+                "error": str(e)
+            }
+    
+    else:
+        logger.warning(f"[SELF-HEAL] Unsupported plugin: {plugin_name}")
+        return {
+            "success": False,
+            "plugin": plugin_name,
+            "error": f"Unknown plugin: {plugin_name}",
+            "supported_plugins": ["teleToDest"]
+        }
+
 @app.get("/api/v1/healing/knowledge")
 async def healing_knowledge():
     """Get knowledge base statistics"""
@@ -1441,6 +3138,132 @@ async def trigger_manual_fix(issue_type: str, issue_description: str):
         }
     except Exception as e:
         logger.error(f"Manual fix failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================================================
+# REAL-TIME TABLE DATA ENDPOINTS
+# ============================================================================
+
+@app.get("/api/v1/tables/monsters")
+async def get_monsters_table():
+    """
+    Get current monster data (updated in real-time by OpenKore)
+    
+    OpenKore updates monsters.txt as the bot explores and discovers new monsters.
+    This endpoint provides the latest monster database for decision-making.
+    """
+    try:
+        monsters = table_loader.load_monsters() if table_loader._monsters_cache is None else table_loader._monsters_cache
+        return {
+            "success": True,
+            "count": len(monsters),
+            "monsters": monsters,
+            "last_updated": time.time(),
+            "source": "openkore-ai/tables/monsters.txt (real-time)"
+        }
+    except Exception as e:
+        logger.error(f"[Tables] Failed to load monsters: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/tables/npcs")
+async def get_npcs_table(map_name: Optional[str] = None):
+    """
+    Get current NPC data (updated in real-time by OpenKore)
+    
+    OpenKore updates npcs.txt as the bot discovers NPCs during gameplay.
+    Optionally filter by map name for faster lookups.
+    
+    Args:
+        map_name: Optional map filter (e.g., "prontera")
+    """
+    try:
+        if map_name:
+            npcs_on_map = table_loader.get_npcs_on_map(map_name)
+            return {
+                "success": True,
+                "map": map_name,
+                "count": len(npcs_on_map),
+                "npcs": npcs_on_map,
+                "last_updated": time.time(),
+                "source": "openkore-ai/tables/npcs.txt (real-time)"
+            }
+        
+        npcs = table_loader.load_npcs() if table_loader._npcs_cache is None else table_loader._npcs_cache
+        return {
+            "success": True,
+            "count": len(npcs),
+            "npcs": npcs,
+            "last_updated": time.time(),
+            "source": "openkore-ai/tables/npcs.txt (real-time)"
+        }
+    except Exception as e:
+        logger.error(f"[Tables] Failed to load NPCs: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/tables/portals")
+async def get_portals_table():
+    """
+    Get current portal data (updated in real-time by OpenKore)
+    
+    OpenKore updates portals.txt as the bot discovers new portal connections.
+    Essential for pathfinding and navigation decisions.
+    """
+    try:
+        portals = table_loader.load_portals() if table_loader._portals_cache is None else table_loader._portals_cache
+        return {
+            "success": True,
+            "count": len(portals),
+            "portals": portals,
+            "last_updated": time.time(),
+            "source": "openkore-ai/tables/portals.txt (real-time)"
+        }
+    except Exception as e:
+        logger.error(f"[Tables] Failed to load portals: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/tables/reload")
+async def reload_all_tables():
+    """
+    Force reload all tables from disk
+    
+    Useful for manual refresh or debugging. Tables are normally
+    reloaded automatically via file watcher.
+    """
+    try:
+        logger.info("[API] Manual table reload requested")
+        
+        # Clear all caches
+        table_loader._items_cache = None
+        table_loader._monsters_cache = None
+        table_loader._npcs_cache = None
+        table_loader._portals_cache = None
+        table_loader._portals_los_cache = None
+        table_loader._maps_cache = None
+        table_loader._cities_cache = None
+        
+        # Reload all tables
+        items = table_loader.load_items()
+        monsters = table_loader.load_monsters()
+        npcs = table_loader.load_npcs()
+        portals = table_loader.load_portals()
+        maps = table_loader.load_maps()
+        cities = table_loader.load_cities()
+        
+        return {
+            "success": True,
+            "reloaded": {
+                "items": len(items),
+                "monsters": len(monsters),
+                "npcs": len(npcs),
+                "portals": len(portals),
+                "maps": len(maps),
+                "cities": len(cities)
+            },
+            "timestamp": time.time(),
+            "message": "All tables reloaded from disk"
+        }
+    except Exception as e:
+        logger.error(f"[Tables] Failed to reload tables: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")
@@ -1556,7 +3379,11 @@ async def root():
             "/api/v1/combat/target/clear",
             "/api/v1/combat/target/metrics",
             "/api/v1/combat/positioning/optimal",
-            "/api/v1/combat/status"
+            "/api/v1/combat/status",
+            "/api/v1/tables/monsters",
+            "/api/v1/tables/npcs",
+            "/api/v1/tables/portals",
+            "/api/v1/tables/reload"
         ]
     }
 

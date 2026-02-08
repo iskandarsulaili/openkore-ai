@@ -394,8 +394,8 @@ echo Service Status:
 echo   [OK] AI Engine:  http://127.0.0.1:%AI_ENGINE_PORT% (PID: !AI_ENGINE_PID!)
 echo   [OK] AI Service: http://127.0.0.1:%AI_SERVICE_PORT% (PID: !AI_SERVICE_PID!)
 echo.
-echo Press any key to launch OpenKore...
-pause >nul
+echo [36mAuto-launching OpenKore in 3 seconds...[0m
+timeout /t 3 /nobreak >nul
 
 :: ============================================================================
 :: LAUNCH OPENKORE

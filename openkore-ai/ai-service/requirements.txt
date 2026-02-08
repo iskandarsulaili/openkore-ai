@@ -29,6 +29,12 @@ onnxruntime>=1.24.1  # Optimized inference
 # Utilities
 pyyaml>=6.0.3
 loguru>=0.7.3
+
+# Optional - Real-time file watching for OpenKore tables (recommended but not required)
+# Automatically reloads monster/NPC/portal data when OpenKore updates them
+# To enable: pip install watchdog>=3.0.0
+watchdog>=3.0.0
+
 # Note: Using python-dotenv~=1.1.1 for compatibility with crewai 1.9.3
 python-dotenv~=1.1.1
 # Note: Using pydantic~=2.11.9 for compatibility with crewai 1.9.3

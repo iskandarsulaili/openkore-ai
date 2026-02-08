@@ -1,10 +1,16 @@
 """
 Quest Automation Framework
 Automatically detects, accepts, and completes quests
+
+Enhanced for Strategic Layer integration
 """
 
 from typing import Dict, Any, List, Optional
 from loguru import logger
+from fastapi import APIRouter
+
+# Create router for quest endpoints
+router = APIRouter()
 
 class QuestStep:
     """Represents a quest step"""
@@ -115,4 +121,101 @@ class QuestAutomation:
             
         return None
 
+# Initialize global instance
 quest_automation = QuestAutomation()
+
+
+# ============================================================================
+# API ENDPOINTS for Strategic Layer Integration
+# ============================================================================
+
+from fastapi import APIRouter
+
+# Create router for quest endpoints
+router = APIRouter()
+
+@router.post("/api/v1/quests/find_available")
+async def find_available_quests(request: Dict[str, Any]):
+    """
+    Find quests available for character
+    
+    Used by Strategic Layer to identify quest opportunities
+    """
+    try:
+        character_level = request.get("character_level", 1)
+        character_class = request.get("character_class", "Novice")
+        current_map = request.get("current_map", "unknown")
+        completed_quests = request.get("completed_quests", [])
+        
+        logger.info(f"[QUEST] Finding quests for Lv{character_level} {character_class}")
+        
+        # Get available quests
+        character_state = {
+            "level": character_level,
+            "job_class": character_class,
+            "current_map": current_map
+        }
+        
+        available = await quest_automation.detect_available_quests(character_state)
+        available = [q for q in available if q.quest_id not in completed_quests]
+        
+        # Format response
+        quest_list = []
+        for quest in available:
+            quest_list.append({
+                "quest_id": quest.quest_id,
+                "name": quest.name,
+                "rewards": {"exp": 1000, "zeny": 500},
+                "estimated_duration_minutes": 15
+            })
+        
+        logger.success(f"[QUEST] Found {len(quest_list)} available quests")
+        
+        return {
+            "available_quests": quest_list,
+            "count": len(quest_list)
+        }
+        
+    except Exception as e:
+        logger.error(f"[QUEST] Error: {e}")
+        return {"available_quests": [], "count": 0, "error": str(e)}
+
+
+@router.post("/api/v1/quests/recommend")
+async def recommend_quest(request: Dict[str, Any]):
+    """
+    Recommend best quest based on current situation
+    
+    Used by Strategic Layer's quest_strategist agent
+    """
+    try:
+        character = request.get("character", {})
+        available_quest_ids = request.get("available_quests", [])
+        
+        # Prioritize job change quest for Novice
+        if character.get("job_class") == "Novice" and character.get("level", 1) >= 10:
+            for quest_id in available_quest_ids:
+                if "job_change" in quest_id:
+                    return {
+                        "recommended_quest": quest_id,
+                        "reasoning": "Job advancement is critical",
+                        "priority": "critical"
+                    }
+        
+        # Otherwise recommend first available
+        if available_quest_ids:
+            return {
+                "recommended_quest": available_quest_ids[0],
+                "reasoning": "Beneficial quest available",
+                "priority": "medium"
+            }
+        
+        return {
+            "recommended_quest": None,
+            "reasoning": "No quests available",
+            "priority": "low"
+        }
+        
+    except Exception as e:
+        logger.error(f"[QUEST] Error: {e}")
+        return {"recommended_quest": None, "reasoning": f"Error: {e}", "priority": "low"}

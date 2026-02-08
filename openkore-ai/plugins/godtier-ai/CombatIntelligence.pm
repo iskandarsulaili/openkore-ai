@@ -51,27 +51,27 @@ sub assess_threat_before_attack {
             target => {
                 id => $target->{nameID},
                 name => $target->{name},
-                level => $target->{lv} || 1,
-                hp => $target->{hp} || $target->{hp_max} || 1000,
-                hp_max => $target->{hp_max} || 1000,
+                level => int($target->{lv} || 1),
+                hp => int($target->{hp} || $target->{hp_max} || 1000),
+                hp_max => int($target->{hp_max} || 1000),
                 element => $target->{element} || 'neutral',
                 race => $target->{race} || 'unknown',
                 size => $target->{size} || 'medium',
-                pos => [$target->{pos_to}{x}, $target->{pos_to}{y}]
+                pos => [int($target->{pos_to}{x} || 0), int($target->{pos_to}{y} || 0)]
             },
             character => {
-                level => $character->{lv},
-                hp => $character->{hp},
-                sp => $character->{sp},
-                hp_max => $character->{hp_max},
-                sp_max => $character->{sp_max},
-                attack => $character->{attack} || 0,
-                matk => $character->{attack_magic_max} || 0,
+                level => int($character->{lv} || 1),
+                hp => int($character->{hp} || 0),
+                sp => int($character->{sp} || 0),
+                hp_max => int($character->{hp_max} || 1),
+                sp_max => int($character->{sp_max} || 1),
+                attack => int($character->{attack} || 0),
+                matk => int($character->{attack_magic_max} || 0),
                 element => $character->{element} || 'neutral',
                 buffs => collect_active_buffs($character),
                 skills => collect_available_skills($character),
                 equipment => collect_equipment($character),
-                pos => [$character->{pos_to}{x}, $character->{pos_to}{y}]
+                pos => [int($character->{pos_to}{x} || 0), int($character->{pos_to}{y} || 0)]
             },
             nearby_enemies => $nearby_enemies || [],
             consumables => $consumables || {
@@ -164,13 +164,13 @@ sub select_best_target {
         my $data = {
             monsters => $monsters,
             character => {
-                level => $character->{lv},
-                pos => [$character->{pos_to}{x}, $character->{pos_to}{y}],
-                attack => $character->{attack} || 0,
-                matk => $character->{attack_magic_max} || 0,
+                level => int($character->{lv} || 1),
+                pos => [int($character->{pos_to}{x} || 0), int($character->{pos_to}{y} || 0)],
+                attack => int($character->{attack} || 0),
+                matk => int($character->{attack_magic_max} || 0),
                 element => $character->{element} || 'neutral',
                 buffs => collect_active_buffs($character),
-                aspd => $character->{attack_speed} || 150
+                aspd => int($character->{attack_speed} || 150)
             },
             quest_targets => $quest_targets || []
         };

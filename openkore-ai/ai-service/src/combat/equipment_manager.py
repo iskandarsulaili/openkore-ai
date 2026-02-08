@@ -60,7 +60,7 @@ class EquipmentManager:
             logger.warning(f"User intent file not found: {self.user_intent_path}")
             return {}
         
-        with open(self.user_intent_path, 'r') as f:
+        with open(self.user_intent_path, 'r', encoding='utf-8-sig') as f:
             return json.load(f)
     
     def on_map_change(self, new_map: str, enemies: List[Dict]) -> Dict[str, Any]:

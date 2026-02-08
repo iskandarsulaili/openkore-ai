@@ -1,0 +1,18 @@
+# Optional dependencies for enhanced features
+# These are NOT required for basic functionality but provide additional capabilities
+
+# Real-time file watching for OpenKore tables
+# Automatically reloads monster/NPC/portal data when OpenKore updates them
+# Enables live updates during gameplay without restarting the AI service
+watchdog>=3.0.0
+
+# GPU acceleration for pathfinding (future enhancement)
+# cupy>=12.0.0
+
+# Advanced monitoring and metrics (future enhancement)
+# prometheus-client>=0.19.0
+
+# Development tools (future enhancement)
+# pytest>=7.4.0
+# pytest-asyncio>=0.21.0
+# pytest-cov>=4.1.0
