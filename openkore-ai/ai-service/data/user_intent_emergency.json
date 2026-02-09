@@ -1,0 +1,10 @@
+{
+    "build": "balanced",
+    "playstyle": "conservative",
+    "build_name": "Conservative Auto-Bot",
+    "playstyle_config": {
+        "heal_threshold": 0.7,
+        "teleport_hp_threshold": 0.4,
+        "risk_tolerance": "conservative"
+    }
+}

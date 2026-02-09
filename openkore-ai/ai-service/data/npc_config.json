@@ -1,0 +1,151 @@
+{
+  "description": "NPC Location Configuration - NEVER HARDCODE NPC LOCATIONS IN CODE!",
+  "requirement": "User requirement: NPC location should never be hardcoded... All of them should use database available as the first source",
+  "npcs": {
+    "prontera": {
+      "tool_dealer": {
+        "x": 134,
+        "y": 88,
+        "name": "Tool Dealer",
+        "type": "vendor",
+        "sells": ["consumables", "teleport_items"],
+        "items": [
+          "Red Potion",
+          "Orange Potion",
+          "Yellow Potion",
+          "White Potion",
+          "Blue Potion",
+          "Green Potion",
+          "Apple",
+          "Meat",
+          "Fly Wing",
+          "Butterfly Wing",
+          "Empty Bottle"
+        ]
+      },
+      "kafra_center": {
+        "x": 152,
+        "y": 29,
+        "name": "Kafra Employee",
+        "type": "storage",
+        "services": ["storage", "save_point", "cart"]
+      },
+      "weapon_dealer": {
+        "x": 175,
+        "y": 184,
+        "name": "Weapon Dealer",
+        "type": "vendor",
+        "sells": ["weapons"]
+      },
+      "armor_dealer": {
+        "x": 203,
+        "y": 60,
+        "name": "Armor Dealer",
+        "type": "vendor",
+        "sells": ["armor"]
+      }
+    },
+    "geffen": {
+      "tool_dealer": {
+        "x": 193,
+        "y": 152,
+        "name": "Tool Dealer",
+        "type": "vendor",
+        "items": [
+          "Red Potion",
+          "Orange Potion",
+          "Yellow Potion",
+          "White Potion",
+          "Blue Potion",
+          "Fly Wing"
+        ]
+      },
+      "kafra": {
+        "x": 120,
+        "y": 62,
+        "name": "Kafra Employee",
+        "type": "storage",
+        "services": ["storage", "save_point", "cart"]
+      }
+    },
+    "morocc": {
+      "tool_dealer": {
+        "x": 96,
+        "y": 166,
+        "name": "Tool Dealer",
+        "type": "vendor",
+        "items": [
+          "Red Potion",
+          "Orange Potion",
+          "Yellow Potion",
+          "White Potion",
+          "Fly Wing"
+        ]
+      },
+      "kafra": {
+        "x": 156,
+        "y": 97,
+        "name": "Kafra Employee",
+        "type": "storage",
+        "services": ["storage", "save_point", "cart"]
+      }
+    },
+    "payon": {
+      "tool_dealer": {
+        "x": 159,
+        "y": 96,
+        "name": "Tool Dealer",
+        "type": "vendor",
+        "items": [
+          "Red Potion",
+          "Orange Potion",
+          "Yellow Potion",
+          "White Potion",
+          "Fly Wing"
+        ]
+      },
+      "kafra": {
+        "x": 181,
+        "y": 104,
+        "name": "Kafra Employee",
+        "type": "storage",
+        "services": ["storage", "save_point", "cart"]
+      }
+    },
+    "alberta": {
+      "tool_dealer": {
+        "x": 98,
+        "y": 154,
+        "name": "Tool Dealer",
+        "type": "vendor",
+        "items": [
+          "Red Potion",
+          "Orange Potion",
+          "Yellow Potion",
+          "White Potion",
+          "Fly Wing"
+        ]
+      },
+      "kafra": {
+        "x": 28,
+        "y": 229,
+        "name": "Kafra Employee",
+        "type": "storage",
+        "services": ["storage", "save_point", "cart"]
+      }
+    }
+  },
+  "buying_quantities": {
+    "description": "Default quantities to purchase when buying items",
+    "Red Potion": 50,
+    "Orange Potion": 30,
+    "Yellow Potion": 20,
+    "White Potion": 10,
+    "Blue Potion": 20,
+    "Fly Wing": 20,
+    "Butterfly Wing": 5,
+    "Apple": 30,
+    "Meat": 20,
+    "default": 10
+  }
+}

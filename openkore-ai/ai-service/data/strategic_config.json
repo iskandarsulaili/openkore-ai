@@ -1,0 +1,171 @@
+{
+  "strategic_layer": {
+    "enabled": true,
+    "description": "CONSCIOUS Layer - Strategic planning with CrewAI for 95% autonomy",
+    "trigger_conditions": {
+      "min_hp_percent": 80,
+      "min_sp_percent": 50,
+      "not_in_combat": true,
+      "description": "Activate when character is healthy and safe for long-term planning"
+    },
+    "planning_frequency": {
+      "min_seconds_between_plans": 30,
+      "plan_when_idle": true,
+      "plan_on_level_up": true,
+      "plan_on_map_change": true,
+      "plan_on_job_level_up": true,
+      "description": "How often to invoke strategic planning"
+    }
+  },
+  "crewai_agents": {
+    "goal_planner": {
+      "enabled": true,
+      "model": "deepseek-chat",
+      "temperature": 0.7,
+      "max_iterations": 15,
+      "description": "Plans long-term goals and progression paths"
+    },
+    "resource_optimizer": {
+      "enabled": true,
+      "model": "deepseek-chat",
+      "temperature": 0.5,
+      "max_iterations": 10,
+      "description": "Optimizes zeny, items, and resource usage"
+    },
+    "quest_strategist": {
+      "enabled": true,
+      "model": "deepseek-chat",
+      "temperature": 0.6,
+      "max_iterations": 10,
+      "description": "Identifies and prioritizes beneficial quests"
+    },
+    "build_advisor": {
+      "enabled": true,
+      "model": "deepseek-chat",
+      "temperature": 0.4,
+      "max_iterations": 10,
+      "description": "Advises on stat allocation and skill learning"
+    }
+  },
+  "autonomous_goals": {
+    "primary_goal": "level_up_efficiently",
+    "secondary_goals": [
+      "maintain_resource_sustainability",
+      "complete_beneficial_quests",
+      "optimize_character_build",
+      "minimize_death_rate"
+    ],
+    "description": "Core objectives for autonomous gameplay"
+  },
+  "action_priorities": {
+    "job_change_quest": {
+      "priority": "critical",
+      "trigger": "job_level >= 10 AND class == Novice",
+      "description": "Immediate job advancement when ready"
+    },
+    "allocate_stats": {
+      "priority": "high",
+      "trigger": "stat_points > 0",
+      "description": "Never waste stat points"
+    },
+    "learn_skills": {
+      "priority": "high",
+      "trigger": "skill_points > 0",
+      "description": "Learn skills for build progression"
+    },
+    "sell_items": {
+      "priority": "medium",
+      "trigger": "zeny < 5000 OR weight > 80%",
+      "description": "Manage resources and inventory"
+    },
+    "auto_buy": {
+      "priority": "medium",
+      "trigger": "consumables_low AND zeny >= estimated_cost",
+      "description": "Restock consumables for sustainability"
+    },
+    "find_quest": {
+      "priority": "medium",
+      "trigger": "quest_available AND beneficial",
+      "description": "Complete quests for rewards"
+    },
+    "farm_monsters": {
+      "priority": "low",
+      "trigger": "no_urgent_tasks",
+      "description": "Default leveling activity"
+    }
+  },
+  "sequential_thinking": {
+    "enabled": true,
+    "description": "Multi-step problem solving with lookahead planning",
+    "lookahead_steps": 3,
+    "example_chains": [
+      "Low zeny → Sell items → Buy potions → Continue farming",
+      "Job level 10 → Job change quest → Allocate new skills → Farm with new abilities",
+      "Stat points available → Allocate STR → Equip better weapon → Farm stronger monsters"
+    ]
+  },
+  "complex_situation_handling": {
+    "enabled": true,
+    "description": "Handle situations requiring multiple sequential actions",
+    "situations": {
+      "resource_depletion": {
+        "condition": "zeny < 1000 AND no_healing_items",
+        "solution_chain": [
+          "1. Farm monsters with valuable drops",
+          "2. Sell drops to NPC",
+          "3. Buy essential consumables",
+          "4. Resume normal farming"
+        ]
+      },
+      "weight_management": {
+        "condition": "weight > 80%",
+        "solution_chain": [
+          "1. Identify junk items (low value drops)",
+          "2. Walk to nearest NPC",
+          "3. Sell junk items",
+          "4. Return to farming location"
+        ]
+      },
+      "build_optimization": {
+        "condition": "stat_points > 0 OR skill_points > 0",
+        "solution_chain": [
+          "1. Analyze current build path",
+          "2. Allocate stats according to build (STR/AGI/VIT/etc)",
+          "3. Learn skills in optimal order",
+          "4. Test new build efficiency"
+        ]
+      },
+      "job_advancement": {
+        "condition": "job_level >= 10 AND class == Novice",
+        "solution_chain": [
+          "1. Navigate to job change location",
+          "2. Complete job change quest",
+          "3. Allocate new job skills",
+          "4. Adjust equipment for new class"
+        ]
+      }
+    }
+  },
+  "performance_targets": {
+    "autonomy_level": "95%",
+    "description": "Target autonomous gameplay without human intervention",
+    "metrics": {
+      "exp_per_hour": "optimal_for_level",
+      "zeny_per_hour": "positive_and_sustainable",
+      "death_rate": "< 1 per 2 hours",
+      "potion_efficiency": "cost < 30% of zeny_income",
+      "quest_completion": "all_beneficial_quests_for_level"
+    }
+  },
+  "fallback_strategy": {
+    "enabled": true,
+    "description": "Simple heuristics when CrewAI fails",
+    "rules": [
+      "IF Novice AND job_level >= 10 THEN job_change_quest",
+      "IF stat_points > 0 THEN allocate_stats",
+      "IF skill_points > 0 THEN learn_skills",
+      "IF zeny < 1000 THEN farm_monsters",
+      "ELSE continue_current_behavior"
+    ]
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "description": "Thresholds Configuration - NEVER HARDCODE THRESHOLDS IN CODE!",
+  "requirement": "User requirement: All hardcoded things should use database available as the first source",
+  "hp_thresholds": {
+    "description": "HP percentage thresholds for different decision layers",
+    "reflex": 30,
+    "tactical": 60,
+    "strategic": 80,
+    "critical_emergency": 20,
+    "warning_level": 50
+  },
+  "sp_thresholds": {
+    "description": "SP percentage thresholds for different decision layers",
+    "reflex": 10,
+    "tactical": 30,
+    "strategic": 50,
+    "critical_emergency": 5,
+    "warning_level": 20
+  },
+  "zeny_thresholds": {
+    "description": "Zeny (currency) thresholds for decision making",
+    "critical": 500,
+    "low": 2000,
+    "comfortable": 5000,
+    "rich": 10000,
+    "need_to_sell": 1000
+  },
+  "weight_thresholds": {
+    "description": "Weight/inventory thresholds (percentage)",
+    "warning": 50,
+    "critical": 80,
+    "full": 90
+  },
+  "adaptive_behavior": {
+    "description": "Adaptive failure tracking thresholds",
+    "failure_threshold": 3,
+    "failure_window_seconds": 30,
+    "retry_max": 3,
+    "timeout_seconds": 10
+  },
+  "combat_thresholds": {
+    "description": "Combat-related thresholds",
+    "flee_hp_percent": 25,
+    "flee_sp_percent": 10,
+    "rest_hp_percent": 70,
+    "rest_sp_percent": 60
+  },
+  "item_management": {
+    "description": "Item management thresholds",
+    "min_healing_items": 10,
+    "min_teleport_items": 5,
+    "sell_when_weight_over": 70
+  }
+}

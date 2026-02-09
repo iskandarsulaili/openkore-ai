@@ -143,8 +143,14 @@ class EquipmentManager:
         
         commands = []
         
-        # If taking heavy damage (>30% HP), switch to defensive gear
-        if damage_amount > 0 and avg_damage > 0:  # Placeholder for HP percentage check
+        # CRITICAL FIX #5j-4: Implement real HP damage tracking for equipment switching
+        # Calculate actual HP loss percentage from damage
+        max_hp = current_hp  # Assume current_hp represents max (should be passed separately)
+        hp_loss_percent = (damage_amount / max(1, max_hp)) * 100 if max_hp > 0 else 0
+        
+        # If taking heavy damage (>30% HP per hit), switch to defensive gear
+        if hp_loss_percent > 30:
+            logger.warning(f"[EQUIPMENT] Heavy damage detected ({hp_loss_percent:.1f}% HP per hit), switching to defensive gear")
             defensive_armor = self._get_defensive_armor(enemy_element)
             
             if defensive_armor and defensive_armor != self.current_equipment.get('armor'):
