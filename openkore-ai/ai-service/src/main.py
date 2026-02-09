@@ -1175,6 +1175,22 @@ def get_alternative_action(failed_action: str, game_state: Dict[str, Any], inven
             "layer": "ADAPTIVE_STRATEGIC"
         }
     
+    elif failed_action == "teleport":
+        logger.warning("[ADAPTIVE] 'teleport' failing (no Fly Wing or Teleport skill)")
+        
+        # Alternative 1: Walk away from danger (retreat without teleport)
+        # This is the safe fallback when character can't teleport
+        logger.info("[ADAPTIVE] Alternative: Retreat by walking (no teleport available)")
+        return {
+            "action": "retreat",
+            "params": {
+                "reason": "teleport_unavailable_walking_away",
+                "method": "walk",  # Explicitly specify walk, not teleport
+                "priority": "high"
+            },
+            "layer": "ADAPTIVE_TACTICAL"
+        }
+    
     else:
         # Generic fallback: just continue with default behavior
         logger.warning(f"[ADAPTIVE] No specific alternative for '{failed_action}', defaulting to continue")
