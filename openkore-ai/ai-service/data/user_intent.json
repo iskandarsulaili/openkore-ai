@@ -1,0 +1,54 @@
+{
+  "description": "User Intent Configuration - Defines bot behavior and progression goals",
+  "requirement": "This file allows users to customize bot behavior without code changes",
+  "version": "1.0.0",
+  
+  "character": {
+    "job_class": "novice",
+    "target_job": "archer",
+    "build_type": "dex_hunter",
+    "playstyle": "balanced"
+  },
+  
+  "farming_preference": {
+    "auto_select_maps": true,
+    "preferred_maps": ["prt_fild08", "prt_fild01"],
+    "avoid_maps": [],
+    "auto_adjust_by_level": true
+  },
+  
+  "progression_goals": {
+    "primary": "level_up",
+    "secondary": "collect_zeny",
+    "enable_auto_quest": false,
+    "enable_skill_learning": true,
+    "enable_stat_allocation": true
+  },
+  
+  "combat_style": {
+    "aggression": "moderate",
+    "kiting_enabled": true,
+    "skill_rotation": "auto",
+    "focus_target": "weakest_first"
+  },
+  
+  "resource_management": {
+    "auto_buy_consumables": true,
+    "min_healing_items": 10,
+    "min_teleport_items": 5,
+    "sell_loot_when_weight_over": 70
+  },
+  
+  "safety": {
+    "flee_on_low_hp": true,
+    "flee_hp_threshold": 25,
+    "avoid_mvp": true,
+    "avoid_pk_maps": true
+  },
+  
+  "social": {
+    "accept_party_invites": false,
+    "accept_friend_requests": false,
+    "auto_decline_trades": true
+  }
+}

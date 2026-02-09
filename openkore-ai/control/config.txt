@@ -3,12 +3,12 @@
 
 ######## Login options and server-specific options ########
 
-master
-server
-username
-password
+master WoM
+server 0
+username kicapmasin
+password b0tTib0tTi
 loginPinCode
-char
+char 0
 otpSeed
 
 # Poseidon Settings: https://openkore.com/wiki/Poseidon
@@ -28,8 +28,8 @@ XKore_dll NetRedirect.dll
 XKore_injectDLL 1
 XKore_autoAttachIfOneExe 1
 XKore_silent 1
-XKore_bypassBotDetection 0
-XKore_exeName ragexe.exe
+XKore_bypassBotDetection 1
+XKore_exeName WoM.exe
 
 # XKore 2 / Proxy configuration
 XKore_listenIp 127.0.0.1
@@ -39,7 +39,7 @@ XKore_ID
 
 # It is not advised to set secureAdminPassword if you're using Xkore 2
 secureAdminPassword 1
-adminPassword yochotwa
+adminPassword nalifroc
 callSign
 commandPrefix ;
 callSignGM 0
@@ -286,7 +286,7 @@ skillsAddAuto_list
 tankMode 0
 tankModeTarget
 
-teleportAuto_hp 10
+teleportAuto_hp 40
 teleportAuto_sp 0
 teleportAuto_idle 0
 teleportAuto_portal 0
@@ -294,8 +294,8 @@ teleportAuto_search 0
 teleportAuto_minAggressives 0
 teleportAuto_minAggressivesInLock 0
 teleportAuto_onlyWhenSafe 0
-teleportAuto_maxDmg 500
-teleportAuto_maxDmgInLock 0
+teleportAuto_maxDmg 300
+teleportAuto_maxDmg 300
 teleportAuto_deadly 1
 teleportAuto_useSkill 1
 teleportAuto_useChatCommand
@@ -911,72 +911,39 @@ equipAuto {
 	manualAI 0
 }
 
-useSelf_item {
-	hp
-	sp
-	ap
-	homunculus
-	homunculus_hp
-	homunculus_sp
-	homunculus_dead
-	homunculus_resting
-	homunculus_noinfo_dead
-	homunculus_noinfo_resting
-	homunculus_onAction
-	homunculus_notOnAction
-	homunculus_whenIdle
-	homunculus_whenNotIdle
-	mercenary
-	mercenary_hp
-	mercenary_sp
-	mercenary_whenStatusActive
-	mercenary_whenStatusInactive
-	mercenary_onAction
-	mercenary_notOnAction
-	mercenary_whenIdle
-	mercenary_whenNotIdle
-	onAction
-	inQueue
-	notInQueue
-	whenStatusActive
-	whenStatusInactive
-	whenFollowing
-	spirit
-	amuletType
-	aggressives
-	monsters
-	notMonsters
-	monstersCount
-	monstersCountDist
-	stopWhenHit 0
-	inLockOnly 0
-	notWhileSitting 0
-	notInTown 0
-	timeout 0
-	disabled 0
-	whenPartyMembersNear
-	whenPartyMembersNearDist
-	inInventory
-	manualAI 0
+
+# Auto-configured healing (from user_intent.json)
+useSelf_item Red Potion {
+	hp < 70
+	inInventory Red Potion > 0
+	notWhileSitting 1
 }
+
+# Emergency teleport with Fly Wing
+useSelf_item Fly Wing {
+	hp < 30
+	inInventory Fly Wing > 0
+	notWhileSitting 1
+}
+
 
 ######## Autostorage/autosell ########
 
-buyAuto {
-	npc
-	npc_steps b
-	isMarket 0
-	standpoint
-	distance 3
-	price
-	minAmount 2
-	maxAmount 3
-	batchSize
-	onlyIdentified
-	disabled 0
-	maxBase
-	minBase
-}
+
+# Auto-configured autonomous item purchasing
+# Bot will automatically buy items when running low
+# [DISABLED BY GODTIER-AI SELF-HEAL] buyAuto Red Potion {
+# [DISABLED BY GODTIER-AI SELF-HEAL]     npc prontera 152 29
+# [DISABLED BY GODTIER-AI SELF-HEAL]     minAmount 30
+# [DISABLED BY GODTIER-AI SELF-HEAL]     maxAmount 100
+# [DISABLED BY GODTIER-AI SELF-HEAL] }
+
+# [DISABLED BY GODTIER-AI SELF-HEAL] buyAuto Fly Wing {
+# [DISABLED BY GODTIER-AI SELF-HEAL]     npc prontera 152 29
+# [DISABLED BY GODTIER-AI SELF-HEAL]     minAmount 10
+# [DISABLED BY GODTIER-AI SELF-HEAL]     maxAmount 50
+# [DISABLED BY GODTIER-AI SELF-HEAL] }
+
 
 sellAuto 0
 sellAuto_npc
@@ -1016,7 +983,7 @@ getAuto {
 
 ######## Debugging options; only useful for developers ########
 
-debug 2
+debug 0
 debugPacket_unparsed 0
 debugPacket_received 0
 debugPacket_ro_sent 0

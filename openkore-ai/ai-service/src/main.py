@@ -145,6 +145,114 @@ table_loader = None
 thresholds_config = None
 npc_handler = None
 
+# Initialize metadata configuration (NEVER HARDCODE!)
+MAP_METADATA = None
+SKILL_METADATA = None
+USER_INTENT = None
+JOB_BUILDS = None
+
+def load_metadata_configs():
+    """Load all metadata configuration files"""
+    global MAP_METADATA, SKILL_METADATA, USER_INTENT, JOB_BUILDS
+    
+    data_dir = Path(__file__).parent.parent / "data"
+    
+    # Load map metadata
+    try:
+        map_metadata_path = data_dir / "map_metadata.json"
+        if map_metadata_path.exists():
+            with open(map_metadata_path, 'r', encoding='utf-8') as f:
+                MAP_METADATA = json.load(f)
+            logger.info(f"[CONFIG] Loaded map_metadata.json: {len(MAP_METADATA.get('towns', {}))} towns, {len(MAP_METADATA.get('farming_maps', {}))} farming maps")
+        else:
+            logger.warning(f"[CONFIG] map_metadata.json not found, using empty metadata")
+            MAP_METADATA = {"towns": {}, "farming_maps": {}, "dungeon_maps": {}}
+    except Exception as e:
+        logger.error(f"[CONFIG] Error loading map_metadata.json: {e}")
+        MAP_METADATA = {"towns": {}, "farming_maps": {}, "dungeon_maps": {}}
+    
+    # Load skill metadata
+    try:
+        skill_metadata_path = data_dir / "skill_metadata.json"
+        if skill_metadata_path.exists():
+            with open(skill_metadata_path, 'r', encoding='utf-8') as f:
+                SKILL_METADATA = json.load(f)
+            logger.info(f"[CONFIG] Loaded skill_metadata.json: {len(SKILL_METADATA.get('skills', {}))} skills")
+        else:
+            logger.warning(f"[CONFIG] skill_metadata.json not found, using empty metadata")
+            SKILL_METADATA = {"skills": {}}
+    except Exception as e:
+        logger.error(f"[CONFIG] Error loading skill_metadata.json: {e}")
+        SKILL_METADATA = {"skills": {}}
+    
+    # Load user intent (optional - gracefully handle missing file)
+    try:
+        user_intent_path = data_dir / "user_intent.json"
+        if user_intent_path.exists():
+            with open(user_intent_path, 'r', encoding='utf-8') as f:
+                USER_INTENT = json.load(f)
+            logger.info(f"[CONFIG] Loaded user_intent.json: target_job={USER_INTENT.get('character', {}).get('target_job', 'unknown')}")
+        else:
+            logger.info(f"[CONFIG] user_intent.json not found (optional file), using defaults")
+            USER_INTENT = None
+    except Exception as e:
+        logger.warning(f"[CONFIG] Error loading user_intent.json (optional): {e}")
+        USER_INTENT = None
+    
+    # Load job builds
+    try:
+        job_builds_path = data_dir / "job_builds.json"
+        if job_builds_path.exists():
+            with open(job_builds_path, 'r', encoding='utf-8') as f:
+                JOB_BUILDS = json.load(f)
+            logger.info(f"[CONFIG] Loaded job_builds.json: {len(JOB_BUILDS)} job classes")
+        else:
+            logger.warning(f"[CONFIG] job_builds.json not found")
+            JOB_BUILDS = {}
+    except Exception as e:
+        logger.error(f"[CONFIG] Error loading job_builds.json: {e}")
+        JOB_BUILDS = {}
+
+def is_town_map(map_name: str) -> bool:
+    """Check if map is a town using metadata (NEVER HARDCODE MAP NAMES!)"""
+    if not MAP_METADATA or not map_name:
+        return False
+    return map_name.lower() in MAP_METADATA.get("towns", {})
+
+def get_threshold(category: str, layer: str, default: float = 50.0) -> float:
+    """
+    Get threshold value from thresholds_config.json (NEVER HARDCODE THRESHOLDS!)
+    
+    Args:
+        category: Threshold category (e.g., "hp_thresholds", "sp_thresholds")
+        layer: Specific layer (e.g., "strategic", "tactical", "reflex")
+        default: Default value if not found
+    
+    Returns:
+        Threshold value as float
+    """
+    if not thresholds_config:
+        return default
+    return thresholds_config.get(category, {}).get(layer, default)
+
+def get_job_property(job_class: str, property_name: str, default=None):
+    """
+    Get job property from job_builds.json metadata (NEVER HARDCODE JOB LOGIC!)
+    
+    Args:
+        job_class: Job class name (e.g., "novice", "swordsman")
+        property_name: Property to get (e.g., "can_use_bare_hands")
+        default: Default value if not found
+    
+    Returns:
+        Property value or default
+    """
+    if not JOB_BUILDS:
+        return default
+    
+    job_meta = JOB_BUILDS.get("_metadata", {}).get("job_properties", {})
+    return job_meta.get(job_class.lower(), {}).get(property_name, default)
+
 # ============================================================================
 # PHASE 14: BACKGROUND ASYNC CREWAI SYSTEM
 # ============================================================================
@@ -362,6 +470,9 @@ def load_configurations():
     # Initialize NPC handler (loads npc_config.json)
     npc_handler = get_npc_handler()
     logger.info(f"[CONFIG] ✓ NPC handler initialized")
+    
+    # Load metadata configurations (map metadata, skill metadata, user intent, job builds)
+    load_metadata_configs()
     
     # Log what was loaded from tables
     items = table_loader.load_items()
@@ -892,18 +1003,77 @@ def should_trigger_autobuy(inventory: List[Dict], hp_percent: float, sp_percent:
     }
 
 # ============================================
+# STAT COST CALCULATION (RO FORMULA)
+# ============================================
+def calculate_stat_cost(current_stat_value: int) -> int:
+    """
+    Calculate cost to increase stat using Ragnarok Online formula
+    
+    Formula: cost = floor(1 + (current_stat - 1) / 10)
+    
+    Examples:
+        - Stats 1-10 cost 1 point each
+        - Stats 11-20 cost 2 points each
+        - Stats 21-30 cost 3 points each
+        - Stats 91-99 cost 10 points each
+    
+    Args:
+        current_stat_value: Current value of the stat (1-99)
+    
+    Returns:
+        Point cost to increase the stat by 1
+    """
+    import math
+    if current_stat_value < 1:
+        current_stat_value = 1
+    return math.floor(1 + (current_stat_value - 1) / 10)
+
+# ============================================
+# SKILL NAME ALIASES (HANDLE vs DISPLAY NAME)
+# ============================================
+# OpenKore sends skill handles (NV_BASIC) but some code expects display names (Basic Skill)
+SKILL_ALIASES = {
+    "Basic Skill": ["NV_BASIC", "Basic Skill"],
+    "First Aid": ["NV_FIRSTAID", "First Aid"],
+    "Teleport": ["AL_TELEPORT", "Teleport"],
+    "Heal": ["AL_HEAL", "Heal"],
+    "HP Recovery": ["SM_RECOVERY", "HP Recovery"],
+    "Bash": ["SM_BASH", "Bash"],
+    "Provoke": ["SM_PROVOKE", "Provoke"],
+    "Sword Mastery": ["SM_SWORD", "Sword Mastery"],
+    "Two-Handed Sword Mastery": ["SM_TWOHAND", "Two-Handed Sword Mastery"],
+    "Endure": ["SM_ENDURE", "Endure"],
+    "Magnum Break": ["SM_MAGNUM", "Magnum Break"],
+    "Fire Bolt": ["MG_FIREBOLT", "Fire Bolt"],
+    "Cold Bolt": ["MG_COLDBOLT", "Cold Bolt"],
+    "Lightning Bolt": ["MG_LIGHTNINGBOLT", "Lightning Bolt"],
+    "Double Strafe": ["AC_DOUBLE", "Double Strafe"],
+    "Owl's Eye": ["AC_OWL", "Owl's Eye"],
+    "Vulture's Eye": ["AC_VULTURE", "Vulture's Eye"],
+    "Divine Protection": ["AL_DP", "Divine Protection"],
+    "Demon Bane": ["AL_DEMONBANE", "Demon Bane"],
+    "Ruwach": ["AL_RUWACH", "Ruwach"],
+    "Pneuma": ["AL_PNEUMA", "Pneuma"],
+    "Increase AGI": ["AL_INCAGI", "Increase AGI"],
+    "Decrease AGI": ["AL_DECAGI", "Decrease AGI"],
+    "Blessing": ["AL_BLESSING", "Blessing"],
+    "Cure": ["AL_CURE", "Cure"]
+}
+
+# ============================================
 # ADAPTIVE FAILURE TRACKING SYSTEM
 # ============================================
-# CRITICAL FIX #1: SKILL PREREQUISITE VALIDATION
+# CRITICAL FIX #1: SKILL PREREQUISITE VALIDATION WITH ALIAS SUPPORT
 # ============================================
 
 def has_required_skill(skills_list: List[Dict], skill_name: str, min_level: int = 1) -> bool:
     """
     Check if character has required skill at minimum level
+    Handles both display names (Basic Skill) and skill handles (NV_BASIC)
     
     Args:
         skills_list: List of character skills from game state
-        skill_name: Name of skill to check (e.g., "Basic Skill")
+        skill_name: Name of skill to check (e.g., "Basic Skill" or "NV_BASIC")
         min_level: Minimum skill level required (default 1)
     
     Returns:
@@ -912,11 +1082,18 @@ def has_required_skill(skills_list: List[Dict], skill_name: str, min_level: int 
     if not isinstance(skills_list, list):
         return False
     
+    # Get list of acceptable names (both display name and handle)
+    acceptable_names = SKILL_ALIASES.get(skill_name, [skill_name])
+    
     for skill in skills_list:
         if not isinstance(skill, dict):
             continue
-        if skill.get("name") == skill_name and skill.get("level", 0) >= min_level:
+        skill_current_name = skill.get("name", "")
+        if skill_current_name in acceptable_names and skill.get("level", 0) >= min_level:
+            logger.debug(f"[SKILL-CHECK] Found {skill_name} as '{skill_current_name}' level {skill.get('level')}")
             return True
+    
+    logger.debug(f"[SKILL-CHECK] {skill_name} not found in {[s.get('name') for s in skills_list if isinstance(s, dict)]}")
     return False
 
 def get_skill_alternatives(missing_skill: str, game_state: Dict) -> Dict:
@@ -1822,15 +1999,20 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
                 "luk": int(character_data.get("luk", 1) or 1)
             }
             
-            # CRITICAL FIX #5h-2: Get stat point COSTS from game state
-            stat_costs = {
-                "str": int(character_data.get("points_str", 1) or 1),
-                "agi": int(character_data.get("points_agi", 1) or 1),
-                "vit": int(character_data.get("points_vit", 1) or 1),
-                "dex": int(character_data.get("points_dex", 1) or 1),
-                "int": int(character_data.get("points_int", 1) or 1),
-                "luk": int(character_data.get("points_luk", 1) or 1)
-            }
+            # CRITICAL FIX #5h-2: Calculate stat point COSTS using RO formula (don't trust OpenKore blindly)
+            stat_costs = {}
+            for stat_name in ["str", "agi", "vit", "dex", "int", "luk"]:
+                current_value = current_stats.get(stat_name, 1)
+                calculated_cost = calculate_stat_cost(current_value)
+                received_cost = int(character_data.get(f"points_{stat_name}", calculated_cost) or calculated_cost)
+                
+                # Validate and warn if mismatch
+                if received_cost != calculated_cost:
+                    logger.warning(f"[STAT-COST] Mismatch for {stat_name.upper()}: "
+                                 f"received={received_cost}, calculated={calculated_cost}, "
+                                 f"current_stat={current_value}, using calculated")
+                
+                stat_costs[stat_name] = calculated_cost
             
             # Dynamic table-driven stat allocation from job_builds.json (NO HARDCODING)
             recommendations = stat_allocator.get_allocation_recommendations(
