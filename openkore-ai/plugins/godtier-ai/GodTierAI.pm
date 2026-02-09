@@ -22,9 +22,16 @@ my $request_counter = 0;
 # Package-level variable declarations
 my %questList;          # Used in collect_game_state() for tracking active quests
 my $last_query_time = 0; # Used in on_ai_pre() for rate limiting
-my %state;              # Used for tracking temporary state (buyAuto disable, map load cooldowns, etc.)
-my %map_transition_history;  # FIX #8: Track map transitions to detect infinite loops
-my $farming_map_entry_time = 0;  # FIX #9: Track when entering farming map for minimum stay enforcement
+
+# STATELESS REFACTOR: Minimal state tracking that auto-expires
+my $buyAuto_disabled_until = 0;           # Timestamp when buyAuto can be re-enabled (auto-expires)
+my %buyAuto_original_values = ();         # Temporary storage for buyAuto restoration (cleared after use)
+my $map_load_cooldown_until = 0;          # Timestamp when AI can make decisions after map load (auto-expires)
+my $farming_map_entry_time = 0;           # Track when entering farming map for minimum stay enforcement
+
+# STATELESS REFACTOR: Sliding window for loop detection (not accumulating history)
+my %map_visit_count = ();                 # Count of visits per map in current window
+my $last_loop_check_cleanup = 0;          # Last time we cleaned the visit counts
 
 # Hot reload configuration monitoring
 my $config_file_path = "control/config.txt";
@@ -579,9 +586,10 @@ sub execute_action {
         my $target_id = $params->{target_id};
         my $target_name = $params->{target_name} || 'Unknown';
         
-        if ($target_id) {
+        # FIX #18: Use 'defined' check instead of truthiness (binID 0 is valid!)
+        if (defined $target_id) {
             message "[GodTierAI] [COMBAT] Attacking monster: $target_name (ID: $target_id)\n", "info";
-            Commands::run("attack $target_id");
+            Commands::run("a $target_id");  # FIX: Use 'a' command instead of 'attack'
         } else {
             error "[GodTierAI] [ERROR] attack_monster action missing target_id parameter\n";
         }
@@ -724,7 +732,7 @@ sub execute_action {
         my $monster = getBestTarget();
         if ($monster) {
             message "[GodTierAI] [ACTION] Target: " . $monster->name() . " (ID: " . $monster->{binID} . ")\n", "info";
-            Commands::run("attack " . $monster->{binID});
+            Commands::run("a " . $monster->{binID});  # FIX: Use 'a' command instead of 'attack'
             send_action_feedback('attack_nearest', 'success', 'monster_targeted');
         } else {
             warning "[GodTierAI] [ACTION] No monsters nearby to attack\n";
@@ -1041,15 +1049,16 @@ sub execute_action {
         
         message "[GodTierAI] [SEQUENTIAL] Moving to map: $target_map - Reason: $reason\n", "info";
         
-        # CRITICAL FIX #1: Temporarily disable buyAuto during farming to prevent town returns
-        # FIXED: Directly modify $config hash to avoid hot reload conflict and invalid commands
+        # STATELESS REFACTOR: Temporarily disable buyAuto during farming to prevent town returns
+        # State expires automatically after 10 minutes (600s) - no manual cleanup needed
         if ($target_map =~ /fild|beach|dun|forest|mine|cave/i) {
             message "[GodTierAI] [FIX#1] Disabling buyAuto BEFORE route calculation\n", "info";
-            $state{buyAuto_disabled_until} = time() + 600;
+            $buyAuto_disabled_until = time() + 600;  # Auto-expires after 10 minutes
             
-            # Save original values
-            $state{buyAuto_Red_Potion_original} = $config{buyAuto_Red_Potion} if exists $config{buyAuto_Red_Potion};
-            $state{buyAuto_Fly_Wing_original} = $config{buyAuto_Fly_Wing} if exists $config{buyAuto_Fly_Wing};
+            # Save original values temporarily (will be cleared when re-enabled)
+            %buyAuto_original_values = ();
+            $buyAuto_original_values{Red_Potion} = $config{buyAuto_Red_Potion} if exists $config{buyAuto_Red_Potion};
+            $buyAuto_original_values{Fly_Wing} = $config{buyAuto_Fly_Wing} if exists $config{buyAuto_Fly_Wing};
             
             # CRITICAL: Disable buyAuto BEFORE route calculation
             $config{buyAuto_Red_Potion} = '';
@@ -1058,7 +1067,7 @@ sub execute_action {
             # Wait for config to propagate through OpenKore's subsystems (100ms)
             select(undef, undef, undef, 0.1);
             
-            message "[GodTierAI] [FIX#1] buyAuto disabled, config propagated, ready to route\n", "success";
+            message "[GodTierAI] [FIX#1] buyAuto disabled (auto-expires in 600s), ready to route\n", "success";
         }
         
         # Now route calculation sees correct config (buyAuto disabled)
@@ -1200,8 +1209,8 @@ sub on_ai_pre {
     return if $current_time - $last_query_time < 2.0;
     $last_query_time = $current_time;
     
-    # CRITICAL FIX #2: Skip AI decisions during map load cooldown
-    if ($state{map_load_cooldown} && $current_time < $state{map_load_cooldown}) {
+    # STATELESS REFACTOR: Check auto-expiring map load cooldown
+    if ($map_load_cooldown_until > 0 && $current_time < $map_load_cooldown_until) {
         debug "[GodTierAI] [FIX#2] Map load cooldown active, skipping AI decision\n", "ai";
         return;
     }
@@ -1220,25 +1229,32 @@ sub on_ai_pre {
     }
 }
 
-# Map change hook
-# FIX #8: Loop Detection Safeguard
+# STATELESS REFACTOR: Loop Detection with Sliding Window (no accumulation)
+# Instead of storing full history, we use a count-based sliding window that auto-expires
 sub detect_infinite_loop {
     my ($map) = @_;
     my $current_time = time();
     
-    # Record this transition
-    push @{$map_transition_history{$map}}, $current_time;
+    # STATELESS: Clean old data every 60 seconds (sliding window)
+    if ($current_time - $last_loop_check_cleanup > 60) {
+        debug "[LOOP-DETECT] Cleaning expired visit counts (sliding window)\n", "ai";
+        %map_visit_count = ();  # Clear all counts (they're >60s old)
+        $last_loop_check_cleanup = $current_time;
+    }
     
-    # Clean old entries (>60s ago)
-    @{$map_transition_history{$map}} = grep { $_ > ($current_time - 60) } @{$map_transition_history{$map}};
+    # STATELESS: Increment visit count for this map (just a counter, not an array)
+    $map_visit_count{$map} ||= 0;
+    $map_visit_count{$map}++;
     
-    # Check if visited >5 times in last 30s
-    my @recent = grep { $_ > ($current_time - 30) } @{$map_transition_history{$map}};
-    
-    if (scalar(@recent) > 5) {
-        Log::warning("[LOOP-DETECT] Visited $map " . scalar(@recent) . " times in 30s - BREAKING LOOP\n");
+    # Check if visited >5 times in current 60s window
+    if ($map_visit_count{$map} > 5) {
+        Log::warning("[LOOP-DETECT] Visited $map " . $map_visit_count{$map} . " times in 60s - BREAKING LOOP\n");
         AI::clear("route", "move");
         $timeout{ai_stuck}{time} = time() + 60;
+        
+        # Reset this map's count after breaking loop
+        $map_visit_count{$map} = 0;
+        
         return 1;  # Loop detected
     }
     
@@ -1274,7 +1290,9 @@ sub on_map_change {
     
     if ($map_name =~ /fild|beach|dun|forest|mine|cave/i) {
         message "[GodTierAI] [FIX#2] Waiting 5s for monster data and map stabilization on $map_name\n", "info";
-        $state{map_load_cooldown} = time() + 5;  # Increased to 5 seconds for monster data and map stabilization
+        
+        # STATELESS REFACTOR: Set auto-expiring cooldown timestamp
+        $map_load_cooldown_until = time() + 5;  # Auto-expires after 5 seconds
         
         # FIX #9: Track farming map entry time
         $farming_map_entry_time = time();
