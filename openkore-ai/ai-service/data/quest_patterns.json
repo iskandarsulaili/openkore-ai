@@ -1,0 +1,108 @@
+{
+  "version": "1.0.0",
+  "description": "Quest Detection Patterns - Server-agnostic pattern-based quest tracking",
+  "patterns": {
+    "kill_count": {
+      "type": "monster_kill",
+      "detection_method": "inventory_item_increase",
+      "completion_check": "item_count_threshold",
+      "indicators": ["kill", "defeat", "hunt", "exterminate"],
+      "typical_objectives": [
+        "Kill X monsters",
+        "Defeat X enemies",
+        "Hunt X creatures"
+      ]
+    },
+    "collection": {
+      "type": "item_collection",
+      "detection_method": "quest_log_update",
+      "completion_check": "inventory_has_items",
+      "indicators": ["collect", "gather", "bring", "find"],
+      "typical_objectives": [
+        "Collect X items",
+        "Gather X materials",
+        "Find X objects"
+      ]
+    },
+    "delivery": {
+      "type": "delivery",
+      "detection_method": "npc_dialogue",
+      "completion_check": "target_npc_found",
+      "indicators": ["deliver", "bring", "give", "take to"],
+      "typical_objectives": [
+        "Deliver item to NPC",
+        "Bring package to location",
+        "Give item to person"
+      ]
+    },
+    "exploration": {
+      "type": "location",
+      "detection_method": "map_entry",
+      "completion_check": "coordinates_reached",
+      "indicators": ["go to", "reach", "visit", "explore"],
+      "typical_objectives": [
+        "Go to location",
+        "Reach destination",
+        "Visit map"
+      ]
+    },
+    "dialogue": {
+      "type": "conversation",
+      "detection_method": "npc_interaction",
+      "completion_check": "dialogue_completed",
+      "indicators": ["talk to", "speak with", "meet", "find"],
+      "typical_objectives": [
+        "Talk to NPC",
+        "Speak with person",
+        "Meet character"
+      ]
+    },
+    "crafting": {
+      "type": "item_creation",
+      "detection_method": "inventory_new_item",
+      "completion_check": "item_created",
+      "indicators": ["craft", "create", "make", "produce"],
+      "typical_objectives": [
+        "Craft item",
+        "Create equipment",
+        "Make potion"
+      ]
+    }
+  },
+  "common_quest_chains": [
+    {
+      "chain_name": "Novice Training",
+      "quests": ["Talk to Trainer", "Kill 5 Porings", "Deliver Report"],
+      "recommended_level": "1-10",
+      "type": "tutorial"
+    },
+    {
+      "chain_name": "Job Change Preparation",
+      "quests": ["Reach Level 10", "Complete Guild Test", "Job Advancement"],
+      "recommended_level": "10",
+      "type": "progression"
+    }
+  ],
+  "quest_priority_rules": {
+    "high_priority": [
+      "job_advancement",
+      "story_quest",
+      "timed_event"
+    ],
+    "medium_priority": [
+      "daily_quest",
+      "repeatable_quest",
+      "side_quest"
+    ],
+    "low_priority": [
+      "collectible_quest",
+      "achievement_quest"
+    ]
+  },
+  "auto_accept_criteria": {
+    "level_appropriate": true,
+    "rewards_valuable": true,
+    "not_too_difficult": true,
+    "aligned_with_goals": true
+  }
+}

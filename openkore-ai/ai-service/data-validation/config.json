@@ -1,0 +1,61 @@
+{
+  "paths": {
+    "reference_base": "../../../external-references/rathena-AI-world",
+    "ai_service_base": "..",
+    "output_base": "./output"
+  },
+  "sources": {
+    "monsters": {
+      "reference": "db/re/mob_db.yml",
+      "ai_service": null,
+      "priority": "CRITICAL"
+    },
+    "items_etc": {
+      "reference": "db/re/item_db_etc.yml",
+      "ai_service": "data/loot_priority_database.json",
+      "priority": "CRITICAL"
+    },
+    "items_equip": {
+      "reference": "db/re/item_db_equip.yml",
+      "ai_service": "data/equipment_loadouts.json",
+      "priority": "CRITICAL"
+    },
+    "items_usable": {
+      "reference": "db/re/item_db_usable.yml",
+      "ai_service": null,
+      "priority": "CRITICAL"
+    },
+    "skills": {
+      "reference": "db/skill_db.yml",
+      "ai_service": "data/skill_metadata.json",
+      "priority": "MEDIUM"
+    },
+    "maps": {
+      "reference": "db/map_index.txt",
+      "ai_service": "data/map_metadata.json",
+      "priority": "MEDIUM"
+    }
+  },
+  "validation_rules": {
+    "required_fields": ["id", "name"],
+    "id_uniqueness": true,
+    "reference_integrity": true,
+    "numeric_bounds": {
+      "level": [1, 999],
+      "hp": [1, 999999999],
+      "weight": [0, 99999],
+      "buy_price": [0, 2000000000],
+      "sell_price": [0, 2000000000]
+    }
+  },
+  "output": {
+    "format": "json",
+    "include_metadata": true,
+    "compression": false
+  },
+  "processing": {
+    "batch_size": 1000,
+    "max_workers": 4,
+    "progress_update_interval": 100
+  }
+}

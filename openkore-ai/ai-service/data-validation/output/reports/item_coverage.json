@@ -1,0 +1,931 @@
+{
+  "timestamp": "2026-02-10T02:16:21.912644",
+  "category": "items",
+  "priority": "CRITICAL",
+  "reference_data": {
+    "total_entries": 29056,
+    "source": "rathena-AI-world"
+  },
+  "ai_service_data": {
+    "total_entries": 228,
+    "exists": true
+  },
+  "coverage": {
+    "percentage": 0.78,
+    "matched_entries": 0,
+    "missing_entries": 100,
+    "extra_entries": 100
+  },
+  "details": {
+    "missing_entries_sample": [
+      {
+        "id": 670,
+        "name": "Bag of Gold Coins",
+        "aegis_name": "Gold_Coin_Moneybag"
+      },
+      {
+        "id": 672,
+        "name": "Bag of Bronze Coins",
+        "aegis_name": "Copper_Coin_Moneybag"
+      },
+      {
+        "id": 674,
+        "name": "Mithril Coin",
+        "aegis_name": "Mithril_Coin"
+      },
+      {
+        "id": 676,
+        "name": "Bag of Silver Coins",
+        "aegis_name": "Silver_Coin_Moneybag"
+      },
+      {
+        "id": 677,
+        "name": "Platinum Coin",
+        "aegis_name": "White_Gold_Coin"
+      },
+      {
+        "id": 701,
+        "name": "Ora Ora",
+        "aegis_name": "Ora_Ora"
+      },
+      {
+        "id": 702,
+        "name": "Animal Gore",
+        "aegis_name": "Animal_Blood"
+      },
+      {
+        "id": 703,
+        "name": "Hinalle",
+        "aegis_name": "Hinalle"
+      },
+      {
+        "id": 704,
+        "name": "Aloe",
+        "aegis_name": "Aloe"
+      },
+      {
+        "id": 705,
+        "name": "Clover",
+        "aegis_name": "Clover"
+      },
+      {
+        "id": 706,
+        "name": "Four Leaf Clover",
+        "aegis_name": "Four_Leaf_Clover"
+      },
+      {
+        "id": 707,
+        "name": "Singing Plant",
+        "aegis_name": "Singing_Plant"
+      },
+      {
+        "id": 708,
+        "name": "Ment",
+        "aegis_name": "Ment"
+      },
+      {
+        "id": 709,
+        "name": "Izidor",
+        "aegis_name": "Izidor"
+      },
+      {
+        "id": 710,
+        "name": "Illusion Flower",
+        "aegis_name": "Illusion_Flower"
+      },
+      {
+        "id": 711,
+        "name": "Shoot",
+        "aegis_name": "Shoot"
+      },
+      {
+        "id": 712,
+        "name": "Flower",
+        "aegis_name": "Flower"
+      },
+      {
+        "id": 713,
+        "name": "Empty Bottle",
+        "aegis_name": "Empty_Bottle"
+      },
+      {
+        "id": 714,
+        "name": "Emperium",
+        "aegis_name": "Emperium"
+      },
+      {
+        "id": 715,
+        "name": "Yellow Gemstone",
+        "aegis_name": "Yellow_Gemstone"
+      },
+      {
+        "id": 716,
+        "name": "Red Gemstone",
+        "aegis_name": "Red_Gemstone"
+      },
+      {
+        "id": 717,
+        "name": "Blue Gemstone",
+        "aegis_name": "Blue_Gemstone"
+      },
+      {
+        "id": 718,
+        "name": "Garnet",
+        "aegis_name": "Dark_Red_Jewel"
+      },
+      {
+        "id": 719,
+        "name": "Amethyst",
+        "aegis_name": "Violet_Jewel"
+      },
+      {
+        "id": 720,
+        "name": "Aquamarine",
+        "aegis_name": "Skyblue_Jewel"
+      },
+      {
+        "id": 721,
+        "name": "Emerald",
+        "aegis_name": "Azure_Jewel"
+      },
+      {
+        "id": 722,
+        "name": "Pearl",
+        "aegis_name": "Scarlet_Jewel"
+      },
+      {
+        "id": 723,
+        "name": "Ruby",
+        "aegis_name": "Cardinal_Jewel"
+      },
+      {
+        "id": 724,
+        "name": "Cursed Ruby",
+        "aegis_name": "Cardinal_Jewel_"
+      },
+      {
+        "id": 725,
+        "name": "Sardonyx",
+        "aegis_name": "Red_Jewel"
+      },
+      {
+        "id": 726,
+        "name": "Sapphire",
+        "aegis_name": "Blue_Jewel"
+      },
+      {
+        "id": 727,
+        "name": "Opal",
+        "aegis_name": "White_Jewel"
+      },
+      {
+        "id": 728,
+        "name": "Topaz",
+        "aegis_name": "Golden_Jewel"
+      },
+      {
+        "id": 729,
+        "name": "Zircon",
+        "aegis_name": "Bluish_Green_Jewel"
+      },
+      {
+        "id": 730,
+        "name": "1carat Diamond",
+        "aegis_name": "Crystal_Jewel"
+      },
+      {
+        "id": 731,
+        "name": "2carat Diamond",
+        "aegis_name": "Crystal_Jewel_"
+      },
+      {
+        "id": 732,
+        "name": "3carat Diamond",
+        "aegis_name": "Crystal_Jewel__"
+      },
+      {
+        "id": 733,
+        "name": "Cracked Diamond",
+        "aegis_name": "Crystal_Jewel___"
+      },
+      {
+        "id": 734,
+        "name": "Red Frame",
+        "aegis_name": "Red_Frame"
+      },
+      {
+        "id": 735,
+        "name": "Chung Jah",
+        "aegis_name": "Blue_Porcelain"
+      },
+      {
+        "id": 736,
+        "name": "China",
+        "aegis_name": "White_Platter"
+      },
+      {
+        "id": 737,
+        "name": "Black Ladle",
+        "aegis_name": "Black_Ladle"
+      },
+      {
+        "id": 738,
+        "name": "Pencil Case",
+        "aegis_name": "Pencil_Case"
+      },
+      {
+        "id": 739,
+        "name": "Rouge",
+        "aegis_name": "Rouge"
+      },
+      {
+        "id": 740,
+        "name": "Puppet",
+        "aegis_name": "Stuffed_Doll"
+      },
+      {
+        "id": 741,
+        "name": "Poring Doll",
+        "aegis_name": "Poring_Doll"
+      },
+      {
+        "id": 742,
+        "name": "Chonchon Doll",
+        "aegis_name": "Chonchon_Doll"
+      },
+      {
+        "id": 743,
+        "name": "Spore Doll",
+        "aegis_name": "Spore_Doll"
+      },
+      {
+        "id": 744,
+        "name": "Bouquet",
+        "aegis_name": "Bunch_Of_Flowers"
+      },
+      {
+        "id": 745,
+        "name": "Wedding Bouquet",
+        "aegis_name": "Wedding_Bouquet"
+      },
+      {
+        "id": 746,
+        "name": "Glass Bead",
+        "aegis_name": "Glass_Bead"
+      },
+      {
+        "id": 747,
+        "name": "Crystal Mirror",
+        "aegis_name": "Crystal_Mirror"
+      },
+      {
+        "id": 748,
+        "name": "Witherless Rose",
+        "aegis_name": "Witherless_Rose"
+      },
+      {
+        "id": 749,
+        "name": "Frozen Rose",
+        "aegis_name": "Frozen_Rose"
+      },
+      {
+        "id": 750,
+        "name": "Baphomet Doll",
+        "aegis_name": "Baphomet_Doll"
+      },
+      {
+        "id": 751,
+        "name": "Osiris Doll",
+        "aegis_name": "Osiris_Doll"
+      },
+      {
+        "id": 752,
+        "name": "Rocker Doll",
+        "aegis_name": "Grasshopper_Doll"
+      },
+      {
+        "id": 753,
+        "name": "Yoyo Doll",
+        "aegis_name": "Monkey_Doll"
+      },
+      {
+        "id": 754,
+        "name": "Raccoon Doll",
+        "aegis_name": "Raccoondog_Doll"
+      },
+      {
+        "id": 756,
+        "name": "Rough Oridecon",
+        "aegis_name": "Oridecon_Stone"
+      },
+      {
+        "id": 757,
+        "name": "Rough Elunium",
+        "aegis_name": "Elunium_Stone"
+      },
+      {
+        "id": 766,
+        "name": "A bundle of shiny hair.",
+        "aegis_name": "Silky_Fur_Bundle"
+      },
+      {
+        "id": 793,
+        "name": "Shadow Booster Voucher",
+        "aegis_name": "2ndTH_S_Booster_Ticket"
+      },
+      {
+        "id": 824,
+        "name": "[Event] Level 200 Gift Ticket",
+        "aegis_name": "3rdTH_Ragwart_Ticket"
+      },
+      {
+        "id": 901,
+        "name": "Daenggie",
+        "aegis_name": "Danggie"
+      },
+      {
+        "id": 902,
+        "name": "Tree Root",
+        "aegis_name": "Tree_Root"
+      },
+      {
+        "id": 903,
+        "name": "Reptile Tongue",
+        "aegis_name": "Reptile_Tongue"
+      },
+      {
+        "id": 904,
+        "name": "Scorpion Tail",
+        "aegis_name": "Scorpion's_Tail"
+      },
+      {
+        "id": 905,
+        "name": "Stem",
+        "aegis_name": "Stem"
+      },
+      {
+        "id": 906,
+        "name": "Pointed Scale",
+        "aegis_name": "Pointed_Scale"
+      },
+      {
+        "id": 907,
+        "name": "Resin",
+        "aegis_name": "Resin"
+      },
+      {
+        "id": 908,
+        "name": "Spawn",
+        "aegis_name": "Spawn"
+      },
+      {
+        "id": 909,
+        "name": "Jellopy",
+        "aegis_name": "Jellopy"
+      },
+      {
+        "id": 910,
+        "name": "Garlet",
+        "aegis_name": "Garlet"
+      },
+      {
+        "id": 911,
+        "name": "Scell",
+        "aegis_name": "Scell"
+      },
+      {
+        "id": 912,
+        "name": "Zargon",
+        "aegis_name": "Zargon"
+      },
+      {
+        "id": 913,
+        "name": "Tooth of Bat",
+        "aegis_name": "Tooth_Of_Bat"
+      },
+      {
+        "id": 914,
+        "name": "Fluff",
+        "aegis_name": "Fluff"
+      },
+      {
+        "id": 915,
+        "name": "Chrysalis",
+        "aegis_name": "Chrysalis"
+      },
+      {
+        "id": 916,
+        "name": "Feather of Birds",
+        "aegis_name": "Feather_Of_Birds"
+      },
+      {
+        "id": 917,
+        "name": "Talon",
+        "aegis_name": "Talon"
+      },
+      {
+        "id": 918,
+        "name": "Sticky Webfoot",
+        "aegis_name": "Sticky_Webfoot"
+      },
+      {
+        "id": 919,
+        "name": "Animal Skin",
+        "aegis_name": "Animal's_Skin"
+      },
+      {
+        "id": 920,
+        "name": "Wolf Claw",
+        "aegis_name": "Claw_Of_Wolves"
+      },
+      {
+        "id": 921,
+        "name": "Mushroom Spore",
+        "aegis_name": "Mushroom_Spore"
+      },
+      {
+        "id": 922,
+        "name": "Orc's Fang",
+        "aegis_name": "Orcish_Cuspid"
+      },
+      {
+        "id": 923,
+        "name": "Evil Horn",
+        "aegis_name": "Evil_Horn"
+      },
+      {
+        "id": 924,
+        "name": "Powder of Butterfly",
+        "aegis_name": "Powder_Of_Butterfly"
+      },
+      {
+        "id": 925,
+        "name": "Bill of Birds",
+        "aegis_name": "Bill_Of_Birds"
+      },
+      {
+        "id": 926,
+        "name": "Snake Scale",
+        "aegis_name": "Scale_Of_Snakes"
+      },
+      {
+        "id": 928,
+        "name": "Insect Feeler",
+        "aegis_name": "Insect_Feeler"
+      },
+      {
+        "id": 929,
+        "name": "Immortal Heart",
+        "aegis_name": "Immortal_Heart"
+      },
+      {
+        "id": 930,
+        "name": "Rotten Bandage",
+        "aegis_name": "Rotten_Bandage"
+      },
+      {
+        "id": 931,
+        "name": "Orcish Voucher",
+        "aegis_name": "Orcish_Voucher"
+      },
+      {
+        "id": 932,
+        "name": "Skel-Bone",
+        "aegis_name": "Skel_Bone"
+      },
+      {
+        "id": 934,
+        "name": "Memento",
+        "aegis_name": "Mementos"
+      },
+      {
+        "id": 935,
+        "name": "Shell",
+        "aegis_name": "Shell"
+      },
+      {
+        "id": 936,
+        "name": "Scale Shell",
+        "aegis_name": "Scales_Shell"
+      },
+      {
+        "id": 937,
+        "name": "Venom Canine",
+        "aegis_name": "Posionous_Canine"
+      },
+      {
+        "id": 938,
+        "name": "Sticky Mucus",
+        "aegis_name": "Sticky_Mucus"
+      }
+    ],
+    "missing_entries_truncated": true,
+    "extra_entries_sample": [
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      },
+      {
+        "id": null,
+        "name": "UNKNOWN"
+      }
+    ],
+    "extra_entries_truncated": true
+  },
+  "recommendations": [
+    "CRITICAL: items has only 0.78% coverage. Add 28828 missing entries.",
+    "This is a CRITICAL data category. Prioritize completing items database immediately."
+  ]
+}

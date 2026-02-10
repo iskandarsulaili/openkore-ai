@@ -1,0 +1,106 @@
+{
+  "version": "1.0.0",
+  "description": "Inventory Management Rules - Auto-organization and cleanup",
+  "rules": {
+    "storage_priority": [
+      "cards",
+      "rare_equipment",
+      "valuable_materials",
+      "quest_items",
+      "consumables_excess"
+    ],
+    "keep_in_inventory": {
+      "healing_items": ["White Potion", "Blue Potion", "Yellow Potion", "Yggdrasil Berry"],
+      "teleport_items": ["Butterfly Wing", "Fly Wing"],
+      "return_items": ["Warp Portal Scroll", "Kafra Card"],
+      "buff_items": ["Awakening Potion", "Concentration Potion", "Berserk Potion"],
+      "minimum_quantities": {
+        "White Potion": 50,
+        "Blue Potion": 30,
+        "Fly Wing": 100
+      }
+    },
+    "auto_sell_patterns": [
+      "Jellopy",
+      "Fluff",
+      "Clover",
+      "Feather",
+      "Sticky Mucus",
+      "Shell",
+      "Worm Peeling",
+      "Chrysalis",
+      "Cobweb",
+      "Resin",
+      "Mushroom Spore"
+    ],
+    "auto_sell_value_threshold": 50,
+    "weight_threshold_percent": 80,
+    "slot_threshold_percent": 90,
+    "reserved_slots": 10,
+    "organization_triggers": {
+      "weight_heavy": 80,
+      "inventory_nearly_full": 90,
+      "after_boss_kill": true,
+      "after_long_farming_session": true
+    }
+  },
+  "item_categories": {
+    "equipment": {
+      "types": ["weapon", "armor", "shield", "footgear", "garment", "accessory", "headgear"],
+      "storage_priority": "high",
+      "keep_best_only": true
+    },
+    "cards": {
+      "patterns": ["Card"],
+      "storage_priority": "critical",
+      "never_sell": true
+    },
+    "consumables": {
+      "types": ["potion", "food", "buff_item"],
+      "storage_priority": "medium",
+      "keep_minimum_stock": true
+    },
+    "materials": {
+      "types": ["material", "crafting"],
+      "storage_priority": "medium",
+      "sell_excess": true
+    },
+    "quest_items": {
+      "types": ["quest"],
+      "storage_priority": "high",
+      "never_sell": true
+    },
+    "junk": {
+      "value_threshold": 50,
+      "storage_priority": "none",
+      "auto_sell": true
+    }
+  },
+  "storage_locations": {
+    "prontera": {
+      "npc": "Kafra",
+      "map": "prontera",
+      "coordinates": [152, 326]
+    },
+    "geffen": {
+      "npc": "Kafra",
+      "map": "geffen",
+      "coordinates": [120, 62]
+    },
+    "morocc": {
+      "npc": "Kafra",
+      "map": "morocc",
+      "coordinates": [156, 97]
+    }
+  },
+  "selling_locations": {
+    "tool_dealer": {
+      "buys": ["materials", "junk"],
+      "common_locations": ["prontera", "geffen", "morocc", "payon"]
+    },
+    "equipment_dealer": {
+      "buys": ["equipment", "weapon", "armor"],
+      "common_locations": ["prontera", "geffen"]
+    }
+  }
+}

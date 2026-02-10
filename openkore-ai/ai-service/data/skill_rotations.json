@@ -1,0 +1,135 @@
+{
+  "version": "1.0.0",
+  "description": "Skill Rotation Configurations - Dynamic context-aware skill usage",
+  "rotations": {
+    "Swordman": {
+      "single_target": ["Bash", "Magnum Break"],
+      "aoe": ["Magnum Break"],
+      "boss": ["Provoke", "Bash", "Bash", "Bash"],
+      "opener": ["Provoke"],
+      "priority": "damage",
+      "sp_management": "moderate"
+    },
+    "Mage": {
+      "single_target": ["Fire Bolt", "Fire Bolt", "Fire Bolt", "Cold Bolt"],
+      "aoe": ["Thunderstorm", "Fire Wall", "Frost Diver"],
+      "boss": ["Stone Curse", "Fire Bolt", "Fire Bolt", "Cold Bolt", "Lightning Bolt"],
+      "opener": ["Safety Wall", "Stone Curse"],
+      "priority": "efficiency",
+      "sp_management": "conservative"
+    },
+    "Archer": {
+      "single_target": ["Double Strafe", "Double Strafe", "Arrow Shower"],
+      "aoe": ["Arrow Shower", "Arrow Shower"],
+      "boss": ["Improve Concentration", "Double Strafe", "Double Strafe", "Arrow Shower"],
+      "opener": ["Improve Concentration"],
+      "priority": "damage",
+      "sp_management": "moderate"
+    },
+    "Acolyte": {
+      "single_target": ["Holy Light", "Heal"],
+      "aoe": ["Holy Light", "Magnus Exorcismus"],
+      "boss": ["Blessing", "Increase AGI", "Holy Light"],
+      "opener": ["Blessing", "Increase AGI"],
+      "priority": "support",
+      "sp_management": "conservative"
+    },
+    "Merchant": {
+      "single_target": ["Mammonite", "Cart Revolution"],
+      "aoe": ["Cart Revolution"],
+      "boss": ["Mammonite", "Mammonite"],
+      "opener": ["Loud Exclamation"],
+      "priority": "damage",
+      "sp_management": "moderate"
+    },
+    "Thief": {
+      "single_target": ["Double Attack", "Envenom", "Hiding"],
+      "aoe": ["Envenom"],
+      "boss": ["Cloaking", "Double Attack", "Envenom"],
+      "opener": ["Cloaking", "Surprise Attack"],
+      "priority": "critical",
+      "sp_management": "moderate"
+    },
+    "Knight": {
+      "single_target": ["Pierce", "Bowling Bash", "Brandish Spear"],
+      "aoe": ["Bowling Bash", "Brandish Spear"],
+      "boss": ["Spear Boomerang", "Pierce", "Pierce", "Bowling Bash"],
+      "opener": ["Provoke", "Two-Hand Quicken"],
+      "priority": "damage",
+      "sp_management": "moderate"
+    },
+    "Wizard": {
+      "single_target": ["Fire Ball", "Meteor Storm", "Lord of Vermillion"],
+      "aoe": ["Meteor Storm", "Storm Gust", "Lord of Vermillion"],
+      "boss": ["Quagmire", "Meteor Storm", "Meteor Storm"],
+      "opener": ["Quagmire", "Frost Diver"],
+      "priority": "burst",
+      "sp_management": "aggressive"
+    },
+    "Hunter": {
+      "single_target": ["Blitz Beat", "Double Strafe", "Charged Arrow"],
+      "aoe": ["Sandman", "Flasher", "Skid Trap"],
+      "boss": ["Freezing Trap", "Blitz Beat", "Charged Arrow"],
+      "opener": ["Detect"],
+      "priority": "control",
+      "sp_management": "moderate"
+    },
+    "Priest": {
+      "single_target": ["Holy Light", "Magnus Exorcismus", "Turn Undead"],
+      "aoe": ["Magnus Exorcismus", "Sanctuary"],
+      "boss": ["Lex Aeterna", "Magnus Exorcismus", "Holy Light"],
+      "opener": ["Blessing", "Kyrie Eleison", "Magnificat"],
+      "priority": "support",
+      "sp_management": "conservative"
+    },
+    "Assassin": {
+      "single_target": ["Soul Breaker", "Grimtooth", "Envenom"],
+      "aoe": ["Grimtooth", "Meteor Assault"],
+      "boss": ["Soul Breaker", "Soul Breaker", "Grimtooth"],
+      "opener": ["Cloaking", "Enchant Poison"],
+      "priority": "burst",
+      "sp_management": "aggressive"
+    }
+  },
+  "skill_priorities": {
+    "opener": 100,
+    "buff": 90,
+    "debuff": 80,
+    "burst_damage": 70,
+    "sustained_damage": 60,
+    "aoe_damage": 65,
+    "control": 55,
+    "utility": 40
+  },
+  "sp_management_profiles": {
+    "conservative": {
+      "reserve_sp_percent": 30,
+      "prefer_efficient_skills": true,
+      "max_sp_per_rotation": 100
+    },
+    "moderate": {
+      "reserve_sp_percent": 20,
+      "prefer_efficient_skills": false,
+      "max_sp_per_rotation": 200
+    },
+    "aggressive": {
+      "reserve_sp_percent": 10,
+      "prefer_efficient_skills": false,
+      "max_sp_per_rotation": 500
+    }
+  },
+  "context_modifiers": {
+    "low_hp": {
+      "prefer_defensive": true,
+      "skip_risky_skills": true
+    },
+    "low_sp": {
+      "use_basic_attacks": true,
+      "skip_expensive_skills": true
+    },
+    "overwhelming_enemies": {
+      "prioritize_aoe": true,
+      "use_escape_skills": true
+    }
+  }
+}

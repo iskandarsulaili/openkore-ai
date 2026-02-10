@@ -1,0 +1,50 @@
+{
+  "version": "1.0.0",
+  "description": "Refinement System Configuration - DISABLED BY DEFAULT",
+  "enabled": false,
+  "require_user_confirmation": true,
+  "safety_limits": {
+    "max_auto_refine_level": 4,
+    "max_safe_refine_level": 7,
+    "value_threshold_for_confirmation": 100000,
+    "minimum_zeny_reserve": 50000,
+    "never_refine_items": [
+      "items_above_threshold",
+      "quest_items",
+      "unique_items"
+    ]
+  },
+  "refine_targets": {
+    "weapons": {
+      "enabled": false,
+      "max_level": 4,
+      "stop_on_failure": true
+    },
+    "armor": {
+      "enabled": false,
+      "max_level": 4,
+      "stop_on_failure": true
+    }
+  },
+  "card_slotting": {
+    "enabled": false,
+    "require_confirmation_for_expensive_cards": true,
+    "expensive_card_threshold": 50000,
+    "never_slot_without_confirmation": [
+      "MVP cards",
+      "rare cards"
+    ]
+  },
+  "failure_handling": {
+    "stop_after_failures": 3,
+    "cooldown_after_failure_minutes": 60,
+    "log_all_attempts": true
+  },
+  "warnings": [
+    "This system is DISABLED by default",
+    "Enable only if you understand the risks",
+    "Failed refinements can destroy items",
+    "Always keep backups of valuable items",
+    "User confirmation required for items >100k zeny"
+  ]
+}

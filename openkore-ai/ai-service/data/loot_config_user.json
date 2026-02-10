@@ -1,0 +1,62 @@
+{
+  "_comment": "User customization file for loot prioritization system",
+  "_usage": "Customize priorities, risk preferences, and tactics here. Changes override defaults in loot_config.json",
+  
+  "custom_priorities": {
+    "_comment": "Add custom item priorities here. Format: 'item_id': {...}",
+    "_example": {
+      "4001": {
+        "priority": 1,
+        "value": 50000000,
+        "notes": "Ghostring Card - must have"
+      },
+      "999": {
+        "priority": 15,
+        "value": 500000,
+        "notes": "Steel - crafting material"
+      }
+    }
+  },
+  
+  "risk_preferences": {
+    "_comment": "Your risk tolerance settings",
+    "max_acceptable_risk": 70,
+    "sacrifice_for_mvp": true,
+    "sacrifice_for_rare": false,
+    "max_deaths_per_session": 5,
+    "retreat_hp_threshold": 20
+  },
+  
+  "tactic_preferences": {
+    "_comment": "Enable/disable specific tactics",
+    "disabled_tactics": [],
+    "preferred_tactics": ["kiting", "hit_and_run"],
+    "emergency_tactics_only_for_priority": 10
+  },
+  
+  "custom_items": [
+    {
+      "_comment": "Example custom server item",
+      "item_id": 99999,
+      "item_name": "Custom Server Event Item",
+      "priority_level": 5,
+      "category": "rare_equipment",
+      "estimated_value": 1000000,
+      "user_notes": "Server-specific valuable drop"
+    }
+  ],
+  
+  "blacklist": {
+    "_comment": "Items to never pick up",
+    "item_ids": [],
+    "item_names": ["Jellopy", "Sticky Mucus"],
+    "categories": []
+  },
+  
+  "whitelist": {
+    "_comment": "Items to always pick up regardless of priority",
+    "item_ids": [4047, 4054, 4125],
+    "item_names": ["Ghostring Card", "Angeling Card", "Deviling Card"],
+    "categories": ["mvp_card"]
+  }
+}

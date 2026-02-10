@@ -1,0 +1,56 @@
+{
+  "version": "1.0.0",
+  "description": "Resource Sources and Gathering Data",
+  "sources": {
+    "healing_potions": {
+      "source_type": "purchase",
+      "locations": ["Prontera Item Shop", "Geffen Item Shop", "Payon Tool Dealer"],
+      "cost_per_unit": 500,
+      "item_names": ["White Potion", "Yellow Potion"]
+    },
+    "blue_potions": {
+      "source_type": "purchase",
+      "locations": ["Prontera Magic Academy", "Geffen Magic Shop"],
+      "cost_per_unit": 5000,
+      "item_names": ["Blue Potion"]
+    },
+    "fly_wings": {
+      "source_type": "farm",
+      "farming_location": "Prontera Field",
+      "monster": "Poring",
+      "drop_rate": 10,
+      "alternative_purchase": {
+        "location": "Kafra",
+        "cost_per_unit": 60
+      }
+    },
+    "arrows": {
+      "source_type": "purchase",
+      "locations": ["Weapon Dealer", "Tool Dealer"],
+      "cost_per_unit": 1,
+      "for_jobs": ["Archer", "Hunter", "Dancer", "Bard"]
+    }
+  },
+  "restocking_thresholds": {
+    "healing_potions": {
+      "minimum": 50,
+      "restock_to": 100,
+      "critical_threshold": 20
+    },
+    "blue_potions": {
+      "minimum": 30,
+      "restock_to": 50,
+      "critical_threshold": 10
+    },
+    "fly_wings": {
+      "minimum": 100,
+      "restock_to": 200,
+      "critical_threshold": 50
+    },
+    "arrows": {
+      "minimum": 500,
+      "restock_to": 1000,
+      "critical_threshold": 200
+    }
+  }
+}

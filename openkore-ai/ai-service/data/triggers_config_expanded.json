@@ -1,0 +1,772 @@
+{
+  "version": "2.0.0",
+  "description": "Comprehensive Multi-Layered Autonomous Trigger System - 35 Triggers",
+  "triggers": [
+    {
+      "trigger_id": "hp_critical_emergency",
+      "name": "Emergency Heal - HP Critical",
+      "description": "Immediate healing when HP drops below critical threshold",
+      "layer": "REFLEX",
+      "priority": 1,
+      "condition": {
+        "type": "simple",
+        "field": "character.hp_percent",
+        "operator": "<=",
+        "value": 15
+      },
+      "action": {
+        "handler": "autonomous.emergency.heal_emergency",
+        "params": {"method": "fastest_available"},
+        "async_execution": false,
+        "timeout": 1.0
+      },
+      "cooldown": 1,
+      "enabled": true,
+      "tags": ["emergency", "healing", "survival", "reflex"]
+    },
+    {
+      "trigger_id": "hp_low_warning",
+      "name": "HP Low Warning",
+      "description": "Healing when HP drops below 50%",
+      "layer": "REFLEX",
+      "priority": 2,
+      "condition": {
+        "type": "compound",
+        "compound_operator": "AND",
+        "checks": [
+          {"type": "simple", "field": "character.hp_percent", "operator": "<=", "value": 50},
+          {"type": "simple", "field": "character.hp_percent", "operator": ">", "value": 15}
+        ]
+      },
+      "action": {
+        "handler": "autonomous.emergency.heal_moderate",
+        "params": {},
+        "async_execution": false,
+        "timeout": 2.0
+      },
+      "cooldown": 3,
+      "enabled": true,
+      "tags": ["healing", "preventive", "reflex"]
+    },
+    {
+      "trigger_id": "death_recovery",
+      "name": "Death Recovery Protocol",
+      "description": "Handle death and recovery process",
+      "layer": "REFLEX",
+      "priority": 10,
+      "condition": {
+        "type": "simple",
+        "field": "character.is_dead",
+        "operator": "==",
+        "value": true
+      },
+      "action": {
+        "handler": "autonomous.emergency.death_recovery",
+        "params": {},
+        "async_execution": true,
+        "timeout": 10.0
+      },
+      "cooldown": 60,
+      "enabled": true,
+      "tags": ["death", "recovery", "emergency", "reflex"]
+    },
+    {
+      "trigger_id": "mvp_spawn_detected",
+      "name": "MVP Spawn Detection",
+      "description": "Flee or prepare when MVP spawns nearby",
+      "layer": "REFLEX",
+      "priority": 3,
+      "condition": {
+        "type": "simple",
+        "field": "combat.mvp_nearby",
+        "operator": "==",
+        "value": true
+      },
+      "action": {
+        "handler": "autonomous.emergency.mvp_response",
+        "params": {"action": "flee"},
+        "async_execution": false,
+        "timeout": 2.0
+      },
+      "cooldown": 30,
+      "enabled": true,
+      "tags": ["mvp", "emergency", "flee", "reflex"]
+    },
+    {
+      "trigger_id": "surrounded_emergency",
+      "name": "Surrounded Emergency Teleport",
+      "description": "Emergency teleport when overwhelmed",
+      "layer": "REFLEX",
+      "priority": 4,
+      "condition": {
+        "type": "simple",
+        "field": "combat.attacking_monster_count",
+        "operator": ">",
+        "value": 10
+      },
+      "action": {
+        "handler": "autonomous.emergency.emergency_teleport",
+        "params": {},
+        "async_execution": false,
+        "timeout": 1.0
+      },
+      "cooldown": 10,
+      "enabled": true,
+      "tags": ["emergency", "teleport", "survival", "reflex"]
+    },
+    {
+      "trigger_id": "sp_low_recovery",
+      "name": "SP Recovery",
+      "description": "Recover SP when running low",
+      "layer": "TACTICAL",
+      "priority": 5,
+      "condition": {
+        "type": "simple",
+        "field": "character.sp_percent",
+        "operator": "<=",
+        "value": 20
+      },
+      "action": {
+        "handler": "autonomous.resources.sp_recovery",
+        "params": {},
+        "async_execution": false,
+        "timeout": 2.0
+      },
+      "cooldown": 5,
+      "enabled": true,
+      "tags": ["sp", "recovery", "resources", "tactical"]
+    },
+    {
+      "trigger_id": "under_attack_retreat",
+      "name": "Tactical Retreat - Under Attack",
+      "description": "Retreat when being attacked with low HP",
+      "layer": "TACTICAL",
+      "priority": 1,
+      "condition": {
+        "type": "compound",
+        "compound_operator": "AND",
+        "checks": [
+          {"type": "simple", "field": "character.hp_percent", "operator": "<=", "value": 40},
+          {"type": "simple", "field": "combat.attacking_monster_count", "operator": ">", "value": 0}
+        ]
+      },
+      "action": {
+        "handler": "autonomous.combat.tactical_retreat",
+        "params": {},
+        "async_execution": false,
+        "timeout": 3.0
+      },
+      "cooldown": 5,
+      "enabled": true,
+      "tags": ["combat", "tactical", "retreat"]
+    },
+    {
+      "trigger_id": "equipment_combat_swap",
+      "name": "Combat Equipment Swap",
+      "description": "Swap equipment for opponent advantage",
+      "layer": "TACTICAL",
+      "priority": 2,
+      "condition": {
+        "type": "simple",
+        "field": "combat.opponent_detected",
+        "operator": "==",
+        "value": true
+      },
+      "action": {
+        "handler": "autonomous.equipment_manager.execute_combat_swap",
+        "params": {},
+        "async_execution": true,
+        "timeout": 2.0
+      },
+      "cooldown": 30,
+      "enabled": true,
+      "tags": ["equipment", "combat", "optimization", "tactical"]
+    },
+    {
+      "trigger_id": "skill_rotation_optimize",
+      "name": "Skill Rotation Optimization",
+      "description": "Optimize skill usage for current combat",
+      "layer": "TACTICAL",
+      "priority": 3,
+      "condition": {
+        "type": "simple",
+        "field": "combat.in_combat",
+        "operator": "==",
+        "value": true
+      },
+      "action": {
+        "handler": "autonomous.skill_rotation.execute_optimal_rotation",
+        "params": {},
+        "async_execution": true,
+        "timeout": 5.0
+      },
+      "cooldown": 10,
+      "enabled": true,
+      "tags": ["skills", "combat", "optimization", "tactical"]
+    },
+    {
+      "trigger_id": "loot_tactical_retrieval",
+      "name": "Tactical Loot Retrieval",
+      "description": "Retrieve valuable loot with risk assessment",
+      "layer": "TACTICAL",
+      "priority": 6,
+      "condition": {
+        "type": "simple",
+        "field": "loot.valuable_item_nearby",
+        "operator": "==",
+        "value": true
+      },
+      "action": {
+        "handler": "autonomous.loot.tactical_retrieval",
+        "params": {},
+        "async_execution": true,
+        "timeout": 5.0
+      },
+      "cooldown": 2,
+      "enabled": true,
+      "tags": ["loot", "tactical", "optimization"]
+    },
+    {
+      "trigger_id": "inventory_full_storage",
+      "name": "Auto Storage - Inventory Full",
+      "description": "Automatically go to storage when inventory is full",
+      "layer": "SUBCONSCIOUS",
+      "priority": 5,
+      "condition": {
+        "type": "simple",
+        "field": "inventory.usage_percent",
+        "operator": ">=",
+        "value": 90
+      },
+      "action": {
+        "handler": "autonomous.inventory_manager.organize_inventory",
+        "params": {"trigger_type": "inventory_full"},
+        "async_execution": true,
+        "timeout": 60.0
+      },
+      "cooldown": 300,
+      "enabled": true,
+      "tags": ["inventory", "storage", "maintenance", "subconscious"]
+    },
+    {
+      "trigger_id": "weight_heavy_storage",
+      "name": "Auto Storage - Weight Heavy",
+      "description": "Go to storage when carrying too much weight",
+      "layer": "SUBCONSCIOUS",
+      "priority": 6,
+      "condition": {
+        "type": "simple",
+        "field": "character.weight_percent",
+        "operator": ">=",
+        "value": 80
+      },
+      "action": {
+        "handler": "autonomous.inventory_manager.organize_inventory",
+        "params": {"trigger_type": "weight_heavy"},
+        "async_execution": true,
+        "timeout": 60.0
+      },
+      "cooldown": 300,
+      "enabled": true,
+      "tags": ["weight", "storage", "maintenance", "subconscious"]
+    },
+    {
+      "trigger_id": "inventory_cleanup_sell",
+      "name": "Auto Sell - Inventory Cleanup",
+      "description": "Sell junk items when inventory reaches 70%",
+      "layer": "SUBCONSCIOUS",
+      "priority": 10,
+      "condition": {
+        "type": "simple",
+        "field": "inventory.usage_percent",
+        "operator": ">=",
+        "value": 70
+      },
+      "action": {
+        "handler": "autonomous.inventory_manager.auto_sell_junk",
+        "params": {},
+        "async_execution": true,
+        "timeout": 60.0
+      },
+      "cooldown": 600,
+      "enabled": true,
+      "tags": ["inventory", "selling", "maintenance", "subconscious"]
+    },
+    {
+      "trigger_id": "buff_renewal",
+      "name": "Buff Renewal",
+      "description": "Renew important buffs when they expire",
+      "layer": "SUBCONSCIOUS",
+      "priority": 15,
+      "condition": {
+        "type": "simple",
+        "field": "buffs.active_count",
+        "operator": "<",
+        "value": 1
+      },
+      "action": {
+        "handler": "autonomous.buffs.auto_renew",
+        "params": {},
+        "async_execution": false,
+        "timeout": 5.0
+      },
+      "cooldown": 30,
+      "enabled": false,
+      "tags": ["buffs", "maintenance", "combat_prep", "subconscious"]
+    },
+    {
+      "trigger_id": "consumable_restock",
+      "name": "Consumable Restocking",
+      "description": "Restock consumables when running low",
+      "layer": "SUBCONSCIOUS",
+      "priority": 8,
+      "condition": {
+        "type": "simple",
+        "field": "inventory.healing_potion_count",
+        "operator": "<",
+        "value": 20
+      },
+      "action": {
+        "handler": "autonomous.resource_gatherer.restock_consumables",
+        "params": {},
+        "async_execution": true,
+        "timeout": 120.0
+      },
+      "cooldown": 600,
+      "enabled": true,
+      "tags": ["resources", "restocking", "maintenance", "subconscious"]
+    },
+    {
+      "trigger_id": "quest_completion_ready",
+      "name": "Quest Completion Ready",
+      "description": "Complete quest when objectives met",
+      "layer": "SUBCONSCIOUS",
+      "priority": 12,
+      "condition": {
+        "type": "simple",
+        "field": "quests.completable_count",
+        "operator": ">",
+        "value": 0
+      },
+      "action": {
+        "handler": "autonomous.quest_monitor.complete_quests",
+        "params": {},
+        "async_execution": true,
+        "timeout": 180.0
+      },
+      "cooldown": 60,
+      "enabled": true,
+      "tags": ["quests", "completion", "progression", "subconscious"]
+    },
+    {
+      "trigger_id": "auto_equip_progression",
+      "name": "Auto Equip on Progression",
+      "description": "Auto-equip better gear when obtained",
+      "layer": "SUBCONSCIOUS",
+      "priority": 18,
+      "condition": {
+        "type": "simple",
+        "field": "inventory.new_equipment_obtained",
+        "operator": "==",
+        "value": true
+      },
+      "action": {
+        "handler": "autonomous.equipment_manager.auto_equip_best_gear",
+        "params": {},
+        "async_execution": true,
+        "timeout": 10.0
+      },
+      "cooldown": 30,
+      "enabled": true,
+      "tags": ["equipment", "progression", "optimization", "subconscious"]
+    },
+    {
+      "trigger_id": "skill_training_idle",
+      "name": "Skill Training - Idle Time",
+      "description": "Train skills when character is idle",
+      "layer": "SUBCONSCIOUS",
+      "priority": 20,
+      "condition": {
+        "type": "compound",
+        "compound_operator": "AND",
+        "checks": [
+          {"type": "simple", "field": "state", "operator": "in", "value": ["idle", "standing"]},
+          {"type": "simple", "field": "character.sp_percent", "operator": ">", "value": 50}
+        ]
+      },
+      "action": {
+        "handler": "autonomous.skills.training",
+        "params": {},
+        "async_execution": true,
+        "timeout": 30.0
+      },
+      "cooldown": 60,
+      "enabled": false,
+      "tags": ["training", "skills", "idle", "subconscious"]
+    },
+    {
+      "trigger_id": "job_advancement_ready",
+      "name": "Job Advancement Ready",
+      "description": "Initiate job change when requirements are met",
+      "layer": "CONSCIOUS",
+      "priority": 1,
+      "condition": {
+        "type": "compound",
+        "compound_operator": "AND",
+        "checks": [
+          {"type": "simple", "field": "character.level", "operator": ">=", "value": 10},
+          {"type": "simple", "field": "character.job_level", "operator": ">=", "value": 10},
+          {"type": "simple", "field": "character.job_class", "operator": "==", "value": "Novice"}
+        ]
+      },
+      "action": {
+        "handler": "autonomous.job_advancement.execute_job_change",
+        "params": {},
+        "async_execution": true,
+        "timeout": 300.0
+      },
+      "cooldown": 3600,
+      "enabled": true,
+      "tags": ["progression", "job_change", "strategic", "conscious"]
+    },
+    {
+      "trigger_id": "job_advancement_2nd_class",
+      "name": "2nd Class Job Advancement",
+      "description": "Advance to 2nd class when ready",
+      "layer": "CONSCIOUS",
+      "priority": 1,
+      "condition": {
+        "type": "compound",
+        "compound_operator": "AND",
+        "checks": [
+          {"type": "simple", "field": "character.job_level", "operator": ">=", "value": 40},
+          {"type": "simple", "field": "character.job_class", "operator": "in", "value": ["Swordman", "Mage", "Archer", "Acolyte", "Merchant", "Thief"]}
+        ]
+      },
+      "action": {
+        "handler": "autonomous.job_advancement.execute_job_change",
+        "params": {},
+        "async_execution": true,
+        "timeout": 300.0
+      },
+      "cooldown": 3600,
+      "enabled": true,
+      "tags": ["progression", "job_change", "strategic", "conscious"]
+    },
+    {
+      "trigger_id": "quest_chain_start",
+      "name": "Quest Chain Initiation",
+      "description": "Start important quest chains",
+      "layer": "CONSCIOUS",
+      "priority": 5,
+      "condition": {
+        "type": "simple",
+        "field": "quests.chain_available",
+        "operator": "==",
+        "value": true
+      },
+      "action": {
+        "handler": "autonomous.quest_monitor.start_quest_chain",
+        "params": {},
+        "async_execution": true,
+        "timeout": 600.0
+      },
+      "cooldown": 1800,
+      "enabled": true,
+      "tags": ["quests", "strategic", "progression", "conscious"]
+    },
+    {
+      "trigger_id": "equipment_progression_plan",
+      "name": "Equipment Progression Planning",
+      "description": "Plan equipment upgrades based on level",
+      "layer": "CONSCIOUS",
+      "priority": 8,
+      "condition": {
+        "type": "simple",
+        "field": "character.level_milestone",
+        "operator": "==",
+        "value": true
+      },
+      "action": {
+        "handler": "autonomous.equipment_manager.plan_progression",
+        "params": {},
+        "async_execution": true,
+        "timeout": 120.0
+      },
+      "cooldown": 1800,
+      "enabled": true,
+      "tags": ["equipment", "planning", "progression", "conscious"]
+    },
+    {
+      "trigger_id": "farming_location_optimize",
+      "name": "Farming Location Optimization",
+      "description": "Switch to better farming location when efficiency drops",
+      "layer": "CONSCIOUS",
+      "priority": 10,
+      "condition": {
+        "type": "simple",
+        "field": "farming.efficiency_percent",
+        "operator": "<",
+        "value": 60
+      },
+      "action": {
+        "handler": "autonomous.farming.optimize_location",
+        "params": {},
+        "async_execution": true,
+        "timeout": 180.0
+      },
+      "cooldown": 900,
+      "enabled": true,
+      "tags": ["farming", "optimization", "efficiency", "conscious"]
+    },
+    {
+      "trigger_id": "skill_build_optimization",
+      "name": "Skill Build Optimization",
+      "description": "Optimize skill point allocation",
+      "layer": "CONSCIOUS",
+      "priority": 12,
+      "condition": {
+        "type": "simple",
+        "field": "character.skill_points_available",
+        "operator": ">",
+        "value": 5
+      },
+      "action": {
+        "handler": "autonomous.skills.optimize_build",
+        "params": {},
+        "async_execution": true,
+        "timeout": 60.0
+      },
+      "cooldown": 600,
+      "enabled": true,
+      "tags": ["skills", "optimization", "progression", "conscious"]
+    },
+    {
+      "trigger_id": "party_coordination",
+      "name": "Party Coordination Strategy",
+      "description": "Coordinate strategy when in party",
+      "layer": "CONSCIOUS",
+      "priority": 15,
+      "condition": {
+        "type": "simple",
+        "field": "party.in_party",
+        "operator": "==",
+        "value": true
+      },
+      "action": {
+        "handler": "autonomous.party.coordinate_strategy",
+        "params": {},
+        "async_execution": true,
+        "timeout": 30.0
+      },
+      "cooldown": 120,
+      "enabled": false,
+      "tags": ["party", "coordination", "strategic", "conscious"]
+    },
+    {
+      "trigger_id": "system_health_check",
+      "name": "System Health Check",
+      "description": "Periodic system health monitoring",
+      "layer": "SYSTEM",
+      "priority": 1,
+      "condition": {
+        "type": "simple",
+        "field": "system.last_health_check",
+        "operator": ">",
+        "value": 300
+      },
+      "action": {
+        "handler": "autonomous.system.health_check",
+        "params": {},
+        "async_execution": true,
+        "timeout": 5.0
+      },
+      "cooldown": 300,
+      "enabled": true,
+      "tags": ["system", "monitoring", "maintenance"]
+    },
+    {
+      "trigger_id": "equipment_repair_needed",
+      "name": "Equipment Repair",
+      "description": "Repair equipment when durability low",
+      "layer": "SYSTEM",
+      "priority": 3,
+      "condition": {
+        "type": "simple",
+        "field": "equipment.min_durability_percent",
+        "operator": "<",
+        "value": 30
+      },
+      "action": {
+        "handler": "autonomous.equipment_manager.schedule_repair",
+        "params": {},
+        "async_execution": true,
+        "timeout": 60.0
+      },
+      "cooldown": 600,
+      "enabled": true,
+      "tags": ["equipment", "repair", "maintenance", "system"]
+    },
+    {
+      "trigger_id": "database_cleanup",
+      "name": "Database Maintenance",
+      "description": "Periodic database cleanup",
+      "layer": "SYSTEM",
+      "priority": 10,
+      "condition": {
+        "type": "simple",
+        "field": "system.database_cleanup_due",
+        "operator": "==",
+        "value": true
+      },
+      "action": {
+        "handler": "autonomous.system.database_cleanup",
+        "params": {},
+        "async_execution": true,
+        "timeout": 30.0
+      },
+      "cooldown": 86400,
+      "enabled": true,
+      "tags": ["system", "database", "maintenance"]
+    },
+    {
+      "trigger_id": "cache_invalidation",
+      "name": "Cache Invalidation",
+      "description": "Clear stale caches",
+      "layer": "SYSTEM",
+      "priority": 8,
+      "condition": {
+        "type": "simple",
+        "field": "system.cache_age_seconds",
+        "operator": ">",
+        "value": 3600
+      },
+      "action": {
+        "handler": "autonomous.system.invalidate_caches",
+        "params": {},
+        "async_execution": true,
+        "timeout": 5.0
+      },
+      "cooldown": 3600,
+      "enabled": true,
+      "tags": ["system", "cache", "maintenance"]
+    },
+    {
+      "trigger_id": "performance_monitoring",
+      "name": "Performance Monitoring",
+      "description": "Monitor and log performance metrics",
+      "layer": "SYSTEM",
+      "priority": 5,
+      "condition": {
+        "type": "simple",
+        "field": "system.monitoring_interval_elapsed",
+        "operator": "==",
+        "value": true
+      },
+      "action": {
+        "handler": "autonomous.system.monitor_performance",
+        "params": {},
+        "async_execution": true,
+        "timeout": 10.0
+      },
+      "cooldown": 600,
+      "enabled": true,
+      "tags": ["system", "performance", "monitoring"]
+    },
+    {
+      "trigger_id": "connection_health",
+      "name": "Connection Health Check",
+      "description": "Verify game connection is stable",
+      "layer": "SYSTEM",
+      "priority": 2,
+      "condition": {
+        "type": "simple",
+        "field": "connection.packet_loss_percent",
+        "operator": ">",
+        "value": 5
+      },
+      "action": {
+        "handler": "autonomous.system.check_connection",
+        "params": {},
+        "async_execution": true,
+        "timeout": 5.0
+      },
+      "cooldown": 60,
+      "enabled": true,
+      "tags": ["system", "connection", "monitoring"]
+    },
+    {
+      "trigger_id": "auto_save_state",
+      "name": "Auto-Save Game State",
+      "description": "Periodically save game state",
+      "layer": "SYSTEM",
+      "priority": 7,
+      "condition": {
+        "type": "simple",
+        "field": "system.last_save_age_seconds",
+        "operator": ">",
+        "value": 600
+      },
+      "action": {
+        "handler": "autonomous.system.save_state",
+        "params": {},
+        "async_execution": true,
+        "timeout": 10.0
+      },
+      "cooldown": 600,
+      "enabled": true,
+      "tags": ["system", "save", "backup"]
+    },
+    {
+      "trigger_id": "error_recovery",
+      "name": "Automatic Error Recovery",
+      "description": "Recover from common errors",
+      "layer": "SYSTEM",
+      "priority": 1,
+      "condition": {
+        "type": "simple",
+        "field": "system.error_detected",
+        "operator": "==",
+        "value": true
+      },
+      "action": {
+        "handler": "autonomous.system.error_recovery",
+        "params": {},
+        "async_execution": true,
+        "timeout": 30.0
+      },
+      "cooldown": 10,
+      "enabled": true,
+      "tags": ["system", "error", "recovery"]
+    },
+    {
+      "trigger_id": "adaptive_learning_update",
+      "name": "Adaptive Learning Update",
+      "description": "Update ML models with new data",
+      "layer": "SYSTEM",
+      "priority": 9,
+      "condition": {
+        "type": "simple",
+        "field": "system.learning_data_accumulated",
+        "operator": ">",
+        "value": 1000
+      },
+      "action": {
+        "handler": "autonomous.system.update_learning",
+        "params": {},
+        "async_execution": true,
+        "timeout": 60.0
+      },
+      "cooldown": 1800,
+      "enabled": true,
+      "tags": ["system", "ml", "learning"]
+    }
+  ],
+  "global_settings": {
+    "max_concurrent_triggers": 3,
+    "evaluation_interval_ms": 500,
+    "enable_adaptive_learning": true,
+    "failure_threshold_for_disable": 10,
+    "cooldown_multiplier_on_failure": 2.0
+  }
+}

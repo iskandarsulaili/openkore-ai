@@ -1,0 +1,184 @@
+{
+  "version": "1.0.0",
+  "description": "Job Change NPC Locations - Server-agnostic pattern-based",
+  "requirements": {
+    "Novice": {
+      "next_jobs": ["Swordman", "Mage", "Archer", "Acolyte", "Merchant", "Thief"],
+      "base_level": 10,
+      "job_level": 10
+    },
+    "Swordman": {
+      "next_jobs": ["Knight", "Crusader"],
+      "base_level": 40,
+      "job_level": 40
+    },
+    "Mage": {
+      "next_jobs": ["Wizard", "Sage"],
+      "base_level": 40,
+      "job_level": 40
+    },
+    "Archer": {
+      "next_jobs": ["Hunter", "Dancer", "Bard"],
+      "base_level": 40,
+      "job_level": 40
+    },
+    "Acolyte": {
+      "next_jobs": ["Priest", "Monk"],
+      "base_level": 40,
+      "job_level": 40
+    },
+    "Merchant": {
+      "next_jobs": ["Blacksmith", "Alchemist"],
+      "base_level": 40,
+      "job_level": 40
+    },
+    "Thief": {
+      "next_jobs": ["Assassin", "Rogue"],
+      "base_level": 40,
+      "job_level": 40
+    }
+  },
+  "locations": {
+    "Swordman": {
+      "map": "izlude_in",
+      "x": 74,
+      "y": 172,
+      "npc_pattern": "Swordman.*Guild|Guild.*Master",
+      "quest_type": "simple"
+    },
+    "Mage": {
+      "map": "geffen_in",
+      "x": 163,
+      "y": 98,
+      "npc_pattern": "Mage.*Guild|Magic.*Academy",
+      "quest_type": "simple"
+    },
+    "Archer": {
+      "map": "payon_in02",
+      "x": 64,
+      "y": 71,
+      "npc_pattern": "Archer.*Guild|Bow.*Master",
+      "quest_type": "simple"
+    },
+    "Acolyte": {
+      "map": "prt_church",
+      "x": 184,
+      "y": 41,
+      "npc_pattern": "Priest|Father|Bishop",
+      "quest_type": "simple"
+    },
+    "Merchant": {
+      "map": "alberta_in",
+      "x": 53,
+      "y": 43,
+      "npc_pattern": "Merchant.*Guild|Guild.*Master",
+      "quest_type": "simple"
+    },
+    "Thief": {
+      "map": "moc_prydb1",
+      "x": 42,
+      "y": 133,
+      "npc_pattern": "Thief.*Guild|Assassin.*Master",
+      "quest_type": "simple"
+    },
+    "Knight": {
+      "map": "prt_in",
+      "x": 88,
+      "y": 101,
+      "npc_pattern": "Knight.*Guild|Chivalry",
+      "quest_type": "test"
+    },
+    "Crusader": {
+      "map": "prt_castle",
+      "x": 45,
+      "y": 169,
+      "npc_pattern": "Crusader.*Guild|Monk.*Hunter",
+      "quest_type": "test"
+    },
+    "Wizard": {
+      "map": "gef_tower",
+      "x": 106,
+      "y": 35,
+      "npc_pattern": "Wizard|High.*Mage",
+      "quest_type": "test"
+    },
+    "Sage": {
+      "map": "yuno_in03",
+      "x": 154,
+      "y": 35,
+      "npc_pattern": "Sage.*Castle|Academy",
+      "quest_type": "test"
+    },
+    "Hunter": {
+      "map": "hu_in01",
+      "x": 386,
+      "y": 373,
+      "npc_pattern": "Hunter.*Guild|Guild.*Master",
+      "quest_type": "test"
+    },
+    "Bard": {
+      "map": "comodo",
+      "x": 226,
+      "y": 123,
+      "npc_pattern": "Bard.*Guild|Maestro",
+      "quest_type": "test",
+      "gender": "male"
+    },
+    "Dancer": {
+      "map": "comodo",
+      "x": 193,
+      "y": 151,
+      "npc_pattern": "Dancer.*Guild|Gypsy",
+      "quest_type": "test",
+      "gender": "female"
+    },
+    "Assassin": {
+      "map": "in_moc_16",
+      "x": 19,
+      "y": 33,
+      "npc_pattern": "Assassin.*Guild|Shadow.*Master",
+      "quest_type": "test"
+    },
+    "Rogue": {
+      "map": "in_rogue",
+      "x": 363,
+      "y": 123,
+      "npc_pattern": "Rogue.*Guild|Markie",
+      "quest_type": "test"
+    },
+    "Priest": {
+      "map": "prt_church",
+      "x": 16,
+      "y": 41,
+      "npc_pattern": "Bishop|High.*Priest",
+      "quest_type": "test"
+    },
+    "Monk": {
+      "map": "monk_in",
+      "x": 99,
+      "y": 58,
+      "npc_pattern": "Monk.*Monastery|Sensei",
+      "quest_type": "test"
+    },
+    "Blacksmith": {
+      "map": "ein_in01",
+      "x": 18,
+      "y": 28,
+      "npc_pattern": "Blacksmith.*Guild|Altiregen",
+      "quest_type": "test"
+    },
+    "Alchemist": {
+      "map": "alde_alche",
+      "x": 27,
+      "y": 185,
+      "npc_pattern": "Alchemist.*Guild|Darwin",
+      "quest_type": "test"
+    }
+  },
+  "progression_paths": {
+    "novice": ["1st_class"],
+    "1st_class": ["2nd_class"],
+    "2nd_class": ["transcendent"],
+    "transcendent": ["3rd_class"]
+  }
+}

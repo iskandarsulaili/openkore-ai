@@ -99,6 +99,15 @@ from progression.stat_allocator import StatAllocator
 from progression.skill_learner import SkillLearner
 from combat.equipment_manager import EquipmentManager
 
+# Import Phase 16 Trigger System components
+from triggers import (
+    TriggerRegistry,
+    TriggerEvaluator,
+    TriggerExecutor,
+    TriggerCoordinator,
+    StateManager
+)
+
 # Import Exploration components (CRITICAL FIX #3)
 from exploration.map_explorer import map_explorer
 
@@ -131,6 +140,13 @@ from game_mechanics.npc_handler import get_npc_handler
 # Import Table Loader for data-driven configuration
 from utils.table_loader import get_table_loader, WATCHDOG_AVAILABLE
 
+# Import Intelligent Loot Prioritization System (Phase 15)
+from loot.loot_prioritizer import LootPrioritizer
+from loot.risk_calculator import RiskCalculator
+from loot.tactical_retrieval import TacticalLootRetrieval
+from loot.loot_learner import LootLearner
+from loot.loot_decision_handler import handle_loot_decision
+
 # Lifespan context manager for startup/shutdown
 # ============================================================================
 # PHASE 70: ENHANCED STARTUP LOGGING
@@ -150,6 +166,22 @@ MAP_METADATA = None
 SKILL_METADATA = None
 USER_INTENT = None
 JOB_BUILDS = None
+
+# Initialize Intelligent Loot Prioritization System (Phase 15)
+loot_prioritizer = None
+risk_calculator = None
+tactical_retrieval = None
+loot_learner = None
+
+# Initialize Trigger System (Phase 16)
+trigger_registry = None
+trigger_coordinator = None
+trigger_state = None
+
+# Initialize Data Management Systems (Phase 1 - Critical Data Import)
+monster_db = None
+item_db = None
+server_adapter = None
 
 def load_metadata_configs():
     """Load all metadata configuration files"""
@@ -631,7 +663,217 @@ async def lifespan(app: FastAPI):
         "Progression Systems Ready [OK]",
         "95% autonomy enabled: Stats, Skills, Equipment"
     )
+    
+    # Initialize Intelligent Loot Prioritization System (Phase 15)
+    console_logger.print_layer_initialization(
+        LayerType.TACTICAL,
+        "Initializing Loot Prioritization System...",
+        "Risk-based tactical retrieval, adaptive learning, 350+ items"
+    )
+    global loot_prioritizer, risk_calculator, tactical_retrieval, loot_learner
+    try:
+        logger.info("[STARTUP] Initializing Loot Prioritization System...")
+        
+        # Paths for loot system
+        data_dir = Path(__file__).parent.parent / "data"
+        loot_db_path = data_dir / "loot_priority_database.json"
+        loot_config_path = data_dir / "loot_config.json"
+        sqlite_db_path = data_dir / "openkore-ai.db"
+        
+        logger.info(f"[STARTUP] Loot database path: {loot_db_path}")
+        logger.info(f"[STARTUP] Loot config path: {loot_config_path}")
+        logger.info(f"[STARTUP] Loot database exists: {loot_db_path.exists()}")
+        logger.info(f"[STARTUP] Loot config exists: {loot_config_path.exists()}")
+        
+        # Initialize components
+        loot_prioritizer = LootPrioritizer(
+            database_path=str(loot_db_path),
+            config_path=str(loot_config_path)
+        )
+        logger.info("[STARTUP] LootPrioritizer initialized successfully")
+        
+        risk_calculator = RiskCalculator()
+        logger.info("[STARTUP] RiskCalculator initialized successfully")
+        
+        tactical_retrieval = TacticalLootRetrieval()
+        logger.info("[STARTUP] TacticalLootRetrieval initialized successfully")
+        
+        loot_learner = LootLearner(db_path=str(sqlite_db_path))
+        logger.info("[STARTUP] LootLearner initialized successfully")
+        
+        console_logger.print_layer_initialization(
+            LayerType.TACTICAL,
+            "Loot Prioritization Ready [OK]",
+            f"{len(loot_prioritizer.items_by_id)} items loaded, adaptive tactics enabled"
+        )
+        logger.info(f"Loot Prioritization System initialized: {len(loot_prioritizer.items_by_id)} items in database")
+    except Exception as e:
+        logger.error("[STARTUP] WARNING: Failed to initialize Loot Prioritization System")
+        logger.exception(e)
+        logger.warning("[STARTUP] Bot will continue without intelligent loot prioritization")
+        loot_prioritizer = None
+        risk_calculator = None
+        tactical_retrieval = None
+        loot_learner = None
     logger.info("Autonomous Progression Systems initialized (Phase 11)")
+    
+    # Initialize Data Management Systems (Phase 1 - Critical Data Import)
+    console_logger.print_layer_initialization(
+        LayerType.STRATEGIC,
+        "Initializing Data Management Systems...",
+        "Monster DB + Item DB + Server Adapter"
+    )
+    global monster_db, item_db, server_adapter
+    try:
+        logger.info("[STARTUP] Initializing Data Management Systems...")
+        
+        # Import data management classes
+        from data.monster_database import MonsterDatabase
+        from data.item_database import ItemDatabase
+        from data.server_adapter import ServerContentAdapter
+        
+        # Initialize Monster Database
+        monster_db_path = data_dir / "monster_db.json"
+        if monster_db_path.exists():
+            monster_db = MonsterDatabase(str(monster_db_path))
+            logger.info(f"[STARTUP] MonsterDatabase loaded: {len(monster_db.monsters)} monsters")
+        else:
+            logger.warning(f"[STARTUP] Monster database not found: {monster_db_path}")
+            monster_db = None
+        
+        # Initialize Item Database
+        item_db_path = data_dir / "item_db.json"
+        priority_db_path = data_dir / "loot_priority_database.json"
+        if item_db_path.exists():
+            item_db = ItemDatabase(
+                str(item_db_path),
+                str(priority_db_path) if priority_db_path.exists() else None
+            )
+            logger.info(f"[STARTUP] ItemDatabase loaded: {len(item_db.items)} items")
+        else:
+            logger.warning(f"[STARTUP] Item database not found: {item_db_path}")
+            item_db = None
+        
+        # Initialize Server Content Adapter
+        if monster_db and item_db:
+            server_adapter = ServerContentAdapter(monster_db, item_db)
+            logger.info("[STARTUP] ServerContentAdapter initialized")
+            
+            # Integrate with loot prioritizer
+            if loot_prioritizer and item_db:
+                loot_prioritizer.set_item_database(item_db)
+                logger.info("[STARTUP] Loot prioritizer integrated with full item database")
+            
+            # Integrate with tactical retrieval
+            if tactical_retrieval and monster_db:
+                tactical_retrieval.set_monster_database(monster_db)
+                logger.info("[STARTUP] Tactical retrieval integrated with monster database")
+            
+            console_logger.print_layer_initialization(
+                LayerType.STRATEGIC,
+                "Data Management Ready [OK]",
+                f"{len(monster_db.monsters)} monsters, {len(item_db.items)} items"
+            )
+            logger.success("Data Management Systems initialized successfully")
+        else:
+            logger.warning("[STARTUP] Data Management Systems partially initialized")
+            server_adapter = None
+    
+    except Exception as e:
+        logger.error("[STARTUP] WARNING: Failed to initialize Data Management Systems")
+        logger.exception(e)
+        logger.warning("[STARTUP] Bot will continue without enhanced data systems")
+        monster_db = None
+        item_db = None
+        server_adapter = None
+    
+    # Initialize Trigger System (Phase 16)
+    console_logger.print_layer_initialization(
+        LayerType.REFLEX,
+        "Initializing Multi-Layered Trigger System...",
+        "5 layers: REFLEX → TACTICAL → SUBCONSCIOUS → CONSCIOUS → SYSTEM"
+    )
+    global trigger_registry, trigger_coordinator, trigger_state
+    try:
+        logger.info("[STARTUP] Initializing Trigger System...")
+        
+        # Initialize state manager with database persistence
+        trigger_state = StateManager(db_path=str(data_dir / "openkore-ai.db"))
+        logger.info("[STARTUP] StateManager initialized")
+        
+        # Initialize registry
+        trigger_registry = TriggerRegistry()
+        logger.info("[STARTUP] TriggerRegistry initialized")
+        
+        # Initialize evaluator
+        trigger_evaluator = TriggerEvaluator()
+        logger.info("[STARTUP] TriggerEvaluator initialized")
+        
+        # Create handler registry with built-in handlers
+        from triggers.trigger_executor import (
+            handler_emergency_heal,
+            handler_job_advancement,
+            handler_auto_storage,
+            handler_auto_sell,
+            handler_skill_training,
+            handler_combat_retreat
+        )
+        
+        handler_registry = {
+            'triggers.trigger_executor.handler_emergency_heal': handler_emergency_heal,
+            'triggers.trigger_executor.handler_job_advancement': handler_job_advancement,
+            'triggers.trigger_executor.handler_auto_storage': handler_auto_storage,
+            'triggers.trigger_executor.handler_auto_sell': handler_auto_sell,
+            'triggers.trigger_executor.handler_skill_training': handler_skill_training,
+            'triggers.trigger_executor.handler_combat_retreat': handler_combat_retreat,
+        }
+        
+        # Initialize executor
+        trigger_executor = TriggerExecutor(handler_registry)
+        logger.info("[STARTUP] TriggerExecutor initialized with built-in handlers")
+        
+        # Initialize coordinator
+        trigger_coordinator = TriggerCoordinator(
+            trigger_registry,
+            trigger_evaluator,
+            trigger_executor,
+            trigger_state
+        )
+        logger.info("[STARTUP] TriggerCoordinator initialized")
+        
+        # Load triggers from configuration
+        triggers_config_path = data_dir / "triggers_config.json"
+        logger.info(f"[STARTUP] Loading triggers from: {triggers_config_path}")
+        
+        if triggers_config_path.exists():
+            loaded_count = trigger_registry.load_from_config(str(triggers_config_path))
+            logger.info(f"[STARTUP] Loaded {loaded_count} triggers")
+            
+            # Get statistics
+            stats = trigger_registry.get_statistics()
+            layers_info = ", ".join([
+                f"{layer}: {info['enabled']}"
+                for layer, info in stats['layers'].items()
+            ])
+            
+            console_logger.print_layer_initialization(
+                LayerType.REFLEX,
+                "Trigger System Ready [OK]",
+                f"{loaded_count} triggers loaded across 5 layers"
+            )
+            logger.success(f"Trigger System initialized: {loaded_count} triggers loaded")
+            logger.info(f"Trigger distribution: {layers_info}")
+        else:
+            logger.warning(f"[STARTUP] Triggers configuration not found: {triggers_config_path}")
+            logger.warning("[STARTUP] Trigger system initialized but no triggers loaded")
+            
+    except Exception as e:
+        logger.error("[STARTUP] WARNING: Failed to initialize Trigger System")
+        logger.exception(e)
+        logger.warning("[STARTUP] Bot will continue without autonomous trigger system")
+        trigger_registry = None
+        trigger_coordinator = None
+        trigger_state = None
     
     # Initialize lifecycle systems (Phase 7)
     global progression_manager
@@ -1535,6 +1777,88 @@ def select_combat_target(monsters: List[Dict], character: Dict) -> Optional[Dict
 # END COMBAT/FARMING LOGIC
 # ============================================
 
+@app.post("/api/v1/select-target")
+async def select_target_endpoint(request: Request, request_body: Dict[str, Any] = Body(...)):
+    """
+    Select optimal monster target based on current context.
+    Uses monster database for intelligent target selection.
+    
+    Request body:
+    {
+        "level": 50,
+        "map": "prt_fild08",
+        "monsters": [1002, 1113, 1031],  # Available monster IDs
+        "goal": "exp" or "loot"  # Optional
+    }
+    
+    Returns:
+    {
+        "targets": [
+            {
+                "id": 1002,
+                "name": "Poring",
+                "level": 1,
+                "score": 85.5,
+                "recommended": true
+            },
+            ...
+        ]
+    }
+    """
+    try:
+        if not monster_db:
+            return {
+                "error": "Monster database not available",
+                "targets": []
+            }
+        
+        # Extract request data
+        current_level = request_body.get("level", 1)
+        current_location = request_body.get("map", "")
+        available_monsters = request_body.get("monsters", [])
+        goal = request_body.get("goal", "exp")
+        
+        # Find optimal targets
+        context = {
+            "level": current_level,
+            "location": current_location,
+            "monsters": available_monsters,
+            "goal": goal
+        }
+        
+        targets = monster_db.find_optimal_targets(context)
+        
+        # Format response
+        formatted_targets = []
+        for i, target in enumerate(targets[:10]):  # Top 10 targets
+            formatted_targets.append({
+                "id": target.get("id"),
+                "name": target.get("name"),
+                "level": target.get("level"),
+                "base_exp": target.get("base_exp"),
+                "job_exp": target.get("job_exp"),
+                "hp": target.get("hp"),
+                "recommended": i == 0  # First is most recommended
+            })
+        
+        logger.info(f"[SELECT-TARGET] Found {len(formatted_targets)} suitable targets for level {current_level}")
+        
+        return {
+            "targets": formatted_targets,
+            "context": {
+                "player_level": current_level,
+                "goal": goal,
+                "available_count": len(available_monsters)
+            }
+        }
+    
+    except Exception as e:
+        logger.error(f"[SELECT-TARGET] Error selecting target: {e}", exc_info=True)
+        return {
+            "error": str(e),
+            "targets": []
+        }
+
 @app.post("/api/v1/decide")
 async def decide_action(request: Request, request_body: Dict[str, Any] = Body(...)):
     """
@@ -1613,7 +1937,62 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
         logger.debug(f"[DECIDE] Inventory items: {len(inventory)} items")
         
         # ==================================================================
-        # DECISION LOGIC: Three-Layer Architecture
+        # PRIORITY 0: AUTONOMOUS TRIGGER SYSTEM (Phase 16)
+        # ==================================================================
+        # Check trigger system first - it can handle multi-layered autonomous responses
+        if trigger_coordinator:
+            try:
+                # Enrich game state with calculated percentages and derived data
+                enriched_game_state = {
+                    **game_state,
+                    "character": {
+                        **character_data,
+                        "hp_percent": hp_percent,
+                        "sp_percent": sp_percent,
+                        "weight_percent": 0,  # TODO: Calculate from game_state
+                    },
+                    "inventory": {
+                        "items": {item.get("name"): item.get("amount", 0) for item in inventory},
+                        "item_count": len(inventory),
+                        "max_items": 100,  # TODO: Get from game_state
+                        "usage_percent": (len(inventory) / 100 * 100) if len(inventory) > 0 else 0
+                    },
+                    "combat": {
+                        **game_state.get("combat", {}),
+                        "attacking_monster_count": game_state.get("combat", {}).get("attacking_monster_count", 0)
+                    },
+                    "state": game_state.get("state", "unknown"),
+                    "request_id": request_id,
+                    "timestamp_ms": timestamp_ms
+                }
+                
+                # Process through trigger system
+                trigger_action = await trigger_coordinator.process_game_state(enriched_game_state)
+                
+                if trigger_action:
+                    console_logger.log(
+                        LayerType.REFLEX,
+                        f"🎯 Trigger System Action: {trigger_action.get('action', 'unknown')}"
+                    )
+                    logger.info(f"[DECIDE] Trigger system returned action: {trigger_action}")
+                    
+                    # Return trigger action with metadata
+                    return {
+                        **trigger_action,
+                        "source": "trigger_system",
+                        "request_id": request_id,
+                        "timestamp": time.time()
+                    }
+                else:
+                    logger.debug("[DECIDE] No trigger fired, continuing to standard decision logic")
+                    
+            except Exception as e:
+                logger.error(f"[DECIDE] Trigger system error: {e}")
+                logger.exception(e)
+                # Fall through to existing decision logic on error
+        
+        # ==================================================================
+        # DECISION LOGIC: Three-Layer Architecture (Fallback)
         # ==================================================================
         
         # Layer 1: REFLEX (Immediate survival responses - use config threshold)
@@ -2311,6 +2690,25 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
                     logger.debug("[STRATEGIC] No cached strategic action, proceeding with tactical logic")
             else:
                 logger.debug("[STRATEGIC] LLM provider not available, skipping strategic planning")
+        
+        # ======================================================================
+        # Layer 2.6: INTELLIGENT LOOT PRIORITIZATION (Phase 15)
+        # ======================================================================
+        # Check for ground items and make risk-based tactical loot decisions
+        # Priority: High-value loot > Combat > Exploration
+        # Only attempt when HP/SP are reasonable (not in critical survival mode)
+        if hp_percent > 40 and sp_percent > 30:
+            loot_action = handle_loot_decision(
+                game_state=game_state,
+                loot_prioritizer=loot_prioritizer,
+                risk_calculator=risk_calculator,
+                tactical_retrieval=tactical_retrieval,
+                loot_learner=loot_learner
+            )
+            
+            if loot_action:
+                logger.info(f"[LOOT] Initiating tactical loot retrieval: {loot_action.get('params', {}).get('tactic')}")
+                return loot_action
         
         # CRITICAL FIX #5i-4: Combat/Farming Logic (ALWAYS check, even if stat allocation failed)
         # This is the FALLBACK when stat allocation is blocked/blacklisted

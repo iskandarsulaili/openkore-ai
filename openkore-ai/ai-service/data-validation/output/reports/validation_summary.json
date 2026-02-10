@@ -1,0 +1,72 @@
+{
+  "timestamp": "2026-02-10T02:16:21.932406",
+  "execution_time_seconds": 387.106196,
+  "extraction": {
+    "monsters": {
+      "total_extracted": 2675,
+      "output_file": "d:\\RO\\bot\\renew\\openkore-ai\\ai-service\\data-validation\\output\\extracted\\monster_db.json",
+      "file_size_bytes": 3308015
+    },
+    "items": {
+      "total_extracted": 29056,
+      "output_file": "d:\\RO\\bot\\renew\\openkore-ai\\ai-service\\data-validation\\output\\extracted\\item_db.json",
+      "file_size_bytes": 16392232,
+      "type_distribution": {
+        "etc": 4120,
+        "ammo": 123,
+        "card": 5582,
+        "unknown": 3,
+        "weapon": 2806,
+        "armor": 8798,
+        "Petegg": 118,
+        "PetEgg": 31,
+        "Petarmor": 42,
+        "PetArmor": 3,
+        "Shadowgear": 507,
+        "ShadowGear": 521,
+        "healing": 463,
+        "DelayConsume": 740,
+        "usable": 2787,
+        "cash": 2410,
+        "Delayconsume": 2
+      }
+    }
+  },
+  "validation": {
+    "monsters": {
+      "total_entries": 2675,
+      "passed": 1976,
+      "failed": 699,
+      "pass_rate": 73.87,
+      "total_errors": 745,
+      "total_warnings": 858
+    },
+    "items": {
+      "total_entries": 29056,
+      "passed": 26513,
+      "failed": 2543,
+      "pass_rate": 91.25,
+      "total_errors": 2543,
+      "total_warnings": 4840
+    }
+  },
+  "coverage": {
+    "monsters": {
+      "percentage": 0.0,
+      "matched_entries": 0,
+      "missing_entries": 2675,
+      "extra_entries": 0
+    },
+    "items": {
+      "percentage": 0.78,
+      "matched_entries": 0,
+      "missing_entries": 100,
+      "extra_entries": 100
+    }
+  },
+  "gap_analysis": {
+    "overall_coverage_percentage": 0.72,
+    "total_missing_entries": 2775,
+    "critical_gaps_count": 2
+  }
+}

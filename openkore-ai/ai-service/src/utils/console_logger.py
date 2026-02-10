@@ -25,6 +25,8 @@ class LayerType(Enum):
     CONSCIOUS = "[CONSCIOUS]"
     SUBCONSCIOUS = "[SUBCONSCIOUS]"
     REFLEX = "[REFLEX]"
+    TACTICAL = "[TACTICAL]"
+    STRATEGIC = "[STRATEGIC]"
     SYSTEM = "[SYSTEM]"
 
 

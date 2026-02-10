@@ -1,0 +1,175 @@
+{
+  "version": "1.0.0",
+  "description": "Equipment Loadout Configurations - Dynamic equipment optimization",
+  "loadouts": {
+    "Novice": {
+      "default": {
+        "weapon": ["Knife", "Dagger"],
+        "armor": ["Cotton Shirt", "Novice Armor"],
+        "shield": ["Guard", "Novice Shield"],
+        "footgear": ["Sandals", "Shoes"],
+        "garment": ["Novice Manteau", "Manteau"],
+        "accessory": ["Novice Ring", "Ring"]
+      },
+      "combat": {
+        "weapon_priority": ["attack", "slots"],
+        "armor_priority": ["defense", "mdef"],
+        "stat_focus": ["str", "agi", "dex"]
+      }
+    },
+    "Swordman": {
+      "default": {
+        "weapon": ["Sword", "Blade"],
+        "armor": ["Armor", "Chain Mail"],
+        "shield": ["Guard", "Buckler"],
+        "footgear": ["Shoes", "Boots"],
+        "garment": ["Manteau", "Muffler"],
+        "accessory": ["Ring", "Earring"]
+      },
+      "tanking": {
+        "weapon": ["One-Handed Sword + Shield"],
+        "armor": ["Plate Armor", "Full Plate"],
+        "shield": ["Strong Shield", "Mirror Shield"],
+        "stat_focus": ["vit", "def"]
+      },
+      "dps": {
+        "weapon": ["Two-Handed Sword"],
+        "armor": ["Light Armor"],
+        "stat_focus": ["str", "agi"]
+      }
+    },
+    "Mage": {
+      "default": {
+        "weapon": ["Rod", "Staff"],
+        "armor": ["Silk Robe", "Mage Coat"],
+        "shield": null,
+        "footgear": ["Shoes", "Boots"],
+        "garment": ["Muffler", "Manteau"],
+        "accessory": ["Earring", "Ring"]
+      },
+      "magic_damage": {
+        "weapon": ["Staff of Element"],
+        "armor": ["Magic Robe"],
+        "stat_focus": ["int", "dex"],
+        "element_weapons": {
+          "fire": ["Firebrand"],
+          "ice": ["Ice Staff"],
+          "wind": ["Wind Staff"],
+          "earth": ["Earth Staff"]
+        }
+      }
+    },
+    "Archer": {
+      "default": {
+        "weapon": ["Bow", "Crossbow"],
+        "armor": ["Tights", "Chain Mail"],
+        "shield": null,
+        "footgear": ["Shoes", "Boots"],
+        "garment": ["Manteau", "Hood"],
+        "accessory": ["Gloves", "Bracer"]
+      },
+      "ranged_dps": {
+        "weapon": ["Composite Bow", "Arbalest"],
+        "stat_focus": ["dex", "agi"],
+        "ammo": ["Arrow", "Steel Arrow"]
+      }
+    },
+    "Acolyte": {
+      "default": {
+        "weapon": ["Mace", "Rod"],
+        "armor": ["Silk Robe", "Saint Robe"],
+        "shield": ["Guard", "Buckler"],
+        "footgear": ["Sandals", "Shoes"],
+        "garment": ["Muffler", "Manteau"],
+        "accessory": ["Rosary", "Ring"]
+      },
+      "support": {
+        "weapon": ["Book", "Mace"],
+        "armor": ["Holy Robe"],
+        "stat_focus": ["int", "dex", "vit"]
+      }
+    },
+    "Merchant": {
+      "default": {
+        "weapon": ["Sword", "Axe"],
+        "armor": ["Armor", "Chain Mail"],
+        "shield": ["Guard", "Buckler"],
+        "footgear": ["Boots", "Shoes"],
+        "garment": ["Manteau"],
+        "accessory": ["Ring", "Brooch"]
+      },
+      "vending": {
+        "weapon": ["Any"],
+        "focus": "weight_capacity",
+        "stat_focus": ["str", "dex"]
+      }
+    },
+    "Thief": {
+      "default": {
+        "weapon": ["Dagger", "Katar"],
+        "armor": ["Thief Clothes", "Ninja Suit"],
+        "shield": null,
+        "footgear": ["Boots", "Shoes"],
+        "garment": ["Manteau", "Muffler"],
+        "accessory": ["Ring", "Gloves"]
+      },
+      "critical": {
+        "weapon": ["Katar", "Main Gauche"],
+        "stat_focus": ["agi", "luk", "str"]
+      },
+      "flee": {
+        "armor": ["Light Armor"],
+        "stat_focus": ["agi", "dex"]
+      }
+    }
+  },
+  "element_weapons": {
+    "Fire": ["Firebrand", "Fireblend"],
+    "Water": ["Aqua Staff", "Ocean Sword"],
+    "Wind": ["Wind Staff", "Gust Bow"],
+    "Earth": ["Earth Staff", "Stone Sword"],
+    "Holy": ["Holy Avenger", "Saint Mace"],
+    "Shadow": ["Shadow Blade", "Cursed Dagger"],
+    "Ghost": ["Ghost Cutter"],
+    "Poison": ["Poison Knife"]
+  },
+  "size_equipment": {
+    "Small": {
+      "cards": ["Desert Wolf Card", "Drops Card"],
+      "weapons": ["Dagger", "Small Sword"]
+    },
+    "Medium": {
+      "cards": ["Skel Worker Card", "Flora Card"],
+      "weapons": ["Sword", "Axe"]
+    },
+    "Large": {
+      "cards": ["Minorous Card", "Vadon Card"],
+      "weapons": ["Two-Handed Sword", "Spear"]
+    }
+  },
+  "race_equipment": {
+    "Demon": {
+      "cards": ["Exorcism Card"],
+      "weapons": ["Holy weapons"]
+    },
+    "Undead": {
+      "cards": ["Holy Light Card"],
+      "weapons": ["Holy weapons", "Fire weapons"]
+    },
+    "Human": {
+      "cards": ["Size cards"],
+      "weapons": ["Standard weapons"]
+    },
+    "Demi-Human": {
+      "cards": ["Racial damage cards"],
+      "weapons": ["Any"]
+    }
+  },
+  "optimization_rules": {
+    "prefer_slots": true,
+    "prefer_refined": true,
+    "element_advantage_bonus": 50,
+    "size_advantage_bonus": 20,
+    "race_advantage_bonus": 20
+  }
+}
