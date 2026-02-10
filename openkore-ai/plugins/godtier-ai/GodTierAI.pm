@@ -403,8 +403,21 @@ sub check_ai_service_connectivity {
 on_load();
 
 # CRITICAL FIX: Helper function to check if inventory is ready
+# FIX #1: Check the actual inventory() method instead of {inventory} hash property
 sub inventory_ready {
-    return ($char && $char->{inventory}) ? 1 : 0;
+    return 0 unless defined $char;
+    
+    # Try to call inventory() method - if it works, inventory is ready
+    eval {
+        my $inv = $char->inventory;
+        return 0 unless defined $inv;
+        # Verify it's an object that can respond to getItems()
+        return 0 unless $inv->can('getItems');
+        return 1;
+    };
+    
+    # If eval failed, inventory not ready
+    return 0;
 }
 
 # Safe distance calculation helper
@@ -551,20 +564,54 @@ sub collect_game_state {
         };
     }
     
-    # Collect inventory (sample - first 10 items)
-    # CRITICAL FIX: Check if inventory is ready before accessing
-    if (inventory_ready()) {
+    # Collect inventory (sample - first 20 items for better AI awareness)
+    # CRITICAL FIX #2: Enhanced inventory collection with DIRECT ACCESS (bypass inventory_ready check)
+    # The issue: inventory_ready() may be too conservative, causing permanent empty inventory
+    eval {
+        # Try multiple access methods for robustness
+        my @items;
+        if (defined $char && ref($char) eq 'Actor::You') {
+            # Method 1: Direct inventory() call
+            if ($char->can('inventory')) {
+                my $inv = $char->inventory;
+                @items = @{$inv->getItems()} if $inv;
+            }
+        }
+        
+        # If still no items, try globals-based access
+        if (!@items && defined $::char && $::char->{inventory}) {
+            @items = values %{$::char->{inventory}};
+        }
+        
+        # Process collected items
         my $inv_count = 0;
-        foreach my $item (@{$char->inventory->getItems()}) {
-            last if $inv_count++ >= 10;
+        foreach my $item (@items) {
+            last if $inv_count++ >= 20;  # CIRCUIT BREAKER: Max 20 items
             next unless $item;
+            next unless (ref($item) && $item->can('name'));  # Must be item object
+            
+            my $item_name = $item->name() || $item->{name} || next;
+            
             push @{$state{inventory}}, {
-                id => int($item->{nameID} || 0),
-                name => $item->{name} || 'Unknown',
+                id => int($item->{nameID} || $item->{ID} || 0),
+                name => $item_name,
                 amount => int($item->{amount} || 1),
                 type => $item->{type} || 'misc',
+                # Add equipped status for better AI decision making
+                equipped => ($item->{equipped}) ? JSON::true : JSON::false,
             };
         }
+        
+        my $collected_count = scalar(@{$state{inventory}});
+        if ($collected_count > 0) {
+            debug "[GodTierAI] [INVENTORY] ✓ Collected $collected_count items\n", "ai";
+        } else {
+            debug "[GodTierAI] [INVENTORY] Warning: No inventory items collected (early game or sync issue)\n", "ai";
+        }
+    };
+    
+    if ($@) {
+        error "[GodTierAI] [INVENTORY] Failed to collect inventory: $@\n";
     }
     
     # Collect nearby players (CRITICAL FIX: Add limit to prevent memory explosion)
@@ -1112,6 +1159,39 @@ sub execute_action {
         # No action needed
         debug "[GodTierAI] Action: None ($reason)\n", "ai";
     }
+    elsif ($type eq 'move_random') {
+        # FIX #3: Active monster seeking - random movement to find targets
+        my $max_dist = $params->{max_distance} || 10;
+        message "[GodTierAI] [EXPLORE] Random walk to find monsters (max: ${max_dist} cells) - Reason: $reason\n", "info";
+        
+        # Use OpenKore's route_randomWalk to move randomly and find monsters
+        eval {
+            require Task::Route;
+            my $task = new Task::Route(
+                map => $field{name},
+                maxRouteTime => 30,
+                randomWalk => 1,
+                maxDistance => $max_dist
+            );
+            
+            if ($task) {
+                $taskManager->add($task);
+                send_action_feedback('move_random', 'success', 'random_walk_initiated');
+            }
+        };
+        
+        if ($@) {
+            warning "[GodTierAI] [EXPLORE] Failed to create random walk task: $@\n";
+            # Fallback: Just use simple random coordinate movement
+            my $current_x = $char->{pos_to}{x};
+            my $current_y = $char->{pos_to}{y};
+            my $new_x = $current_x + int(rand($max_dist * 2)) - $max_dist;
+            my $new_y = $current_y + int(rand($max_dist * 2)) - $max_dist;
+            
+            Commands::run("move $new_x $new_y");
+            send_action_feedback('move_random', 'success', 'random_coordinate_movement');
+        }
+    }
     # P0 CRITICAL FIX #4: Direct stat allocation (from AI-Service decision layer)
     elsif ($type eq 'allocate_stats') {
         my $stats = $params->{stats};  # Hash of stat => points
@@ -1141,12 +1221,20 @@ sub execute_action {
                     next;
                 }
                 
-                # Check if character has enough free points
-                if ($char->{points_free} < 1) {
-                    Log::warning("[GodTierAI] [PROGRESSION] No free stat points available (requested: $points to $stat_name)\n");
+                # CRITICAL FIX: Re-query points FRESH from network to avoid stale data
+                # This prevents race condition where collected state is outdated
+                Network::send($messageSender, "018A", { type => 0 });
+                sleep 0.05;  # Allow network update
+                
+                # Now check CURRENT free points (not stale cached value)
+                my $current_free_points = int($char->{points_free} || 0);
+                if ($current_free_points < 1) {
+                    Log::warning("[GodTierAI] [PROGRESSION] No free stat points available after refresh (requested: $points to $stat_name)\n");
                     push @failed_stats, "$stat_name (no points)";
                     next;
                 }
+                
+                Log::message("[GodTierAI] [PROGRESSION] Verified: $current_free_points stat points available\n", "ai");
                 
                 # Check if stat is already at cap
                 my $current_stat = $char->{$stat_lower} || 1;

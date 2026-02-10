@@ -4,25 +4,61 @@ Priority: DeepSeek (default) → OpenAI → Anthropic
 """
 
 from typing import Optional, Dict, Any, List
+from abc import ABC, abstractmethod
 import os
 import httpx
 from loguru import logger
 
-class LLMProvider:
-    """Base LLM provider"""
+class LLMProvider(ABC):
+    """
+    Abstract base class for LLM providers
+    
+    All concrete provider implementations must inherit from this class
+    and implement the abstract methods: query() and check_availability()
+    """
     
     def __init__(self, name: str, priority: int):
         self.name = name
         self.priority = priority
         self.available = False
         
+    @abstractmethod
     async def query(self, prompt: str, context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Query the LLM"""
-        raise NotImplementedError()
+        """
+        Query the LLM provider with a prompt
         
+        Args:
+            prompt: The prompt to send to the LLM
+            context: Additional context information
+            
+        Returns:
+            Dictionary containing response and metadata, or None if query fails
+            Expected format: {
+                'provider': str,
+                'response': str,
+                'model': str
+            }
+        """
+        pass
+        
+    @abstractmethod
     async def check_availability(self) -> bool:
-        """Check if provider is available"""
-        raise NotImplementedError()
+        """
+        Check if the provider is available (e.g., API key is set)
+        
+        Returns:
+            True if provider is available and ready to use, False otherwise
+        """
+        pass
+    
+    def is_available(self) -> bool:
+        """
+        Synchronous check for provider availability
+        
+        Returns:
+            Current availability status
+        """
+        return self.available
 
 class DeepSeekProvider(LLMProvider):
     """DeepSeek LLM provider (default, $4.20/month)"""

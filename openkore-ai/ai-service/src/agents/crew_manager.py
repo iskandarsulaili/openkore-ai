@@ -24,6 +24,9 @@ from crewai.memory import EntityMemory, ShortTermMemory, LongTermMemory
 from crewai.llm import LLM
 import os
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
+import hashlib
+import json
 
 # Import custom game tools
 from agents.game_tools import (
@@ -35,6 +38,212 @@ from agents.game_tools import (
 from memory.crewai_embedder import get_crewai_embedder
 
 load_dotenv()
+
+
+# ============================================================================
+# CREWAI RESULT CACHING SYSTEM
+# ============================================================================
+
+class CrewAIResultCache:
+    """
+    Sophisticated caching system for CrewAI task results
+    
+    Features:
+    - Task parameter hashing for cache keys
+    - Configurable TTL (default 5 minutes)
+    - Automatic expiration
+    - Cache statistics tracking
+    """
+    
+    def __init__(self, default_ttl_seconds: int = 300):
+        """
+        Initialize cache
+        
+        Args:
+            default_ttl_seconds: Default time-to-live for cache entries (default: 5 minutes)
+        """
+        self.default_ttl = default_ttl_seconds
+        self._cache: Dict[str, Dict[str, Any]] = {}
+        self._stats = {
+            'hits': 0,
+            'misses': 0,
+            'expirations': 0,
+            'invalidations': 0
+        }
+        logger.info(f"CrewAI result cache initialized with {default_ttl_seconds}s TTL")
+    
+    def _generate_cache_key(self, context: Dict[str, Any], task_type: str = "default") -> str:
+        """
+        Generate cache key from task parameters
+        
+        Uses MD5 hash of normalized context to create unique cache keys
+        
+        Args:
+            context: Task context/parameters
+            task_type: Type of task (for cache segmentation)
+            
+        Returns:
+            Cache key string
+        """
+        # Create normalized representation of context
+        # Only include relevant fields that affect the result
+        cache_context = {
+            'task_type': task_type,
+            'character_level': context.get('character', {}).get('level'),
+            'job_class': context.get('character', {}).get('job_class'),
+            'hp': context.get('character', {}).get('hp'),
+            'max_hp': context.get('character', {}).get('max_hp'),
+            'map': context.get('character', {}).get('position', {}).get('map'),
+            'monsters_count': len(context.get('monsters', [])),
+            'party_size': len(context.get('party', {}).get('members', [])) if context.get('party') else 0
+        }
+        
+        # Convert to stable JSON string
+        cache_str = json.dumps(cache_context, sort_keys=True)
+        
+        # Generate hash
+        cache_hash = hashlib.md5(cache_str.encode()).hexdigest()
+        
+        return f"crew_{task_type}_{cache_hash}"
+    
+    def get(self, context: Dict[str, Any], task_type: str = "default") -> Optional[Dict[str, Any]]:
+        """
+        Get cached result if available and not expired
+        
+        Args:
+            context: Task context to generate cache key
+            task_type: Type of task
+            
+        Returns:
+            Cached result or None if not found/expired
+        """
+        cache_key = self._generate_cache_key(context, task_type)
+        
+        if cache_key not in self._cache:
+            self._stats['misses'] += 1
+            logger.debug(f"[CACHE MISS] Key: {cache_key}")
+            return None
+        
+        entry = self._cache[cache_key]
+        
+        # Check if expired
+        age = datetime.now() - entry['timestamp']
+        if age.total_seconds() > entry['ttl']:
+            logger.debug(f"[CACHE EXPIRED] Key: {cache_key}, Age: {age.total_seconds():.1f}s")
+            self._stats['expirations'] += 1
+            del self._cache[cache_key]
+            return None
+        
+        # Cache hit
+        self._stats['hits'] += 1
+        logger.info(f"[CACHE HIT] Key: {cache_key}, Age: {age.total_seconds():.1f}s")
+        return entry['result']
+    
+    def set(
+        self,
+        context: Dict[str, Any],
+        result: Dict[str, Any],
+        task_type: str = "default",
+        ttl: Optional[int] = None
+    ) -> None:
+        """
+        Store result in cache
+        
+        Args:
+            context: Task context to generate cache key
+            result: Result to cache
+            task_type: Type of task
+            ttl: Optional custom TTL (seconds), uses default if not provided
+        """
+        cache_key = self._generate_cache_key(context, task_type)
+        ttl = ttl if ttl is not None else self.default_ttl
+        
+        self._cache[cache_key] = {
+            'result': result,
+            'timestamp': datetime.now(),
+            'ttl': ttl,
+            'context_summary': {
+                'level': context.get('character', {}).get('level'),
+                'map': context.get('character', {}).get('position', {}).get('map')
+            }
+        }
+        
+        logger.debug(f"[CACHE SET] Key: {cache_key}, TTL: {ttl}s")
+    
+    def invalidate(self, context: Dict[str, Any], task_type: str = "default") -> bool:
+        """
+        Manually invalidate a cache entry
+        
+        Args:
+            context: Task context to generate cache key
+            task_type: Type of task
+            
+        Returns:
+            True if entry was found and removed, False otherwise
+        """
+        cache_key = self._generate_cache_key(context, task_type)
+        
+        if cache_key in self._cache:
+            del self._cache[cache_key]
+            self._stats['invalidations'] += 1
+            logger.info(f"[CACHE INVALIDATE] Key: {cache_key}")
+            return True
+        
+        return False
+    
+    def clear(self) -> None:
+        """Clear all cache entries"""
+        count = len(self._cache)
+        self._cache.clear()
+        logger.info(f"[CACHE CLEAR] Cleared {count} entries")
+    
+    def get_stats(self) -> Dict[str, Any]:
+        """
+        Get cache statistics
+        
+        Returns:
+            Dictionary with cache performance metrics
+        """
+        total_requests = self._stats['hits'] + self._stats['misses']
+        hit_rate = (self._stats['hits'] / total_requests * 100) if total_requests > 0 else 0.0
+        
+        return {
+            'total_entries': len(self._cache),
+            'total_requests': total_requests,
+            'hits': self._stats['hits'],
+            'misses': self._stats['misses'],
+            'hit_rate_percent': round(hit_rate, 2),
+            'expirations': self._stats['expirations'],
+            'invalidations': self._stats['invalidations']
+        }
+    
+    def cleanup_expired(self) -> int:
+        """
+        Remove all expired entries
+        
+        Returns:
+            Number of entries removed
+        """
+        now = datetime.now()
+        expired_keys = []
+        
+        for key, entry in self._cache.items():
+            age = now - entry['timestamp']
+            if age.total_seconds() > entry['ttl']:
+                expired_keys.append(key)
+        
+        for key in expired_keys:
+            del self._cache[key]
+            self._stats['expirations'] += 1
+        
+        if expired_keys:
+            logger.info(f"[CACHE CLEANUP] Removed {len(expired_keys)} expired entries")
+        
+        return len(expired_keys)
+
+
+# Global cache instance
+_result_cache = CrewAIResultCache(default_ttl_seconds=300)
 
 
 class CrewManager:
@@ -255,21 +464,33 @@ class CrewManager:
         return crew
     
     async def consult_agents(
-        self, 
+        self,
         context: Dict[str, Any],
-        async_execution: bool = False
+        async_execution: bool = False,
+        use_cache: bool = True,
+        cache_ttl: Optional[int] = None
     ) -> Dict[str, Any]:
         """
-        Consult all agents with enhanced task orchestration
+        Consult all agents with enhanced task orchestration and result caching
         
         Args:
             context: Game state context
             async_execution: Execute tasks in parallel where possible
+            use_cache: Whether to use result caching (default: True)
+            cache_ttl: Optional custom cache TTL in seconds
             
         Returns:
             Aggregated recommendations with confidence scores
         """
         logger.info("Consulting enhanced CrewAI agents...")
+        
+        # Check cache first if enabled
+        if use_cache:
+            cached_result = _result_cache.get(context, task_type="consult_agents")
+            if cached_result:
+                logger.success("Using cached CrewAI result")
+                cached_result['_cached'] = True
+                return cached_result
         
         # Create tasks dynamically based on context
         tasks = self._create_tasks(context, async_execution)
@@ -288,6 +509,12 @@ class CrewManager:
             
             # Parse and aggregate results
             aggregated = self._aggregate_results(result, context)
+            aggregated['_cached'] = False
+            
+            # Cache the result if caching is enabled
+            if use_cache:
+                _result_cache.set(context, aggregated, task_type="consult_agents", ttl=cache_ttl)
+                logger.debug("Cached CrewAI result for future use")
             
             return aggregated
             
@@ -296,7 +523,8 @@ class CrewManager:
             return {
                 'error': str(e),
                 'aggregated_recommendations': [],
-                'consensus_confidence': 0.0
+                'consensus_confidence': 0.0,
+                '_cached': False
             }
     
     def _create_tasks(self, context: Dict[str, Any], async_execution: bool = False) -> List[Task]:

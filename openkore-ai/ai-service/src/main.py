@@ -1128,7 +1128,8 @@ import threading
 
 action_blacklist = {}  # {action_name: expiry_timestamp}
 action_blacklist_lock = threading.RLock()  # Thread-safe access to blacklist
-BLACKLIST_DURATION = 300  # 5 minutes
+BLACKLIST_DURATION = 60  # CRITICAL FIX: Reduced from 300s to 60s for faster recovery
+# 60s is enough to prevent spam but allows quicker adaptation
 
 def blacklist_action(action: str, duration: int = BLACKLIST_DURATION):
     """Temporarily blacklist an action after repeated failures (THREAD-SAFE)"""
@@ -2397,17 +2398,18 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
                     "layer": "STRATEGIC"
                 }
             
-            # STEP 2: If in farming map, find monsters
+            # STEP 2: If in farming map, ACTIVELY seek monsters
             if current_map.startswith("prt_fild") or current_map.endswith("_fild"):
-                logger.info("[SEQUENTIAL] Step 2: Already in farming map - searching for monsters")
-                # OpenKore's native AI will handle monster detection and combat
+                logger.info("[SEQUENTIAL] Step 2: Already in farming map - ACTIVELY seeking monsters")
+                # CRITICAL FIX #3: Use move_random for ACTIVE monster seeking (not passive waiting)
+                # This fixes the stuck loop where bot just sits and does nothing
                 return {
-                    "action": "continue",
+                    "action": "move_random",
                     "params": {
-                        "reason": "let_openkore_find_monsters",
-                        "priority": "medium"
+                        "max_distance": 15,  # Move up to 15 cells randomly
+                        "reason": "active_monster_search"
                     },
-                    "layer": "SUBCONSCIOUS"
+                    "layer": "TACTICAL"
                 }
         
         # Fallback: Basic combat decision or continue
