@@ -645,6 +645,7 @@ echo   - AI Service: %LOGS_DIR%\ai-service.log
 echo.
 
 pause
+endlocal
 exit /b 0
 
 :: ============================================================================
@@ -674,4 +675,5 @@ if not "!AI_SERVICE_PID!"=="" (
 )
 
 pause
+endlocal
 exit /b 1

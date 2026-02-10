@@ -77,10 +77,10 @@ class DatabaseImporter:
             )
             
             if all_success:
-                logger.info("✓ All databases imported successfully!")
+                logger.info(" All databases imported successfully!")
                 self._print_summary(time.time() - start_time)
             else:
-                logger.error("✗ Some imports failed, rolling back...")
+                logger.error(" Some imports failed, rolling back...")
                 await self.rollback_if_failed()
         
         except Exception as e:
@@ -154,16 +154,16 @@ class DatabaseImporter:
             # Test ID lookup
             test_monster = test_db.get_monster_by_id(1002)
             if test_monster:
-                logger.info(f"  ✓ ID lookup test: Found {test_monster.get('name')}")
+                logger.info(f"   ID lookup test: Found {test_monster.get('name')}")
             
             # Test name lookup
             test_monster = test_db.get_monster_by_name("Poring")
             if test_monster:
-                logger.info(f"  ✓ Name lookup test: Found ID {test_monster.get('id')}")
+                logger.info(f"   Name lookup test: Found ID {test_monster.get('id')}")
             
             # Test optimal target finding
             targets = test_db.find_optimal_targets({'level': 50, 'monsters': [1002, 1113, 1031]})
-            logger.info(f"  ✓ Optimal target test: Found {len(targets)} targets")
+            logger.info(f"   Optimal target test: Found {len(targets)} targets")
             
             # Get statistics
             stats = test_db.get_statistics()
@@ -176,13 +176,13 @@ class DatabaseImporter:
             if stats['load_time_seconds'] > 1.0:
                 logger.warning(f"⚠ Load time exceeds 1s: {stats['load_time_seconds']:.3f}s")
             else:
-                logger.info(f"  ✓ Performance: Load time {stats['load_time_seconds']:.3f}s < 1s")
+                logger.info(f"   Performance: Load time {stats['load_time_seconds']:.3f}s < 1s")
             
             self.import_results['monster_db']['status'] = 'success'
-            logger.info("✓ Monster database import successful")
+            logger.info(" Monster database import successful")
         
         except Exception as e:
-            logger.error(f"✗ Monster database import failed: {e}", exc_info=True)
+            logger.error(f" Monster database import failed: {e}", exc_info=True)
             self.import_results['monster_db']['status'] = 'failed'
             self.import_results['monster_db']['errors'].append(str(e))
     
@@ -257,16 +257,16 @@ class DatabaseImporter:
             # Test ID lookup
             test_item = test_db.get_item_by_id(909)
             if test_item:
-                logger.info(f"  ✓ ID lookup test: Found {test_item.get('name')}")
+                logger.info(f"   ID lookup test: Found {test_item.get('name')}")
             
             # Test name lookup
             test_item = test_db.get_item_by_name("Jellopy")
             if test_item:
-                logger.info(f"  ✓ Name lookup test: Found ID {test_item.get('id')}")
+                logger.info(f"   Name lookup test: Found ID {test_item.get('id')}")
             
             # Test category lookup
             cards = test_db.get_items_by_category("card")
-            logger.info(f"  ✓ Category lookup test: Found {len(cards)} cards")
+            logger.info(f"   Category lookup test: Found {len(cards)} cards")
             
             # Get statistics
             stats = test_db.get_statistics()
@@ -280,13 +280,13 @@ class DatabaseImporter:
             if stats['load_time_seconds'] > 1.0:
                 logger.warning(f"⚠ Load time exceeds 1s: {stats['load_time_seconds']:.3f}s")
             else:
-                logger.info(f"  ✓ Performance: Load time {stats['load_time_seconds']:.3f}s < 1s")
+                logger.info(f"   Performance: Load time {stats['load_time_seconds']:.3f}s < 1s")
             
             self.import_results['item_db']['status'] = 'success'
-            logger.info("✓ Item database import successful")
+            logger.info(" Item database import successful")
         
         except Exception as e:
-            logger.error(f"✗ Item database import failed: {e}", exc_info=True)
+            logger.error(f" Item database import failed: {e}", exc_info=True)
             self.import_results['item_db']['status'] = 'failed'
             self.import_results['item_db']['errors'].append(str(e))
     
@@ -351,7 +351,7 @@ class DatabaseImporter:
             logger.info(f"  Total load time: {total_load_time:.3f}s")
             
             if total_load_time < 0.5:
-                logger.info(f"  ✓ Load performance: {total_load_time:.3f}s < 0.5s")
+                logger.info(f"   Load performance: {total_load_time:.3f}s < 0.5s")
             else:
                 logger.warning(f"  ⚠ Load performance: {total_load_time:.3f}s > 0.5s")
             
@@ -374,7 +374,7 @@ class DatabaseImporter:
             logger.info(f"  Item lookup: {item_lookup_time:.3f}ms per query")
             
             if monster_lookup_time < 5.0 and item_lookup_time < 5.0:
-                logger.info(f"  ✓ Lookup performance: All queries < 5ms")
+                logger.info(f"   Lookup performance: All queries < 5ms")
             else:
                 logger.warning(f"  ⚠ Lookup performance: Some queries > 5ms")
             
@@ -389,13 +389,13 @@ class DatabaseImporter:
             custom_item = {'id': 60001, 'name': 'Custom Item'}
             adapter.register_custom_content('item', custom_item)
             
-            logger.info(f"  ✓ Server adapter: Registered custom content")
+            logger.info(f"   Server adapter: Registered custom content")
             
             self.import_results['integration_tests']['status'] = 'success'
-            logger.info("✓ Integration tests passed")
+            logger.info(" Integration tests passed")
         
         except Exception as e:
-            logger.error(f"✗ Integration tests failed: {e}", exc_info=True)
+            logger.error(f" Integration tests failed: {e}", exc_info=True)
             self.import_results['integration_tests']['status'] = 'failed'
             self.import_results['integration_tests']['errors'].append(str(e))
     
@@ -422,10 +422,10 @@ class DatabaseImporter:
                 logger.info(f"Restoring item DB from: {latest_item_backup}")
                 shutil.copy2(latest_item_backup, target)
             
-            logger.info("✓ Rollback complete")
+            logger.info(" Rollback complete")
         
         except Exception as e:
-            logger.error(f"✗ Rollback failed: {e}", exc_info=True)
+            logger.error(f" Rollback failed: {e}", exc_info=True)
     
     def _print_summary(self, total_time: float):
         """Print import summary."""
@@ -434,7 +434,7 @@ class DatabaseImporter:
         logger.info("=" * 80)
         
         for component, result in self.import_results.items():
-            status_icon = "✓" if result['status'] == 'success' else "✗"
+            status_icon = "" if result['status'] == 'success' else ""
             logger.info(f"{status_icon} {component}: {result['status']}")
             if result['errors']:
                 for error in result['errors']:

@@ -222,7 +222,7 @@ class LLMProviderChain:
         """Check availability of all providers"""
         for provider in self.providers:
             await provider.check_availability()
-            status = "[OK] Available" if provider.available else "✗ Unavailable"
+            status = "[OK] Available" if provider.available else " Unavailable"
             logger.info(f"  Priority {provider.priority}: {provider.name} - {status}")
             
     async def query(self, prompt: str, context: Dict[str, Any]) -> Optional[Dict[str, Any]]:

@@ -129,12 +129,12 @@ class IntegrationMonitor:
         
         # Health indicators
         if delta_requests > 0:
-            print(f"  ✓ OpenKore is communicating")
+            print(f"   OpenKore is communicating")
         else:
             print(f"  ⚠ No new requests (OpenKore may not be active)")
         
         if delta_queries > 0:
-            print(f"  ✓ Databases are being queried")
+            print(f"   Databases are being queried")
         elif self.stats['database_queries'] > 0:
             print(f"  ⚠ No new queries (but {self.stats['database_queries']} total)")
         else:
@@ -160,20 +160,20 @@ class IntegrationMonitor:
         # Diagnosis
         print("INTEGRATION HEALTH:")
         if self.stats['total_requests'] == 0:
-            print("  ✗ CRITICAL: No requests received - OpenKore not communicating")
+            print("   CRITICAL: No requests received - OpenKore not communicating")
         elif self.stats['decision_requests'] == 0:
-            print("  ✗ CRITICAL: No decision requests - GodTierAI.pm not calling API")
+            print("   CRITICAL: No decision requests - GodTierAI.pm not calling API")
         else:
-            print("  ✓ OpenKore communication: WORKING")
+            print("   OpenKore communication: WORKING")
         
         if self.stats['database_queries'] == 0:
-            print("  ✗ CRITICAL: No database queries - Databases not integrated")
+            print("   CRITICAL: No database queries - Databases not integrated")
         else:
-            print(f"  ✓ Database integration: WORKING ({self.stats['database_queries']} queries)")
+            print(f"   Database integration: WORKING ({self.stats['database_queries']} queries)")
         
         if self.stats['decision_requests'] > 0 and self.stats['database_queries'] > 0:
             print()
-            print("  ✓✓✓ FULL INTEGRATION: OPERATIONAL ✓✓✓")
+            print("   FULL INTEGRATION: OPERATIONAL ")
         else:
             print()
             print("  ⚠⚠⚠ INTEGRATION: INCOMPLETE ⚠⚠⚠")

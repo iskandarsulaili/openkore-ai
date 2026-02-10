@@ -390,7 +390,7 @@ class AutonomousHealingSystem:
                         if solution_action != 'N/A':
                             print(f"   💾 Solution: {solution_action}")
                 else:
-                    self.logger.warning(f"✗ Issue resolution failed: {issue_type}")
+                    self.logger.warning(f" Issue resolution failed: {issue_type}")
                     print(f"   [WARNING] Issue resolution incomplete: {issue_type}")
                     if 'error' in result:
                         self.logger.error(f"Error: {result['error']}")

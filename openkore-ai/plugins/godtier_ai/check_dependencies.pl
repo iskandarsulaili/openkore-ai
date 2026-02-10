@@ -37,13 +37,13 @@ foreach my $module (@required) {
     printf "  %-30s : ", $module;
     eval "require $module";
     if ($@) {
-        print "✗ MISSING\n";
+        print " MISSING\n";
         print "    Error: $@\n";
         print "    Install: cpanm $module\n";
         $all_ok = 0;
     } else {
         my $version = eval "\$${module}::VERSION" || "unknown";
-        print "✓ OK (version: $version)\n";
+        print " OK (version: $version)\n";
     }
 }
 
@@ -54,10 +54,10 @@ foreach my $module (@http_modules) {
     printf "  %-30s : ", $module;
     eval "require $module";
     if ($@) {
-        print "✗ Not installed\n";
+        print " Not installed\n";
     } else {
         my $version = eval "\$${module}::VERSION" || "unknown";
-        print "✓ Available (version: $version)\n";
+        print " Available (version: $version)\n";
         $http_available++;
     }
 }
@@ -69,7 +69,7 @@ if ($http_available == 0) {
     print "  Install with: cpanm LWP::UserAgent\n";
     $all_ok = 0;
 } else {
-    print "\n  ✓ At least one HTTP library is available\n";
+    print "\n   At least one HTTP library is available\n";
 }
 
 # Check optional modules
@@ -82,7 +82,7 @@ foreach my $module (@optional) {
         print "  Not installed (OK, but recommended)\n";
     } else {
         my $version = eval "\$${module}::VERSION" || "unknown";
-        print "✓ Available (version: $version)\n";
+        print " Available (version: $version)\n";
     }
 }
 
@@ -96,13 +96,13 @@ printf "  Operating System           : %s\n", $^O;
 # Final summary
 print "\n" . "=" x 60 . "\n";
 if ($all_ok) {
-    print "✓ SUCCESS: All required dependencies are installed!\n";
-    print "✓ godtier_ai plugin should load successfully.\n";
+    print " SUCCESS: All required dependencies are installed!\n";
+    print " godtier_ai plugin should load successfully.\n";
     print "=" x 60 . "\n";
     exit 0;
 } else {
-    print "✗ FAILURE: Some required dependencies are MISSING!\n";
-    print "✗ Plugin will NOT load until these are installed.\n";
+    print " FAILURE: Some required dependencies are MISSING!\n";
+    print " Plugin will NOT load until these are installed.\n";
     print "\n";
     print "Installation Instructions:\n";
     print "-" x 60 . "\n";

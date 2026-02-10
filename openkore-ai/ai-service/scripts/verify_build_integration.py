@@ -49,11 +49,11 @@ class BuildIntegrationVerifier:
             logger.info(f"\n[CHECK] {check_name}...")
             try:
                 check_func()
-                logger.success(f"✓ {check_name} passed")
+                logger.success(f" {check_name} passed")
                 self.success_count += 1
             except Exception as e:
                 self.errors.append(f"{check_name}: {str(e)}")
-                logger.error(f"✗ {check_name} failed: {e}")
+                logger.error(f" {check_name} failed: {e}")
         
         # Print summary
         self._print_summary()
@@ -271,7 +271,7 @@ class BuildIntegrationVerifier:
         if self.errors:
             logger.error("\nERRORS:")
             for error in self.errors:
-                logger.error(f"  ✗ {error}")
+                logger.error(f"   {error}")
         
         if self.warnings:
             logger.warning("\nWARNINGS:")
@@ -281,9 +281,9 @@ class BuildIntegrationVerifier:
         if not self.errors and not self.warnings:
             logger.success("\n🎉 All checks passed! Build variant integration is complete.")
         elif not self.errors:
-            logger.info("\n✓ Integration complete with minor warnings.")
+            logger.info("\n Integration complete with minor warnings.")
         else:
-            logger.error("\n✗ Integration has errors that need to be fixed.")
+            logger.error("\n Integration has errors that need to be fixed.")
         
         logger.info("=" * 70)
 

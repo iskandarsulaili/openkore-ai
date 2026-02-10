@@ -90,6 +90,7 @@ if !errorlevel! equ 0 (
                     echo Please install Python 3.11+ manually from:
                     echo https://www.python.org/downloads/
                     pause
+                    endlocal
                     exit /b 1
                 )
                 
@@ -104,6 +105,7 @@ if !errorlevel! equ 0 (
                     echo [ERROR] Python installation failed >> "%LOG_FILE%"
                     del "%TEMP%\python-installer.exe" >nul 2>&1
                     pause
+                    endlocal
                     exit /b 1
                 )
                 
@@ -120,6 +122,7 @@ if !errorlevel! equ 0 (
                     echo [ERROR] Python installation verification failed
                     echo [ERROR] Python installation verification failed >> "%LOG_FILE%"
                     pause
+                    endlocal
                     exit /b 1
                 )
                 
@@ -195,6 +198,7 @@ if !errorlevel! neq 0 (
             echo Please install Strawberry Perl manually from:
             echo https://strawberryperl.com/
             pause
+            endlocal
             exit /b 1
         )
         
@@ -245,6 +249,107 @@ if !errorlevel! neq 0 (
 )
 
 :: ============================================================================
+:: INSTALL PERL DEPENDENCIES (LWP::UserAgent for GodTierAI plugin)
+:: ============================================================================
+
+echo [INFO] Checking Perl module dependencies...
+echo [INFO] Checking Perl module dependencies... >> "%LOG_FILE%"
+
+:: Test if LWP::UserAgent module loads
+perl -e "use LWP::UserAgent; exit 0;" >nul 2>&1
+set PERL_LWP_TEST=%errorlevel%
+
+if %PERL_LWP_TEST%==0 goto perl_lwp_found
+goto perl_lwp_not_found
+
+:perl_lwp_found
+echo [SUCCESS] LWP::UserAgent module is installed
+echo [SUCCESS] LWP::UserAgent module is installed >> "%LOG_FILE%"
+
+:: Test if LWP::UserAgent can actually be USED (runtime verification)
+echo [INFO] Testing LWP::UserAgent runtime verification...
+echo [INFO] Testing LWP::UserAgent runtime verification... >> "%LOG_FILE%"
+perl -e "use LWP::UserAgent; my $ua = LWP::UserAgent->new; exit 0;" >nul 2>&1
+set PERL_LWP_RUNTIME_TEST=%errorlevel%
+
+if %PERL_LWP_RUNTIME_TEST%==0 goto perl_lwp_verified
+echo [WARNING] LWP::UserAgent loads but runtime creation FAILED
+echo [WARNING] LWP::UserAgent loads but runtime creation FAILED >> "%LOG_FILE%"
+echo [INFO] Attempting reinstall...
+echo [INFO] Attempting reinstall... >> "%LOG_FILE%"
+goto perl_lwp_not_found
+
+:perl_lwp_verified
+echo [SUCCESS] LWP::UserAgent runtime verification PASSED
+echo [SUCCESS] LWP::UserAgent runtime verification PASSED >> "%LOG_FILE%"
+goto perl_deps_done
+
+:perl_lwp_not_found
+echo [INFO] LWP::UserAgent not found, installing...
+echo [INFO] LWP::UserAgent not found, installing... >> "%LOG_FILE%"
+echo.
+echo [INFO] This may take 2-5 minutes on first CPAN run
+echo [INFO] CPAN will configure itself automatically
+
+:: Set environment variables to prevent cpan from hanging
+set PERL_MM_USE_DEFAULT=1
+set AUTOMATED_TESTING=1
+
+:: Try to install LWP::UserAgent using cpan with minimal output
+echo [INFO] Installing LWP::UserAgent via cpan (non-interactive, tests skipped)...
+echo [INFO] Installing LWP::UserAgent via cpan... >> "%LOG_FILE%"
+call cpan -T LWP::UserAgent 2>&1 | findstr /V "Reading" | findstr /V "Fetching" >> "%LOG_FILE%"
+
+echo.
+echo [INFO] Verifying LWP::UserAgent installation...
+echo [INFO] Verifying LWP::UserAgent installation... >> "%LOG_FILE%"
+perl -e "use LWP::UserAgent; my $ua = LWP::UserAgent->new; print qq(LWP::UserAgent successfully installed and verified\n);" 2>&1
+if %errorlevel%==0 (
+    echo [SUCCESS] LWP::UserAgent installed and working
+    echo [SUCCESS] LWP::UserAgent installed and working >> "%LOG_FILE%"
+    goto perl_deps_done
+)
+
+:: If cpan failed, provide comprehensive troubleshooting
+echo.
+echo [ERROR] LWP::UserAgent installation failed via cpan
+echo [ERROR] LWP::UserAgent installation failed via cpan >> "%LOG_FILE%"
+echo.
+echo ========================================================================
+echo   TROUBLESHOOTING - Try these methods in order:
+echo ========================================================================
+echo.
+echo METHOD 1 - Using cpanm (faster, recommended):
+echo   cpan App::cpanminus
+echo   cpanm LWP::UserAgent
+echo.
+echo METHOD 2 - Using Strawberry Perl Package Manager:
+echo   a. Ensure you have Strawberry Perl installed
+echo   b. Open Command Prompt as Administrator
+echo   c. Run: cpan -fi LWP::UserAgent
+echo.
+echo METHOD 3 - Manual installation:
+echo   a. Download from https://metacpan.org/dist/libwww-perl
+echo   b. Extract and follow installation instructions
+echo.
+echo METHOD 4 - Reinstall Strawberry Perl:
+echo   a. Download latest from https://strawberryperl.com/
+echo   b. Install (includes LWP::UserAgent by default in recent versions)
+echo.
+echo IMPORTANT: LWP::UserAgent is required for the GodTierAI plugin
+echo Without it, the plugin will run in degraded mode with limited features
+echo.
+echo After installation, run this setup script again.
+echo.
+echo For now, continuing setup (GodTierAI plugin will be disabled without LWP::UserAgent)...
+echo.
+pause
+
+:perl_deps_done
+echo [SUCCESS] Perl dependencies verified
+echo [SUCCESS] Perl dependencies verified >> "%LOG_FILE%"
+
+:: ============================================================================
 :: DETECT GPU
 :: ============================================================================
 
@@ -277,6 +382,7 @@ if exist "%VENV_DIR%\Scripts\python.exe" (
         echo [ERROR] Failed to create virtual environment
         echo [ERROR] Failed to create virtual environment >> "%LOG_FILE%"
         pause
+        endlocal
         exit /b 1
     )
     echo [SUCCESS] Virtual environment created
@@ -312,6 +418,7 @@ if !errorlevel! neq 0 (
     echo [ERROR] Failed to install PyTorch
     echo [ERROR] Failed to install PyTorch >> "%LOG_FILE%"
     pause
+    endlocal
     exit /b 1
 )
 echo [SUCCESS] PyTorch installed
@@ -425,6 +532,7 @@ if !DATA_MISSING! equ 1 (
     echo [ERROR] Please ensure all variant data files are present.
     echo [ERROR] Required data files are missing! >> "%LOG_FILE%"
     pause
+    endlocal
     exit /b 1
 )
 
@@ -1250,23 +1358,23 @@ if !errorlevel! equ 0 (
 
 echo.
 echo ========================================================================
-echo   ✅ Build Variant System Integration Complete!
+echo   [SUCCESS] Build Variant System Integration Complete!
 echo ========================================================================
 echo.
 echo Your configuration includes:
-echo   • Job Path: %JOB_PATH_NAME%
-echo   • Build Variant: %BUILD_NAME%
-echo   • Playstyle: %PLAYSTYLE_NAME%
-echo   • Stat Allocation: Fully Automated
-echo   • Job Advancement: Fully Automated
-echo   • Equipment Management: Fully Automated
+echo   - Job Path: %JOB_PATH_NAME%
+echo   - Build Variant: %BUILD_NAME%
+echo   - Playstyle: %PLAYSTYLE_NAME%
+echo   - Stat Allocation: Fully Automated
+echo   - Job Advancement: Fully Automated
+echo   - Equipment Management: Fully Automated
 echo.
 echo The AI will automatically:
-echo   ✓ Allocate stats based on your build variant
-echo   ✓ Learn skills in optimal order
-echo   ✓ Change jobs when ready (39 jobs supported)
-echo   ✓ Use appropriate skill rotations (42 jobs supported)
-echo   ✓ Manage equipment based on progression
+echo   [OK] Allocate stats based on your build variant
+echo   [OK] Learn skills in optimal order
+echo   [OK] Change jobs when ready (39 jobs supported)
+echo   [OK] Use appropriate skill rotations (42 jobs supported)
+echo   [OK] Manage equipment based on progression
 echo.
 echo [SUCCESS] Character configuration saved with full variant support!
 echo.
@@ -1281,6 +1389,25 @@ echo   STEP 6: Auto-Configuring OpenKore Bot
 echo ========================================================================
 echo.
 
+echo [INFO] Verifying user_intent.json was created...
+echo [INFO] Verifying user_intent.json was created... >> "%LOG_FILE%"
+
+REM Verify critical files exist before proceeding
+set "INTENT_FILE_CHECK=%SCRIPT_DIR%\ai-service\data\user_intent.json"
+if not exist "%INTENT_FILE_CHECK%" (
+    echo [ERROR] user_intent.json was not created properly!
+    echo [ERROR] user_intent.json was not created properly! >> "%LOG_FILE%"
+    echo [ERROR] Installation cannot continue without this file.
+    echo.
+    echo Please report this issue with the install.log file.
+    pause
+    endlocal
+    exit /b 1
+)
+
+echo [SUCCESS] user_intent.json verified
+echo [SUCCESS] user_intent.json verified >> "%LOG_FILE%"
+
 echo [INFO] Applying configuration to OpenKore config.txt...
 echo [INFO] Applying configuration to OpenKore config.txt... >> "%LOG_FILE%"
 
@@ -1291,24 +1418,46 @@ set "TOOLS_PATH=%AI_SERVICE_ROOT%\tools"
 set "CONFIG_PATH=%OPENKORE_ROOT%\control\config.txt"
 set "INTENT_PATH=%AI_SERVICE_ROOT%\data\user_intent.json"
 
-REM Activate venv and run auto-configure from correct directory
-cd /d "%AI_SERVICE_ROOT%"
-if exist "venv\Scripts\activate.bat" (
-    call venv\Scripts\activate.bat
-    python "%TOOLS_PATH%\auto_configure.py" "%CONFIG_PATH%" "%INTENT_PATH%"
-    set AUTO_CONFIG_RESULT=!errorlevel!
-    deactivate
-) else (
-    "%PYTHON_CMD%" "%TOOLS_PATH%\auto_configure.py" "%CONFIG_PATH%" "%INTENT_PATH%"
-    set AUTO_CONFIG_RESULT=!errorlevel!
+REM Verify auto_configure.py exists
+if not exist "%TOOLS_PATH%\auto_configure.py" (
+    echo [ERROR] auto_configure.py not found at: %TOOLS_PATH%\auto_configure.py
+    echo [ERROR] auto_configure.py not found >> "%LOG_FILE%"
+    echo [WARNING] Skipping auto-configuration
+    echo [WARNING] Skipping auto-configuration >> "%LOG_FILE%"
+    set AUTO_CONFIG_RESULT=1
+    goto skip_auto_config
 )
 
-cd /d "%OPENKORE_ROOT%"
+REM Verify config.txt exists
+if not exist "%CONFIG_PATH%" (
+    echo [ERROR] config.txt not found at: %CONFIG_PATH%
+    echo [ERROR] config.txt not found >> "%LOG_FILE%"
+    echo [WARNING] Skipping auto-configuration
+    echo [WARNING] Skipping auto-configuration >> "%LOG_FILE%"
+    set AUTO_CONFIG_RESULT=1
+    goto skip_auto_config
+)
+
+REM Run auto-configure using venv Python
+REM Note: Using venv Python directly instead of activating to avoid path issues
+echo [INFO] Running auto_configure.py with venv Python...
+echo [DEBUG] Python: %PYTHON_CMD%
+echo [DEBUG] Script: %TOOLS_PATH%\auto_configure.py
+echo [DEBUG] Config: %CONFIG_PATH%
+echo [DEBUG] Intent: %INTENT_PATH%
+
+"%PYTHON_CMD%" "%TOOLS_PATH%\auto_configure.py" "%CONFIG_PATH%" "%INTENT_PATH%" 2>&1 | findstr /V "^$"
+set AUTO_CONFIG_RESULT=!errorlevel!
+
+echo [DEBUG] auto_configure.py returned: !AUTO_CONFIG_RESULT!
+
+:skip_auto_config
 
 if !AUTO_CONFIG_RESULT! neq 0 (
-    echo [WARNING] Auto-configuration encountered issues
-    echo [WARNING] Auto-configuration encountered issues >> "%LOG_FILE%"
+    echo [WARNING] Auto-configuration encountered issues (exit code: !AUTO_CONFIG_RESULT!)
+    echo [WARNING] Auto-configuration encountered issues (exit code: !AUTO_CONFIG_RESULT!) >> "%LOG_FILE%"
     echo [WARNING] You may need to configure config.txt manually
+    echo [WARNING] Continuing with installation...
     echo.
 ) else (
     echo [SUCCESS] Config.txt auto-configured successfully!
@@ -1321,26 +1470,26 @@ if !AUTO_CONFIG_RESULT! neq 0 (
 
 echo.
 echo ========================================================================
-echo   ✅ Autonomous Item Purchasing Enabled
+echo   [SUCCESS] Autonomous Item Purchasing Enabled
 echo ========================================================================
 echo.
 echo   Your bot is configured for FULL AUTONOMY:
 echo.
-echo   🤖 AUTOMATIC ITEM PURCHASING:
-echo   • Bot will auto-buy Red Potions (healing)
-echo   • Bot will auto-buy Fly Wings (emergency teleport)
-echo   • No manual item purchasing needed!
+echo   [AUTOMATIC ITEM PURCHASING]:
+echo   - Bot will auto-buy Red Potions (healing)
+echo   - Bot will auto-buy Fly Wings (emergency teleport)
+echo   - No manual item purchasing needed!
 echo.
-echo   💰 Initial Zeny Requirement:
-echo   • Your character needs ~20,000 zeny to start buying items
-echo   • If you have less: Bot will farm first, then buy items automatically
-echo   • If you have more: Bot starts buying items immediately
+echo   [Initial Zeny Requirement]:
+echo   - Your character needs ~20,000 zeny to start buying items
+echo   - If you have less: Bot will farm first, then buy items automatically
+echo   - If you have more: Bot starts buying items immediately
 echo.
-echo   📍 NPC Location: Prontera Tool Shop (152, 29)
-echo   • Bot knows where to go automatically
-echo   • Bot will walk there when items run low
+echo   [NPC Location]: Prontera Tool Shop (152, 29)
+echo   - Bot knows where to go automatically
+echo   - Bot will walk there when items run low
 echo.
-echo   ✅ 95%% AUTONOMOUS OPERATION:
+echo   [95%% AUTONOMOUS OPERATION]:
 echo   1. Farm monsters for zeny and exp
 echo   2. Auto-buy healing items when low
 echo   3. Auto-heal when HP drops
@@ -1356,7 +1505,7 @@ echo.
 
 echo.
 echo ========================================================================
-echo   ✅ Installation Complete!
+echo   [SUCCESS] Installation Complete!
 echo ========================================================================
 echo.
 echo [SUCCESS] Installation completed successfully
@@ -1365,6 +1514,7 @@ echo.
 echo Installed components:
 echo   - Python: %PYTHON_VERSION%
 echo   - Perl: %PERL_VERSION%
+echo   - Perl Modules: LWP::UserAgent (for GodTierAI plugin)
 echo   - PyTorch: GPU Support = !HAS_GPU!
 echo   - Character Build: %BUILD_NAME% (%PLAYSTYLE_NAME%)
 echo   - Job Path: %JOB_PATH_NAME%
@@ -1372,43 +1522,43 @@ echo   - Build Variant System: ENABLED (55 variants across 11 paths)
 echo   - Bot Configuration: Auto-applied to config.txt
 echo.
 echo Build Variant Integration:
-echo   ✓ Job Build Variants: 55 builds (11 paths x 5 variants)
-echo   ✓ Job Change Locations: 39 jobs supported
-echo   ✓ Skill Rotations: 42 jobs supported
-echo   ✓ Stat Allocation: Fully automated per build
-echo   ✓ Job Advancement: Fully automated
+echo   [OK] Job Build Variants: 55 builds (11 paths x 5 variants)
+echo   [OK] Job Change Locations: 39 jobs supported
+echo   [OK] Skill Rotations: 42 jobs supported
+echo   [OK] Stat Allocation: Fully automated per build
+echo   [OK] Job Advancement: Fully automated
 echo.
 echo Log file: %LOG_FILE%
 echo.
 echo ========================================================================
-echo   ⚡ NEXT STEPS (IN ORDER):
+echo   NEXT STEPS (IN ORDER):
 echo ========================================================================
 echo.
-echo   1. ✅ API Key: Configured automatically during installation
-echo      • If you skipped API key entry, you can add it manually to ai-service\.env
-echo      • Format: DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxx
+echo   1. [API Key]: Configured automatically during installation
+echo      - If you skipped API key entry, you can add it manually to ai-service\.env
+echo      - Format: DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxx
 echo.
-echo   2. 💰 Optional - Give Character Zeny:
-echo      • If your character has ^<20k zeny, consider giving some zeny
-echo      • Bot can farm first, but 20k+ zeny allows immediate item buying
-echo      • Bot will AUTO-BUY items - no manual purchasing needed!
+echo   2. [Optional] - Give Character Zeny:
+echo      - If your character has less than 20k zeny, consider giving some zeny
+echo      - Bot can farm first, but 20k+ zeny allows immediate item buying
+echo      - Bot will AUTO-BUY items - no manual purchasing needed!
 echo.
-echo   3. 🚀 Start the system:
-echo      • Run: start.bat
-echo      • AI Engine will start first (port 9901)
-echo      • AI Service will start second (port 9902)
-echo      • OpenKore will start last
+echo   3. [Start the system]:
+echo      - Run: start.bat
+echo      - AI Engine will start first (port 9901)
+echo      - AI Service will start second (port 9902)
+echo      - OpenKore will start last
 echo.
-echo   4. 🎮 What Your Bot Will Do Automatically:
-echo      • Allocate stats according to %BUILD_NAME% build
-echo      • Learn skills in optimal order
-echo      • Change jobs when level requirements are met
-echo      • Use appropriate skill rotations for your job
-echo      • Manage equipment based on progression
-echo      • Farm, heal, and purchase items autonomously
+echo   4. [What Your Bot Will Do Automatically]:
+echo      - Allocate stats according to %BUILD_NAME% build
+echo      - Learn skills in optimal order
+echo      - Change jobs when level requirements are met
+echo      - Use appropriate skill rotations for your job
+echo      - Manage equipment based on progression
+echo      - Farm, heal, and purchase items autonomously
 echo.
 echo ========================================================================
-echo   ✅ FULL AUTONOMY ACHIEVED WITH BUILD VARIANT SYSTEM!
+echo   FULL AUTONOMY ACHIEVED WITH BUILD VARIANT SYSTEM
 echo ========================================================================
 echo.
 echo Your bot now has access to 55 pre-configured build variants
@@ -1416,4 +1566,5 @@ echo across 11 job paths with complete automation support.
 echo.
 
 pause
+endlocal
 exit /b 0

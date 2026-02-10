@@ -232,7 +232,7 @@ class MacroManagementCoordinator:
             return result
             
         except Exception as e:
-            logger.error(f"  ✗ Deployment failed: {e}")
+            logger.error(f"   Deployment failed: {e}")
             self._processing_stats['deployment_failures'] += 1
             return {'status': 'failed', 'error': str(e)}
     

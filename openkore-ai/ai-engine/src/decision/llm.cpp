@@ -1,4 +1,5 @@
 #include "../../include/decision/llm.hpp"
+#include "../../include/logger.hpp"
 #include <httplib.h>
 #include <nlohmann/json.hpp>
 #include <chrono>
@@ -9,9 +10,11 @@ using json = nlohmann::json;
 namespace openkore_ai {
 namespace decision {
 
-LLMTier::LLMTier(const std::string& python_service_url) 
+LLMTier::LLMTier(const std::string& python_service_url)
     : python_service_url_(python_service_url) {
-    std::cout << "[LLMTier] Initialized with Python service: " << python_service_url_ << std::endl;
+    // Note: Do not log in constructor as logger may not be initialized yet
+    // Logging will occur on first use
+    std::cout << "[LLMTier] Constructor: Python service URL = " << python_service_url_ << std::endl;
 }
 
 bool LLMTier::should_handle(const GameState& state) const {
@@ -37,16 +40,19 @@ bool LLMTier::should_handle(const GameState& state) const {
 }
 
 Action LLMTier::decide(const GameState& state) {
+    using namespace openkore_ai::logging;
     auto start = std::chrono::steady_clock::now();
     
-    std::cout << "[LLMTier] Querying Python AI Service for strategic decision..." << std::endl;
+    Logger::info("Querying Python AI Service for strategic decision...", "LLMTier");
     
     auto result = query_python_service(state);
     
     auto end = std::chrono::steady_clock::now();
     auto latency_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     
-    std::cout << "[LLMTier] Query completed in " << latency_ms << "ms" << std::endl;
+    std::ostringstream msg;
+    msg << "Query completed in " << latency_ms << "ms";
+    Logger::info(msg.str(), "LLMTier");
     
     // Update last query time
     last_query_time_ms_ = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -66,7 +72,11 @@ Action LLMTier::decide(const GameState& state) {
 }
 
 std::optional<Action> LLMTier::query_python_service(const GameState& state) {
+    using namespace openkore_ai::logging;
+    
     try {
+        Logger::debug("Connecting to Python AI Service...", "LLMTier");
+        
         // Parse URL
         httplib::Client client("http://127.0.0.1:9902");
         client.set_connection_timeout(5, 0);  // 5 seconds connection timeout
@@ -79,20 +89,28 @@ std::optional<Action> LLMTier::query_python_service(const GameState& state) {
         request_json["context"] = "Strategic planning for character progression";
         request_json["request_id"] = "llm_" + std::to_string(state.timestamp_ms);
         
+        Logger::log_request("POST", "/api/v1/llm/query", request_json.dump(), request_json.dump().size());
+        
         // Send POST request
         auto response = client.Post("/api/v1/llm/query",
                                    request_json.dump(),
                                    "application/json");
         
         if (!response) {
-            std::cerr << "[LLMTier] Failed to connect to Python service" << std::endl;
+            Logger::error("Failed to connect to Python service at http://127.0.0.1:9902", "LLMTier");
             return std::nullopt;
         }
         
         if (response->status != 200) {
-            std::cerr << "[LLMTier] Python service returned error: " << response->status << std::endl;
+            std::ostringstream msg;
+            msg << "Python service returned error status: " << response->status;
+            Logger::error(msg.str(), "LLMTier");
+            Logger::debug("Response body: " + response->body, "LLMTier");
             return std::nullopt;
         }
+        
+        Logger::info("Received response from Python AI Service", "LLMTier");
+        Logger::log_response("/api/v1/llm/query", response->status, 0, response->body);
         
         // Parse response
         json response_json = json::parse(response->body);
@@ -110,13 +128,15 @@ std::optional<Action> LLMTier::query_python_service(const GameState& state) {
                 }
             }
             
+            Logger::info("Successfully parsed LLM action: " + action.type, "LLMTier");
             return action;
         }
         
+        Logger::warning("Response does not contain valid action", "LLMTier");
         return std::nullopt;
         
     } catch (const std::exception& e) {
-        std::cerr << "[LLMTier] Exception during query: " << e.what() << std::endl;
+        Logger::error(std::string("Exception during query: ") + e.what(), "LLMTier");
         return std::nullopt;
     }
 }

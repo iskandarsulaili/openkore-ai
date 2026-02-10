@@ -58,7 +58,7 @@ def test_trigger_models():
         cooldown=1
     )
     
-    print(f"✓ Created trigger: {trigger.name}")
+    print(f" Created trigger: {trigger.name}")
     print(f"  Layer: {trigger.layer.name}")
     print(f"  Priority: {trigger.priority}")
     print(f"  Cooldown: {trigger.cooldown}s")
@@ -86,11 +86,11 @@ def test_trigger_registry():
         )
         registry.register(trigger)
     
-    print(f"✓ Registered 3 triggers")
+    print(f" Registered 3 triggers")
     
     # Test retrieval
     triggers = registry.get_triggers_for_layer(LayerPriority.REFLEX)
-    print(f"✓ Retrieved {len(triggers)} triggers for REFLEX layer")
+    print(f" Retrieved {len(triggers)} triggers for REFLEX layer")
     
     # Verify sorting by priority
     priorities = [t.priority for t in triggers]
@@ -99,7 +99,7 @@ def test_trigger_registry():
     
     # Test statistics
     stats = registry.get_statistics()
-    print(f"✓ Statistics: {stats['total_triggers']} total triggers")
+    print(f" Statistics: {stats['total_triggers']} total triggers")
     
     return True
 
@@ -127,7 +127,7 @@ def test_trigger_evaluator():
     )
     
     result = evaluator.evaluate_condition(hp_condition, game_state)
-    print(f"✓ HP Critical (20 <= 25): {result}")
+    print(f" HP Critical (20 <= 25): {result}")
     assert result == True, "HP critical condition should be True"
     
     # Test compound condition
@@ -141,7 +141,7 @@ def test_trigger_evaluator():
     )
     
     result = evaluator.evaluate_condition(compound_condition, game_state)
-    print(f"✓ Compound AND (HP<=30 AND SP>40): {result}")
+    print(f" Compound AND (HP<=30 AND SP>40): {result}")
     assert result == True, "Compound condition should be True"
     
     # Test cooldown
@@ -156,7 +156,7 @@ def test_trigger_evaluator():
     )
     
     can_execute = evaluator.check_cooldown(trigger)
-    print(f"✓ Cooldown check (never executed): {can_execute}")
+    print(f" Cooldown check (never executed): {can_execute}")
     assert can_execute == True, "Should be able to execute on first run"
     
     return True
@@ -200,7 +200,7 @@ async def test_trigger_executor():
     
     result = await executor.execute_action(trigger, game_state)
     
-    print(f"✓ Execution result: {result.success}")
+    print(f" Execution result: {result.success}")
     print(f"  Execution time: {result.execution_time_ms:.2f}ms")
     print(f"  Action: {result.result.get('action')}")
     
@@ -268,7 +268,7 @@ async def test_trigger_coordinator():
     
     result = await coordinator.process_game_state(game_state)
     
-    print(f"✓ Coordinator result: {result}")
+    print(f" Coordinator result: {result}")
     assert result is not None, "Should return action for critical HP"
     assert result['action'] == 'emergency_heal', "Wrong action returned"
     
@@ -276,12 +276,12 @@ async def test_trigger_coordinator():
     game_state['character']['hp_percent'] = 80
     result = await coordinator.process_game_state(game_state)
     
-    print(f"✓ Safe HP result: {result}")
+    print(f" Safe HP result: {result}")
     assert result is None, "Should not fire trigger when HP is safe"
     
     # Test statistics
     stats = coordinator.get_statistics()
-    print(f"✓ Coordinator stats:")
+    print(f" Coordinator stats:")
     print(f"  Total checks: {stats['total_checks']}")
     print(f"  Triggers fired: {stats['total_triggers_fired']}")
     
@@ -297,18 +297,18 @@ def test_state_manager():
     # Test basic operations
     state.set('test_key', 'test_value')
     value = state.get('test_key')
-    print(f"✓ Set and get: {value}")
+    print(f" Set and get: {value}")
     assert value == 'test_value', "State get/set failed"
     
     # Test layer-specific state
     state.set_layer_state(LayerPriority.REFLEX, 'hp_check_count', 5)
     layer_value = state.get_layer_state(LayerPriority.REFLEX, 'hp_check_count')
-    print(f"✓ Layer state: {layer_value}")
+    print(f" Layer state: {layer_value}")
     assert layer_value == 5, "Layer state get/set failed"
     
     # Test statistics
     stats = state.get_statistics()
-    print(f"✓ State statistics:")
+    print(f" State statistics:")
     print(f"  Global state size: {stats['global_state_size']}")
     print(f"  Total gets: {stats['total_gets']}")
     print(f"  Total sets: {stats['total_sets']}")
@@ -327,10 +327,10 @@ async def test_config_loading():
     
     if config_path.exists():
         loaded_count = registry.load_from_config(str(config_path))
-        print(f"✓ Loaded {loaded_count} triggers from config")
+        print(f" Loaded {loaded_count} triggers from config")
         
         stats = registry.get_statistics()
-        print(f"✓ Distribution across layers:")
+        print(f" Distribution across layers:")
         for layer, info in stats['layers'].items():
             print(f"  {layer}: {info['enabled']} enabled / {info['total']} total")
         

@@ -5,12 +5,18 @@
 #include <thread>
 #include <chrono>
 #include <mutex>
+#include <filesystem>
+#include <exception>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include "types.hpp"
 #include "decision/reflex.hpp"
 #include "decision/rules.hpp"
 #include "decision/ml.hpp"
 #include "decision/llm.hpp"
 #include "coordinators/coordinator_manager.hpp"
+#include "logger.hpp"
 
 using json = nlohmann::json;
 using namespace openkore_ai;
@@ -92,13 +98,13 @@ GameState parse_game_state(const json& j) {
     
     // Parse nearby players
     if (j.contains("nearby_players")) {
-        for (const auto& p : j["nearby_players"]) {
+        for (const auto& player_json : j["nearby_players"]) {
             Player player;
-            player.name = p["name"];
-            player.level = p["level"];
-            player.guild = p.value("guild", "");
-            player.distance = p["distance"];
-            player.is_party_member = p.value("is_party_member", false);
+            player.name = player_json["name"];
+            player.level = player_json["level"];
+            player.guild = player_json.value("guild", "");
+            player.distance = player_json["distance"];
+            player.is_party_member = player_json.value("is_party_member", false);
             state.nearby_players.push_back(player);
         }
     }
@@ -214,37 +220,133 @@ done:
     return response;
 }
 
+// Helper function for early error reporting (before logger is ready)
+void report_early_error(const std::string& message) {
+    std::cerr << "[CRITICAL ERROR] " << message << std::endl;
+#ifdef _WIN32
+    MessageBoxA(NULL, message.c_str(), "AI Engine - Critical Error", MB_OK | MB_ICONERROR);
+#endif
+}
+
 int main() {
-    httplib::Server server;
-    
-    std::cout << "OpenKore AI Engine v1.0.0 (Phase 5)" << std::endl;
-    std::cout << "Starting HTTP server on http://127.0.0.1:9901" << std::endl;
-    
-    // Initialize decision tiers
-    std::cout << "Initializing decision tiers..." << std::endl;
-    reflex_tier = std::make_unique<decision::ReflexTier>();
-    rules_tier = std::make_unique<decision::RulesTier>();
-    ml_tier = std::make_unique<decision::MLTier>();
-    llm_tier = std::make_unique<decision::LLMTier>("http://127.0.0.1:9902");
-    std::cout << "All decision tiers initialized successfully" << std::endl;
-    
-    // Initialize coordinator framework (Phase 5)
-    std::cout << "\nInitializing coordinator framework (Phase 5)..." << std::endl;
-    coordinator_manager = std::make_unique<coordinators::CoordinatorManager>();
-    coordinator_manager->initialize();
-    std::cout << "Coordinator framework initialized successfully\n" << std::endl;
-    
-    // POST /api/v1/decide - Main decision endpoint
-    server.Post("/api/v1/decide", [](const httplib::Request& req, httplib::Response& res) {
+    // PHASE 1: Early initialization checks (before any complex operations)
+    try {
+        std::cout << "[STARTUP] AI Engine starting..." << std::endl;
+        std::cout << "[STARTUP] Working directory: " << std::filesystem::current_path().string() << std::endl;
+        
+        // Validate logs directory can be created
+        std::cout << "[STARTUP] Creating logs directory..." << std::endl;
         try {
+            std::filesystem::create_directories("logs");
+            if (!std::filesystem::exists("logs")) {
+                throw std::runtime_error("Failed to create logs directory - directory does not exist after creation");
+            }
+            if (!std::filesystem::is_directory("logs")) {
+                throw std::runtime_error("'logs' exists but is not a directory");
+            }
+            std::cout << "[STARTUP] Logs directory ready: " << std::filesystem::absolute("logs").string() << std::endl;
+        } catch (const std::exception& e) {
+            std::string error_msg = std::string("Failed to create logs directory: ") + e.what();
+            report_early_error(error_msg);
+            return 1;
+        }
+        
+        // PHASE 2: Initialize logger
+        std::cout << "[STARTUP] Initializing logger..." << std::endl;
+        try {
+            using namespace openkore_ai::logging;
+            Logger::initialize("logs");
+            Logger::info("========================================");
+            Logger::info("OpenKore AI Engine v1.0.0 (Phase 5)");
+            Logger::info("Starting HTTP server on http://127.0.0.1:9901");
+            Logger::info("Working directory: " + std::filesystem::current_path().string());
+            Logger::info("========================================");
+            std::cout << "[STARTUP] Logger initialized successfully" << std::endl;
+        } catch (const std::exception& e) {
+            std::string error_msg = std::string("Failed to initialize logger: ") + e.what();
+            report_early_error(error_msg);
+            return 1;
+        }
+        
+        // PHASE 3: Create HTTP server
+        using namespace openkore_ai::logging;
+        std::cout << "[STARTUP] Creating HTTP server..." << std::endl;
+        std::unique_ptr<httplib::Server> server;
+        try {
+            server = std::make_unique<httplib::Server>();
+            Logger::info("HTTP server instance created");
+            std::cout << "[STARTUP] HTTP server created successfully" << std::endl;
+        } catch (const std::exception& e) {
+            std::string error_msg = std::string("Failed to create HTTP server: ") + e.what();
+            Logger::error(error_msg);
+            report_early_error(error_msg);
+            return 1;
+        }
+        
+        // PHASE 4: Initialize decision tiers
+        std::cout << "[STARTUP] Initializing decision tiers..." << std::endl;
+        try {
+            Logger::info("Initializing decision tiers...");
+            
+            Logger::debug("Creating ReflexTier...");
+            reflex_tier = std::make_unique<decision::ReflexTier>();
+            
+            Logger::debug("Creating RulesTier...");
+            rules_tier = std::make_unique<decision::RulesTier>();
+            
+            Logger::debug("Creating MLTier...");
+            ml_tier = std::make_unique<decision::MLTier>();
+            
+            Logger::debug("Creating LLMTier...");
+            llm_tier = std::make_unique<decision::LLMTier>("http://127.0.0.1:9902");
+            
+            Logger::info("All decision tiers initialized successfully");
+            std::cout << "[STARTUP] Decision tiers initialized successfully" << std::endl;
+        } catch (const std::exception& e) {
+            std::string error_msg = std::string("Failed to initialize decision tiers: ") + e.what();
+            Logger::error(error_msg);
+            report_early_error(error_msg);
+            return 1;
+        }
+        
+        // PHASE 5: Initialize coordinator framework
+        std::cout << "[STARTUP] Initializing coordinator framework..." << std::endl;
+        try {
+            Logger::info("Initializing coordinator framework (Phase 5)...");
+            coordinator_manager = std::make_unique<coordinators::CoordinatorManager>();
+            coordinator_manager->initialize();
+            Logger::info("Coordinator framework initialized successfully");
+            std::cout << "[STARTUP] Coordinator framework initialized successfully" << std::endl;
+        } catch (const std::exception& e) {
+            std::string error_msg = std::string("Failed to initialize coordinator framework: ") + e.what();
+            Logger::error(error_msg);
+            report_early_error(error_msg);
+            return 1;
+        }
+    
+        // PHASE 6: Register HTTP endpoints
+        std::cout << "[STARTUP] Registering HTTP endpoints..." << std::endl;
+        Logger::info("Registering HTTP endpoints...");
+        
+        // POST /api/v1/decide - Main decision endpoint
+        server->Post("/api/v1/decide", [](const httplib::Request& req, httplib::Response& res) {
+        using namespace openkore_ai::logging;
+        auto start_time = std::chrono::steady_clock::now();
+        
+        try {
+            // Log incoming request
+            Logger::log_request("POST", "/api/v1/decide", req.body, req.body.size());
+            
             json request_json = json::parse(req.body);
             GameState state = parse_game_state(request_json["game_state"]);
             std::string request_id = request_json.value("request_id", "unknown");
             
-            std::cout << "[DECIDE] Request " << request_id 
-                     << " - Character: " << state.character.name 
-                     << " (Lv " << state.character.level << ", "
-                     << state.character.hp << "/" << state.character.max_hp << " HP)" << std::endl;
+            std::ostringstream msg;
+            msg << "Request " << request_id
+                << " - Character: " << state.character.name
+                << " (Lv " << state.character.level << ", "
+                << state.character.hp << "/" << state.character.max_hp << " HP)";
+            Logger::info(msg.str(), "DECIDE");
             
             // Make decision using multi-tier system
             DecisionResponse decision = make_decision(state, request_id);
@@ -256,24 +358,37 @@ int main() {
             response_json["latency_ms"] = decision.latency_ms;
             response_json["request_id"] = decision.request_id;
             
-            std::cout << "[DECIDE] Response: " << decision.action.type 
+            std::ostringstream resp_msg;
+            resp_msg << "Response: " << decision.action.type
                      << " via " << tier_to_string(decision.tier_used)
-                     << " (" << decision.latency_ms << "ms)" << std::endl;
+                     << " (" << decision.latency_ms << "ms)";
+            Logger::info(resp_msg.str(), "DECIDE");
             
             res.set_content(response_json.dump(), "application/json");
             res.status = 200;
             
+            // Log response
+            auto end_time = std::chrono::steady_clock::now();
+            auto latency_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+            Logger::log_response("/api/v1/decide", 200, latency_ms, response_json.dump());
+            
         } catch (const std::exception& e) {
+            Logger::error(std::string("Exception: ") + e.what(), "DECIDE");
+            
             json error_json;
             error_json["error"] = e.what();
             res.set_content(error_json.dump(), "application/json");
             res.status = 500;
-            std::cerr << "[ERROR] " << e.what() << std::endl;
+            
+            // Log error response
+            auto end_time = std::chrono::steady_clock::now();
+            auto latency_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+            Logger::log_response("/api/v1/decide", 500, latency_ms, error_json.dump());
         }
     });
     
-    // GET /api/v1/health - Health check endpoint
-    server.Get("/api/v1/health", [](const httplib::Request&, httplib::Response& res) {
+        // GET /api/v1/health - Health check endpoint
+        server->Get("/api/v1/health", [](const httplib::Request&, httplib::Response& res) {
         auto now = std::chrono::steady_clock::now();
         long long uptime_seconds = std::chrono::duration_cast<std::chrono::seconds>(now - start_time).count();
         
@@ -291,8 +406,8 @@ int main() {
         res.status = 200;
     });
     
-    // GET /api/v1/metrics - Metrics endpoint
-    server.Get("/api/v1/metrics", [](const httplib::Request&, httplib::Response& res) {
+        // GET /api/v1/metrics - Metrics endpoint
+        server->Get("/api/v1/metrics", [](const httplib::Request&, httplib::Response& res) {
         std::lock_guard<std::mutex> lock(stats.stats_mutex);
         
         json metrics_json;
@@ -307,12 +422,63 @@ int main() {
         res.status = 200;
     });
     
-    // Start server
-    std::cout << "Server ready. Listening for requests..." << std::endl;
-    if (!server.listen("127.0.0.1", 9901)) {
-        std::cerr << "Failed to start server" << std::endl;
+        Logger::info("All HTTP endpoints registered");
+        std::cout << "[STARTUP] HTTP endpoints registered successfully" << std::endl;
+        
+        // PHASE 7: Start server
+        std::cout << "[STARTUP] Starting HTTP server on 127.0.0.1:9901..." << std::endl;
+        Logger::info("========================================");
+        Logger::info("Server ready. Starting listener...");
+        Logger::info("Endpoint: http://127.0.0.1:9901");
+        Logger::info("Logs directory: " + std::filesystem::absolute("logs").string());
+        Logger::info("========================================");
+        
+        std::cout << "========================================" << std::endl;
+        std::cout << "AI Engine is running!" << std::endl;
+        std::cout << "Endpoint: http://127.0.0.1:9901" << std::endl;
+        std::cout << "Press Ctrl+C to stop" << std::endl;
+        std::cout << "========================================" << std::endl;
+        
+        if (!server->listen("127.0.0.1", 9901)) {
+            std::string error_msg = "Failed to start server on port 9901 - port may be in use or access denied";
+            Logger::error(error_msg);
+            report_early_error(error_msg);
+            Logger::cleanup();
+            return 1;
+        }
+        
+        // Server stopped
+        Logger::info("Server stopped");
+        Logger::cleanup();
+        return 0;
+        
+    } catch (const std::exception& e) {
+        std::string error_msg = std::string("Unhandled exception in main: ") + e.what();
+        std::cerr << "[FATAL] " << error_msg << std::endl;
+        report_early_error(error_msg);
+        
+        try {
+            using namespace openkore_ai::logging;
+            Logger::error(error_msg);
+            Logger::cleanup();
+        } catch (...) {
+            // Logger might not be initialized
+        }
+        
+        return 1;
+    } catch (...) {
+        std::string error_msg = "Unknown exception in main()";
+        std::cerr << "[FATAL] " << error_msg << std::endl;
+        report_early_error(error_msg);
+        
+        try {
+            using namespace openkore_ai::logging;
+            Logger::error(error_msg);
+            Logger::cleanup();
+        } catch (...) {
+            // Logger might not be initialized
+        }
+        
         return 1;
     }
-    
-    return 0;
 }

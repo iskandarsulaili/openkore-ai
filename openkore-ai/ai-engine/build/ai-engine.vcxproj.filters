@@ -46,6 +46,9 @@
     <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\decision\rules.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\logger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="D:\RO\bot\renew\openkore-ai\ai-engine\src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -94,6 +97,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\decision\rules.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\logger.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="D:\RO\bot\renew\openkore-ai\ai-engine\include\types.hpp">

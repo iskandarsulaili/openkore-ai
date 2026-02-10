@@ -449,7 +449,7 @@ class ConfigValidator:
     def print_report(self) -> None:
         """Print validation report to logger"""
         if self.error_count == 0 and self.warning_count == 0:
-            logger.info("✓ Configuration validation passed")
+            logger.info(" Configuration validation passed")
             return
         
         logger.warning("=" * 80)

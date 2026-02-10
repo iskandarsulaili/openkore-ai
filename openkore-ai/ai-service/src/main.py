@@ -147,6 +147,10 @@ from loot.tactical_retrieval import TacticalLootRetrieval
 from loot.loot_learner import LootLearner
 from loot.loot_decision_handler import handle_loot_decision
 
+# Import Phase 5-7 Planning System components
+from planning.sequential_planner import SequentialPlanner
+from planning.action_queue import ActionQueue
+
 # Lifespan context manager for startup/shutdown
 # ============================================================================
 # PHASE 70: ENHANCED STARTUP LOGGING
@@ -182,6 +186,10 @@ trigger_state = None
 monster_db = None
 item_db = None
 server_adapter = None
+
+# Initialize Planning System (Phase 5-7)
+sequential_planner = None
+action_queue = None
 
 def load_metadata_configs():
     """Load all metadata configuration files"""
@@ -221,7 +229,7 @@ def load_metadata_configs():
     try:
         user_intent_path = data_dir / "user_intent.json"
         if user_intent_path.exists():
-            with open(user_intent_path, 'r', encoding='utf-8') as f:
+            with open(user_intent_path, 'r', encoding='utf-8-sig') as f:
                 USER_INTENT = json.load(f)
             logger.info(f"[CONFIG] Loaded user_intent.json: target_job={USER_INTENT.get('character', {}).get('target_job', 'unknown')}")
         else:
@@ -483,14 +491,14 @@ def load_configurations():
     
     # Load OpenKore tables
     table_loader = get_table_loader(server="ROla")
-    logger.info(f"[CONFIG] ✓ Table loader initialized for server: ROla")
+    logger.info(f"[CONFIG]  Table loader initialized for server: ROla")
     
     # Load thresholds configuration
     thresholds_file = Path(__file__).parent.parent / "data" / "thresholds_config.json"
     if thresholds_file.exists():
         with open(thresholds_file, 'r', encoding='utf-8') as f:
             thresholds_config = json.load(f)
-        logger.info(f"[CONFIG] ✓ Loaded thresholds config with {len(thresholds_config)} categories")
+        logger.info(f"[CONFIG]  Loaded thresholds config with {len(thresholds_config)} categories")
     else:
         logger.warning(f"[CONFIG] ⚠ Thresholds config not found: {thresholds_file}")
         thresholds_config = {
@@ -501,7 +509,7 @@ def load_configurations():
     
     # Initialize NPC handler (loads npc_config.json)
     npc_handler = get_npc_handler()
-    logger.info(f"[CONFIG] ✓ NPC handler initialized")
+    logger.info(f"[CONFIG]  NPC handler initialized")
     
     # Load metadata configurations (map metadata, skill metadata, user intent, job builds)
     load_metadata_configs()
@@ -509,8 +517,8 @@ def load_configurations():
     # Log what was loaded from tables
     items = table_loader.load_items()
     healing_items = table_loader.get_healing_items()
-    logger.info(f"[CONFIG] ✓ Loaded {len(items)} items from OpenKore tables")
-    logger.info(f"[CONFIG] ✓ Verified {len(healing_items)} healing items")
+    logger.info(f"[CONFIG]  Loaded {len(items)} items from OpenKore tables")
+    logger.info(f"[CONFIG]  Verified {len(healing_items)} healing items")
     logger.info("[CONFIG] All configurations loaded from tables/config files (NO HARDCODED VALUES)")
 
 @asynccontextmanager
@@ -542,10 +550,10 @@ async def lifespan(app: FastAPI):
     
     logger.info("=" * 60)
     logger.info("FEATURE STATUS:")
-    logger.info(f"  Table Loader: ✓ Enabled")
-    logger.info(f"  Real-Time File Watching: {'✓ Enabled' if WATCHDOG_AVAILABLE else '✗ Disabled (install watchdog)'}")
-    logger.info(f"  CrewAI Strategic Layer: ✓ Enabled (Background Async Mode - Full Potential)")
-    logger.info(f"  Adaptive Failure Tracking: ✓ Enabled")
+    logger.info(f"  Table Loader:  Enabled")
+    logger.info(f"  Real-Time File Watching: {' Enabled' if WATCHDOG_AVAILABLE else ' Disabled (install watchdog)'}")
+    logger.info(f"  CrewAI Strategic Layer:  Enabled (Background Async Mode - Full Potential)")
+    logger.info(f"  Adaptive Failure Tracking:  Enabled")
     logger.info("=" * 60)
     logger.info("CREWAI OPTIMIZATION:")
     logger.info("  Mode: Background Async Execution")
@@ -874,6 +882,38 @@ async def lifespan(app: FastAPI):
         trigger_registry = None
         trigger_coordinator = None
         trigger_state = None
+    
+    # Initialize Planning System (Phase 5-7)
+    console_logger.print_layer_initialization(
+        LayerType.TACTICAL,
+        "Initializing Sequential Planning System...",
+        "Multi-step plans, action queue, conflict prevention"
+    )
+    global sequential_planner, action_queue
+    try:
+        logger.info("[STARTUP] Initializing Sequential Planning System...")
+        
+        # Initialize Sequential Planner
+        sequential_planner = SequentialPlanner()
+        logger.info("[STARTUP] SequentialPlanner initialized")
+        
+        # Initialize Action Queue
+        action_queue = ActionQueue()
+        logger.info("[STARTUP] ActionQueue initialized")
+        
+        console_logger.print_layer_initialization(
+            LayerType.TACTICAL,
+            "Planning System Ready [OK]",
+            "Sequential planner + Action queue operational"
+        )
+        logger.success("Planning System initialized successfully")
+        
+    except Exception as e:
+        logger.error("[STARTUP] WARNING: Failed to initialize Planning System")
+        logger.exception(e)
+        logger.warning("[STARTUP] Bot will continue without planning system")
+        sequential_planner = None
+        action_queue = None
     
     # Initialize lifecycle systems (Phase 7)
     global progression_manager
@@ -1829,7 +1869,7 @@ def select_combat_target(monsters: List[Dict], character: Dict) -> Optional[Dict
     suitable_monsters.sort(key=lambda x: (x["distance"], x["level_diff"]))
     
     selected = suitable_monsters[0]["monster"]
-    logger.info(f"[COMBAT] ✓ Selected target: {selected.get('name')} at distance {suitable_monsters[0]['distance']:.1f}")
+    logger.info(f"[COMBAT]  Selected target: {selected.get('name')} at distance {suitable_monsters[0]['distance']:.1f}")
     
     return selected
 
@@ -1995,6 +2035,68 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
         
         logger.info(f"[DECIDE] Character: {character_name}, HP: {hp_percent:.1f}%, SP: {sp_percent:.1f}%, Combat: {in_combat}")
         logger.debug(f"[DECIDE] Inventory items: {len(inventory)} items")
+        
+        # ==================================================================
+        # PRIORITY -1: SEQUENTIAL PLANNER & ACTION QUEUE (Phase 5-7)
+        # ==================================================================
+        # Check for active plans FIRST - they take precedence over everything except triggers
+        if sequential_planner and action_queue:
+            try:
+                # STEP 1: Check for active plan
+                if sequential_planner.has_active_plan():
+                    active_plans = sequential_planner.active_plans
+                    if active_plans:
+                        plan = active_plans[0]  # Get highest priority plan
+                        next_action = sequential_planner.get_next_action(plan.plan_id)
+                        
+                        if next_action:
+                            logger.info(f"[PLANNER] Executing step {plan.current_step}/{len(plan.steps)} of plan: {plan.goal}")
+                            
+                            # Queue the action to prevent conflicts
+                            action_id = await action_queue.enqueue(
+                                action_type=next_action["action"],
+                                parameters=next_action.get("parameters", {}),
+                                priority=next_action.get("priority", 5)
+                            )
+                            
+                            console_logger.log(
+                                LayerType.TACTICAL,
+                                f"📋 Sequential Plan: {next_action['action']} (step {plan.current_step}/{len(plan.steps)})"
+                            )
+                            
+                            return {
+                                "action": next_action["action"],
+                                "params": next_action.get("parameters", {}),
+                                "plan_id": plan.plan_id,
+                                "action_id": action_id,
+                                "reasoning": f"Sequential plan step {plan.current_step}: {next_action.get('description', '')}",
+                                "layer": "TACTICAL",
+                                "source": "sequential_planner"
+                            }
+                
+                # STEP 2: Check action queue for pending actions
+                queued_action = await action_queue.get_next_action()
+                if queued_action and queued_action.get("status") == "pending":
+                    logger.info(f"[QUEUE] Executing queued action: {queued_action['action_type']}")
+                    
+                    console_logger.log(
+                        LayerType.TACTICAL,
+                        f"⏳ Queued Action: {queued_action['action_type']}"
+                    )
+                    
+                    return {
+                        "action": queued_action["action_type"],
+                        "params": queued_action["parameters"],
+                        "action_id": queued_action["action_id"],
+                        "reasoning": "Executing queued action",
+                        "layer": "TACTICAL",
+                        "source": "action_queue"
+                    }
+                    
+            except Exception as e:
+                logger.error(f"[PLANNER] Error in planning system: {e}")
+                logger.exception(e)
+                # Fall through to normal decision logic
         
         # ==================================================================
         # PRIORITY 0: AUTONOMOUS TRIGGER SYSTEM (Phase 16)
@@ -2942,21 +3044,50 @@ async def action_feedback(request: Request, feedback: Dict[str, Any] = Body(...)
     This enables adaptive learning - AI tracks which actions are failing
     and tries alternatives after 3+ consecutive failures.
     
+    Also handles Sequential Planner and Action Queue feedback.
+    
     Request body:
     {
         "action": "rest",
         "status": "failed",
         "reason": "basic_skill_not_learned",
-        "message": "Character does not have Basic Skill Lv3 to sit"
+        "message": "Character does not have Basic Skill Lv3 to sit",
+        "plan_id": "uuid",  # Optional: if from sequential plan
+        "action_id": "uuid"  # Optional: if from action queue
     }
     """
     action = feedback.get("action", "unknown")
     status = feedback.get("status", "unknown")
     reason = feedback.get("reason", "")
     message = feedback.get("message", "")
+    plan_id = feedback.get("plan_id")
+    action_id = feedback.get("action_id")
+    success = status == "success" or status == "succeeded"
     
     logger.info(f"[FEEDBACK] Action '{action}' → {status.upper()}")
+    if plan_id:
+        logger.info(f"[FEEDBACK] Plan ID: {plan_id}")
+    if action_id:
+        logger.info(f"[FEEDBACK] Action ID: {action_id}")
     
+    # Update Sequential Planner if plan_id provided
+    if plan_id and sequential_planner:
+        try:
+            error_msg = reason if not success else None
+            sequential_planner.mark_step_complete(plan_id, success=success, error=error_msg)
+            logger.info(f"[PLANNER] Updated plan {plan_id}: success={success}")
+        except Exception as e:
+            logger.error(f"[PLANNER] Error updating plan: {e}")
+    
+    # Update Action Queue if action_id provided
+    if action_id and action_queue:
+        try:
+            await action_queue.mark_complete(action_id, success=success)
+            logger.info(f"[QUEUE] Marked action {action_id} as {'complete' if success else 'failed'}")
+        except Exception as e:
+            logger.error(f"[QUEUE] Error updating action queue: {e}")
+    
+    # Adaptive failure tracking (existing logic)
     if status == "failed":
         logger.warning(f"[FEEDBACK] Failure reason: {reason}")
         logger.debug(f"[FEEDBACK] Message: {message}")
@@ -2972,6 +3103,8 @@ async def action_feedback(request: Request, feedback: Dict[str, Any] = Body(...)
         "received": True,
         "action": action,
         "status": status,
+        "plan_updated": plan_id is not None,
+        "queue_updated": action_id is not None,
         "failure_count": len(action_failure_tracker.get(action, []))
     }
 

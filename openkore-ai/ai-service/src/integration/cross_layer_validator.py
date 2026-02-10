@@ -484,20 +484,20 @@ class CrossLayerValidator:
         summary = report['summary']
         print(f"\nSummary:")
         print(f"  Total Tests: {summary['total']}")
-        print(f"  Passed: {summary['passed']} ✓")
-        print(f"  Failed: {summary['failed']} ✗")
+        print(f"  Passed: {summary['passed']} ")
+        print(f"  Failed: {summary['failed']} ")
         print(f"  Warnings: {summary['warnings']} ⚠")
         print(f"  Skipped: {summary['skipped']} -")
         print(f"  Success Rate: {summary['success_rate']:.1f}%")
         print(f"  Total Duration: {summary['total_duration_ms']:.2f}ms")
         
-        print(f"\nProduction Ready: {'YES ✓' if report['production_ready'] else 'NO ✗'}")
+        print(f"\nProduction Ready: {'YES ' if report['production_ready'] else 'NO '}")
         
         print(f"\nDetailed Results:")
         for result in report['results']:
             status_icon = {
-                'passed': '✓',
-                'failed': '✗',
+                'passed': '',
+                'failed': '',
                 'warning': '⚠',
                 'skipped': '-'
             }.get(result['status'], '?')
