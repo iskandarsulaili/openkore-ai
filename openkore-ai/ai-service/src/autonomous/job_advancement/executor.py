@@ -24,7 +24,7 @@ class JobAdvancementExecutor:
         
         Args:
             data_dir: Directory containing job change location data
-            openkore_client: OpenKore IPC client for commands
+            openkore_client: OpenKore HTTP client (REST API) for commands
         """
         self.data_dir = data_dir
         self.openkore = openkore_client

@@ -1,7 +1,7 @@
 """
 Autonomous Stat Allocation System with Playstyle-Based Ratios
 Integrates with existing raiseStat.pl plugin
-Version 2.0 - Dynamic ratio-based allocation for ALL job/playstyle combinations
+Version 3.0 - Extended support for ALL 55 build variants across 11 job paths
 """
 
 import json
@@ -16,12 +16,30 @@ class StatAllocator:
     Autonomous stat allocation based on playstyle ratios and performance metrics.
     Supports dynamic adjustment and all job/build/playstyle combinations.
     Thread-safe with mutex locks to prevent race conditions.
+    
+    Version 3.0 Changes:
+    - Integrated with job_build_variants.json (55 build variants)
+    - Support for all 11 job paths including extended classes
+    - Enhanced build config lookup with job_path support
     """
     
-    def __init__(self, user_intent_path: str, job_builds_path: str, playstyles_path: str = None):
-        """Initialize with user intent, job builds, and playstyles"""
+    def __init__(self, user_intent_path: str, job_builds_path: str = None, playstyles_path: str = None):
+        """
+        Initialize with user intent, job builds, and playstyles
+        
+        Args:
+            user_intent_path: Path to user intent configuration
+            job_builds_path: Path to job builds (defaults to job_build_variants.json)
+            playstyles_path: Path to playstyles configuration
+        """
         self.user_intent_path = Path(user_intent_path)
-        self.job_builds_path = Path(job_builds_path)
+        
+        # Default to job_build_variants.json if not specified
+        if job_builds_path:
+            self.job_builds_path = Path(job_builds_path)
+        else:
+            self.job_builds_path = Path(user_intent_path).parent / "job_build_variants.json"
+        
         self.playstyles_path = Path(playstyles_path) if playstyles_path else \
             Path(user_intent_path).parent / "playstyles.json"
         
@@ -78,25 +96,50 @@ class StatAllocator:
     def get_current_build_config(self) -> Optional[Dict[str, Any]]:
         """
         Get current job build configuration with fallback logic.
-        FIXES CRITICAL BUG: Handles cross-job builds (e.g., novice targeting archer build)
+        Version 3.0: Enhanced to support job_path lookup in job_build_variants.json
+        
+        Lookup Strategy:
+        1. Check if job_builds has 'build_variants' structure (new format)
+        2. If so, lookup by job_path identifier (e.g., 'swordman_knight_rune_knight')
+        3. Then lookup build within that path
+        4. Fallback to legacy lookup by current_job
         """
         with self._lock:
             current_job = self.user_intent.get('current_job', 'novice').lower()
-            build_type = self.user_intent.get('build', 'default')
+            build_type = self.user_intent.get('build', 'balanced')
+            job_path = self.user_intent.get('job_path', '')
             
-            # Strategy 1: Try current_job + build_type
+            # Strategy 1: New format - lookup by job_path in build_variants
+            build_variants = self.job_builds.get('build_variants', {})
+            if build_variants and job_path:
+                path_data = build_variants.get(job_path, {})
+                if path_data:
+                    builds = path_data.get('builds', {})
+                    build_config = builds.get(build_type, {})
+                    
+                    if build_config:
+                        logger.debug(f"Found build config (new format): {job_path}/{build_type}")
+                        return build_config
+                    
+                    # Try balanced as fallback within this path
+                    balanced_config = builds.get('balanced', {})
+                    if balanced_config:
+                        logger.warning(f"Using balanced build for {job_path} (requested: {build_type})")
+                        return balanced_config
+            
+            # Strategy 2: Legacy format - lookup by current_job
             job_data = self.job_builds.get(current_job, {})
             build_config = job_data.get(build_type, {})
             
             if build_config:
-                logger.debug(f"Found build config: {current_job}/{build_type}")
+                logger.debug(f"Found build config (legacy format): {current_job}/{build_type}")
                 return build_config
             
-            # Strategy 2: If build_type suggests future job (e.g., dex_hunter for novice)
+            # Strategy 3: If build_type suggests future job (e.g., dex_hunter for novice)
             # Look for the target job in job_path
             if not build_config and 'job_path' in self.user_intent:
-                job_path = self.user_intent.get('job_path', [])
-                for target_job in job_path:
+                job_path_list = self.user_intent.get('job_path', [])
+                for target_job in job_path_list:
                     target_job_lower = target_job.lower()
                     if target_job_lower == current_job:
                         continue
@@ -109,19 +152,23 @@ class StatAllocator:
                                    f"(current job: {current_job})")
                         return build_config
             
-            # Strategy 3: Try default build for current job
-            default_config = job_data.get('default', {})
+            # Strategy 4: Try balanced/default build for current job
+            default_config = job_data.get('balanced', {}) or job_data.get('default', {})
             if default_config:
-                logger.warning(f"Using default build for {current_job} (requested: {build_type})")
+                logger.warning(f"Using balanced/default build for {current_job} (requested: {build_type})")
                 return default_config
             
-            # Strategy 4: Fallback to novice default
-            novice_default = self.job_builds.get('novice', {}).get('default', {})
-            if novice_default:
-                logger.warning(f"Fallback to novice/default (no config for {current_job}/{build_type})")
-                return novice_default
+            # Strategy 5: Fallback to first available build in job_path (new format)
+            if build_variants and job_path:
+                path_data = build_variants.get(job_path, {})
+                builds = path_data.get('builds', {})
+                if builds:
+                    first_build = next(iter(builds.values()), None)
+                    if first_build:
+                        logger.warning(f"Fallback to first build in {job_path}")
+                        return first_build
             
-            logger.error(f"No build config found anywhere for {current_job}/{build_type}")
+            logger.error(f"No build config found anywhere for {current_job}/{build_type} (job_path: {job_path})")
             return None
     
     def calculate_stat_distribution_from_ratios(self, 

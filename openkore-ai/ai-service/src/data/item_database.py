@@ -147,7 +147,19 @@ class ItemDatabase:
             Item data dict or None if not found
         """
         self.query_count += 1
-        return self.items_by_id.get(item_id)
+        
+        # Track query for integration verification
+        logger.debug(f"[ITEM-DB] Query: get_item_by_id({item_id})")
+        
+        result = self.items_by_id.get(item_id)
+        
+        # Log result for integration verification
+        if result:
+            logger.debug(f"[ITEM-DB] Found: {result.get('name')} (Type: {result.get('type')}, Price: {result.get('buy_price', 0)}z)")
+        else:
+            logger.warning(f"[ITEM-DB] Not found: ID {item_id}")
+        
+        return result
     
     def get_item_by_name(self, name: str, fuzzy: bool = True) -> Optional[Dict]:
         """
@@ -161,11 +173,15 @@ class ItemDatabase:
             Item data dict or None if not found
         """
         self.query_count += 1
+        logger.debug(f"[ITEM-DB] Query: get_item_by_name('{name}', fuzzy={fuzzy})")
+        
         name_lower = name.lower()
         
         # Exact match first
         if name_lower in self.items_by_name:
-            return self.items_by_name[name_lower]
+            result = self.items_by_name[name_lower]
+            logger.debug(f"[ITEM-DB] Exact match found: {result.get('name')} (ID {result.get('id')})")
+            return result
         
         # Fuzzy matching for custom content
         if fuzzy:
@@ -196,7 +212,13 @@ class ItemDatabase:
         """
         self.query_count += 1
         category_lower = category.lower()
-        return self.items_by_category.get(category_lower, [])
+        
+        logger.debug(f"[ITEM-DB] Query: get_items_by_category('{category}')")
+        
+        results = self.items_by_category.get(category_lower, [])
+        logger.debug(f"[ITEM-DB] Found {len(results)} items in category '{category}'")
+        
+        return results
     
     def get_equipment_requirements(self, item_id: int) -> Dict:
         """
@@ -243,9 +265,11 @@ class ItemDatabase:
             Calculated value score (0-100)
         """
         self.query_count += 1
+        logger.debug(f"[ITEM-DB] Calculating value for item ID {item_id}")
         
         item = self.get_item_by_id(item_id)
         if not item:
+            logger.warning(f"[ITEM-DB] Cannot calculate value - item {item_id} not found")
             return 0.0
         
         context = context or {}

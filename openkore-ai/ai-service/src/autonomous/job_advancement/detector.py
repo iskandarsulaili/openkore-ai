@@ -2,6 +2,8 @@
 Job Advancement Detector
 Detects when character meets job change requirements
 Server-agnostic pattern-based detection
+
+Version 2.0: Extended to support all job paths including extended and special classes
 """
 
 import json
@@ -14,7 +16,13 @@ import threading
 class JobAdvancementDetector:
     """
     Detects job advancement opportunities based on character state
-    Handles multi-step progression: Novice → 1st → 2nd → Trans → 3rd
+    Handles multi-step progression: Novice → 1st → 2nd → 3rd → 4th
+    
+    Version 2.0 Changes:
+    - Support for all 11 job paths from job_build_variants.json
+    - Extended class support (Gunslinger, Ninja, Taekwon, etc.)
+    - Special class support (Super Novice, Summoner)
+    - Integration with job_path_mappings
     """
     
     def __init__(self, data_dir: Path):
@@ -22,15 +30,16 @@ class JobAdvancementDetector:
         Initialize job advancement detector
         
         Args:
-            data_dir: Directory containing job_change_locations.json
+            data_dir: Directory containing job_change_locations.json and job_build_variants.json
         """
         self.data_dir = data_dir
         self.job_requirements: Dict[str, Any] = {}
         self.job_paths: Dict[str, List[str]] = {}
+        self.job_path_mappings: Dict[str, Any] = {}
         self._lock = threading.RLock()
         self._load_job_data()
         
-        logger.info("JobAdvancementDetector initialized")
+        logger.info("JobAdvancementDetector v2.0 initialized with extended class support")
     
     def _load_job_data(self):
         """Load job change requirements and paths from configuration"""
@@ -47,8 +56,10 @@ class JobAdvancementDetector:
             
             self.job_requirements = data.get('requirements', {})
             self.job_paths = data.get('progression_paths', {})
+            self.job_path_mappings = data.get('job_path_mappings', {})
             
-            logger.success(f"Loaded job data for {len(self.job_requirements)} jobs")
+            logger.success(f"Loaded job data for {len(self.job_requirements)} jobs, "
+                         f"{len(self.job_path_mappings.get('paths', {}))} job paths")
             
         except Exception as e:
             logger.error(f"Failed to load job data: {e}")

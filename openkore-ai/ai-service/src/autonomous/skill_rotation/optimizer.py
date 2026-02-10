@@ -28,7 +28,7 @@ class SkillRotationOptimizer:
         
         Args:
             data_dir: Directory containing skill_rotations.json
-            openkore_client: OpenKore IPC client
+            openkore_client: OpenKore HTTP client (REST API)
         """
         self.data_dir = data_dir
         self.openkore = openkore_client

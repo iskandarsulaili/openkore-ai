@@ -21,7 +21,7 @@ class InventoryCleaner:
         Initialize inventory cleaner
         
         Args:
-            openkore_client: OpenKore IPC client
+            openkore_client: OpenKore HTTP client (REST API)
         """
         self.openkore = openkore_client
         self._lock = threading.RLock()

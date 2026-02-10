@@ -29,7 +29,7 @@ class AutonomousHandlerRegistry:
         
         Args:
             data_dir: Directory containing configuration files
-            openkore_client: OpenKore IPC client
+            openkore_client: OpenKore HTTP client (REST API communication)
         """
         self.data_dir = data_dir
         self.openkore = openkore_client

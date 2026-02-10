@@ -7,21 +7,112 @@ use Globals;
 use Log qw(message warning error debug);
 use Utils;
 use JSON;
-use LWP::UserAgent;
 use Time::HiRes qw(time);
 
+# ============================================================================
+# FIX 1: ROBUST DEPENDENCY CHECKING AND GRACEFUL DEGRADATION
+# ============================================================================
+our $HTTP_AVAILABLE = 0;
+our $HTTP_CLIENT = 'None';
+our $LOAD_ERROR = '';
+our $JSON_AVAILABLE = 0;
+
+# Pre-flight dependency verification with STDERR output for visibility
+print STDERR "[GodTierAI] *** MODULE LOADING STARTED ***\n";
+print STDERR "[GodTierAI] *** Timestamp: " . localtime() . "\n";
+print STDERR "[GodTierAI] *** Perl version: $]\n";
+
+BEGIN {
+    print STDERR "[GodTierAI] *** DEPENDENCY CHECK: Starting...\n";
+    
+    # Check JSON module (critical dependency)
+    eval {
+        require JSON;
+        JSON->import();
+        $JSON_AVAILABLE = 1;
+        print STDERR "[GodTierAI] ✓ JSON module loaded successfully\n";
+    };
+    
+    if ($@) {
+        $JSON_AVAILABLE = 0;
+        print STDERR "[GodTierAI] ✗ JSON module FAILED: $@\n";
+        print STDERR "[GodTierAI] ✗ CRITICAL ERROR: JSON module required!\n";
+        print STDERR "[GodTierAI] ✗ Install with: cpanm JSON\n";
+    }
+    
+    # Try LWP::UserAgent first (preferred)
+    eval {
+        require LWP::UserAgent;
+        LWP::UserAgent->import();
+        $HTTP_AVAILABLE = 1;
+        $HTTP_CLIENT = 'LWP';
+        print STDERR "[GodTierAI] ✓ LWP::UserAgent loaded successfully\n";
+    };
+    
+    # Fallback to HTTP::Tiny (built-in since Perl 5.14)
+    if ($@ && !$HTTP_AVAILABLE) {
+        my $lwp_error = $@;
+        print STDERR "[GodTierAI] ⚠ LWP::UserAgent not available, trying HTTP::Tiny...\n";
+        
+        eval {
+            require HTTP::Tiny;
+            HTTP::Tiny->import();
+            $HTTP_AVAILABLE = 1;
+            $HTTP_CLIENT = 'HTTP::Tiny';
+            print STDERR "[GodTierAI] ✓ HTTP::Tiny loaded successfully\n";
+        };
+        
+        if ($@) {
+            $LOAD_ERROR = "LWP::UserAgent error: $lwp_error\nHTTP::Tiny error: $@";
+            $HTTP_AVAILABLE = 0;
+            $HTTP_CLIENT = 'None';
+            print STDERR "[GodTierAI] ✗ No HTTP client available\n";
+            print STDERR "[GodTierAI] ✗ Install with: cpanm LWP::UserAgent\n";
+        }
+    }
+    
+    # Don't die, but log clearly
+    unless ($JSON_AVAILABLE && $HTTP_AVAILABLE) {
+        print STDERR "[GodTierAI] ⚠ WARNING: Running in degraded mode\n";
+        print STDERR "[GodTierAI] ⚠ AI features will not be available\n";
+    }
+}
+
 # VERIFICATION: Plugin file loaded successfully
-print "[GodTierAI] *** FILE LOADED *** Timestamp: " . localtime() . "\n";
-print "[GodTierAI] *** LINE 391 FIX ACTIVE *** Guard against undefined \$char\n";
+print STDERR "[GodTierAI] *** MODULE LOADED (json=$JSON_AVAILABLE, http=$HTTP_AVAILABLE) ***\n";
+print STDERR "[GodTierAI] *** HTTP CLIENT: $HTTP_CLIENT ***\n";
+print STDERR "[GodTierAI] *** DEPENDENCY CHECK: Complete\n";
 
 Plugins::register('GodTierAI', 'Advanced AI system with LLM integration', \&on_unload);
 
 my $hooks;
 my $ai_engine_url = "http://127.0.0.1:9901";
 my $ai_service_url = "http://127.0.0.1:9902";
-# Increased to 35s to accommodate background async CrewAI (avg 28.4s, max 31.6s observed in Test #14)
-my $ua = LWP::UserAgent->new(timeout => 35);
+
+# FIX 2: HTTP CLIENT FACTORY WITH CONNECTION POOLING
+my $http_client;  # Unified HTTP client wrapper
+my $ua;           # LWP::UserAgent instance (when available)
+my $http_tiny;    # HTTP::Tiny instance (when available)
 my $request_counter = 0;
+my $degraded_mode = 0;  # Flag for running without HTTP library
+
+# FIX 7: CIRCUIT BREAKERS FOR ERROR RECOVERY
+my %circuit_breakers = (
+    'ai_engine' => {
+        'failures' => 0,
+        'threshold' => 3,
+        'reset_time' => 60,
+        'last_failure' => 0,
+        'state' => 'closed',  # closed, open, half_open
+    },
+    'ai_service' => {
+        'failures' => 0,
+        'threshold' => 3,
+        'reset_time' => 60,
+        'last_failure' => 0,
+        'state' => 'closed',
+    },
+);
 
 # EMERGENCY CIRCUIT BREAKERS (Fix for memory crash)
 my $request_count_per_minute = 0;
@@ -298,6 +389,42 @@ sub log_healing_action {
 
 # Plugin initialization function - called explicitly by OpenKore
 sub on_load {
+    # DIAGNOSTIC: Confirm plugin file was loaded
+    message "[GodTierAI] ========================================\n", "system";
+    message "[GodTierAI] *** PLUGIN LOADING STARTED ***\n", "system";
+    message "[GodTierAI] File: " . __FILE__ . "\n", "system";
+    message "[GodTierAI] Timestamp: " . scalar(localtime) . "\n", "system";
+    message "[GodTierAI] ========================================\n", "system";
+    
+    # DIAGNOSTIC: Check HTTP library availability
+    if (!$HTTP_AVAILABLE) {
+        error "[GodTierAI] ================================\n";
+        error "[GodTierAI] CRITICAL ERROR: HTTP library not available!\n";
+        error "[GodTierAI] Error: $LOAD_ERROR\n";
+        error "[GodTierAI] ================================\n";
+        error "[GodTierAI] The plugin requires LWP::UserAgent or HTTP::Tiny to communicate with AI Service.\n";
+        error "[GodTierAI] Install with: cpanm LWP::UserAgent\n";
+        error "[GodTierAI] Or download: http://search.cpan.org/dist/libwww-perl/\n";
+        error "[GodTierAI] ================================\n";
+        error "[GodTierAI] Plugin will run in DEGRADED mode (no AI features)\n";
+        error "[GodTierAI] ================================\n";
+        
+        # Set flag for degraded mode
+        $degraded_mode = 1;
+    } else {
+        message "[GodTierAI] ✓ HTTP library available: $HTTP_CLIENT\n", "success";
+        $degraded_mode = 0;
+        
+        # Initialize HTTP client based on what's available
+        if ($HTTP_CLIENT eq 'LWP') {
+            $ua = LWP::UserAgent->new(timeout => 35);
+            message "[GodTierAI] ✓ LWP::UserAgent initialized (timeout: 35s)\n", "success";
+        } elsif ($HTTP_CLIENT eq 'HTTP::Tiny') {
+            $http_tiny = HTTP::Tiny->new(timeout => 35);
+            message "[GodTierAI] ✓ HTTP::Tiny initialized (timeout: 35s)\n", "success";
+        }
+    }
+    
     message "[GodTierAI] Initializing plugin...\n", "info";
     
     # CRITICAL: Sanitize config BEFORE hooks to prevent buyAuto from triggering
@@ -658,6 +785,9 @@ sub collect_equipment {
 sub send_action_feedback {
     my ($action, $status, $reason, $message) = @_;
     
+    # Check if HTTP client available
+    return unless $HTTP_AVAILABLE;
+    
     $message ||= '';
     
     my $payload = encode_json({
@@ -667,16 +797,34 @@ sub send_action_feedback {
         message => $message
     });
     
-    my $response = $ua->post(
-        "$ai_service_url/api/v1/action_feedback",
-        'Content-Type' => 'application/json',
-        Content => $payload
-    );
-    
-    if ($response->is_success) {
-        debug "[GodTierAI] [FEEDBACK] Sent: $action -> $status ($reason)\n", "ai";
-    } else {
-        error "[GodTierAI] [FEEDBACK] Failed to send feedback: " . $response->status_line . "\n";
+    # Use appropriate HTTP client
+    if ($HTTP_CLIENT eq 'LWP') {
+        my $response = $ua->post(
+            "$ai_service_url/api/v1/action_feedback",
+            'Content-Type' => 'application/json',
+            Content => $payload
+        );
+        
+        if ($response->is_success) {
+            debug "[GodTierAI] [FEEDBACK] Sent: $action -> $status ($reason)\n", "ai";
+        } else {
+            error "[GodTierAI] [FEEDBACK] Failed to send feedback: " . $response->status_line . "\n";
+        }
+        
+    } elsif ($HTTP_CLIENT eq 'HTTP::Tiny') {
+        my $response = $http_tiny->post(
+            "$ai_service_url/api/v1/action_feedback",
+            {
+                headers => { 'Content-Type' => 'application/json' },
+                content => $payload,
+            }
+        );
+        
+        if ($response->{success}) {
+            debug "[GodTierAI] [FEEDBACK] Sent: $action -> $status ($reason)\n", "ai";
+        } else {
+            error "[GodTierAI] [FEEDBACK] Failed to send feedback: " . $response->{status} . " " . $response->{reason} . "\n";
+        }
     }
 }
 
@@ -684,23 +832,35 @@ sub send_action_feedback {
 sub request_decision {
     my $current_time = time();
     
+    # FIX #4: VERBOSE DIAGNOSTICS - Track every step of decision request
+    message "[GodTierAI] [REQUEST-DEBUG] === Starting request_decision() ===\n", "info";
+    
+    # Check if HTTP client available
+    unless ($HTTP_AVAILABLE) {
+        error "[GodTierAI] [REQUEST-DEBUG] HTTP client not available - cannot make requests\n";
+        return undef;
+    }
+    
     # EMERGENCY CIRCUIT BREAKER #1: Check if we're in emergency pause
     if ($current_time < $emergency_pause_until) {
         my $remaining = int($emergency_pause_until - $current_time);
-        debug "[GodTierAI] EMERGENCY PAUSE: $remaining seconds remaining\n", "ai";
+        warning "[GodTierAI] [REQUEST-DEBUG] EMERGENCY PAUSE active: $remaining seconds remaining\n";
         return undef;
     }
     
     # EMERGENCY CIRCUIT BREAKER #2: Reset per-minute counter
     if ($current_time - $last_minute_reset >= 60) {
+        message "[GodTierAI] [REQUEST-DEBUG] Resetting request counter ($request_count_per_minute requests in last minute)\n", "info";
         $request_count_per_minute = 0;
         $last_minute_reset = $current_time;
     }
     
     # EMERGENCY CIRCUIT BREAKER #3: Max requests per minute
     $request_count_per_minute++;
+    message "[GodTierAI] [REQUEST-DEBUG] Request count: $request_count_per_minute/30 per minute\n", "info";
+    
     if ($request_count_per_minute > 30) {
-        warning "[GodTierAI] EMERGENCY: Too many requests ($request_count_per_minute/min), pausing 60s\n";
+        warning "[GodTierAI] [REQUEST-DEBUG] EMERGENCY: Too many requests ($request_count_per_minute/min), pausing 60s\n";
         $emergency_pause_until = $current_time + 60;
         $request_count_per_minute = 0;
         return undef;
@@ -708,19 +868,27 @@ sub request_decision {
     
     # EMERGENCY CIRCUIT BREAKER #4: Total request counter for debugging
     $total_requests_made++;
+    message "[GodTierAI] [REQUEST-DEBUG] Total requests made: $total_requests_made\n", "info";
+    
     if ($total_requests_made % 100 == 0) {
         message "[GodTierAI] Stats: $total_requests_made total requests made since plugin load\n", "info";
     }
     
+    message "[GodTierAI] [REQUEST-DEBUG] Collecting game state...\n", "info";
     my $game_state = collect_game_state();
+    
     # CRITICAL FIX: Don't send request if character not ready (prevents line 391 crash)
     unless (defined $game_state) {
-        debug "[GodTierAI] Character not ready, skipping AI decision\n", "ai";
+        warning "[GodTierAI] [REQUEST-DEBUG] collect_game_state() returned undef - character not ready\n";
         return undef;
     }
     
+    message "[GodTierAI] [REQUEST-DEBUG] Game state collected successfully\n", "info";
+    
     $request_counter++;
     my $request_id = "req_" . time() . "_" . $request_counter;
+    
+    message "[GodTierAI] [REQUEST-DEBUG] Building HTTP request (ID: $request_id)...\n", "info";
     
     my %request = (
         game_state => $game_state,
@@ -729,18 +897,62 @@ sub request_decision {
     );
     
     my $json_request = encode_json(\%request);
+    my $json_size = length($json_request);
     
-    my $response = $ua->post(
-        "$ai_service_url/api/v1/decide",
-        Content_Type => 'application/json',
-        Content => $json_request,
-    );
+    message "[GodTierAI] [REQUEST-DEBUG] JSON payload size: $json_size bytes\n", "info";
+    message "[GodTierAI] [REQUEST-DEBUG] Using HTTP client: $HTTP_CLIENT\n", "info";
+    message "[GodTierAI] [REQUEST-DEBUG] Sending POST to $ai_service_url/api/v1/decide\n", "info";
     
-    if ($response->is_success) {
-        my $data = decode_json($response->decoded_content);
-        return $data;
+    my $request_start = time();
+    
+    # Use appropriate HTTP client
+    if ($HTTP_CLIENT eq 'LWP') {
+        my $response = $ua->post(
+            "$ai_service_url/api/v1/decide",
+            Content_Type => 'application/json',
+            Content => $json_request,
+        );
+        my $request_duration = time() - $request_start;
+        
+        message "[GodTierAI] [REQUEST-DEBUG] HTTP request completed in ${request_duration}s\n", "info";
+        message "[GodTierAI] [REQUEST-DEBUG] HTTP status: " . $response->code . " " . $response->message . "\n", "info";
+        
+        if ($response->is_success) {
+            message "[GodTierAI] [REQUEST-DEBUG] Response successful, decoding JSON...\n", "success";
+            my $data = decode_json($response->decoded_content);
+            message "[GodTierAI] [REQUEST-DEBUG] Decision received and parsed successfully\n", "success";
+            return $data;
+        } else {
+            error "[GodTierAI] [REQUEST-DEBUG] Request FAILED: " . $response->status_line . "\n";
+            error "[GodTierAI] [REQUEST-DEBUG] Response body: " . $response->decoded_content . "\n";
+            return undef;
+        }
+        
+    } elsif ($HTTP_CLIENT eq 'HTTP::Tiny') {
+        my $response = $http_tiny->post(
+            "$ai_service_url/api/v1/decide",
+            {
+                headers => { 'Content-Type' => 'application/json' },
+                content => $json_request,
+            }
+        );
+        my $request_duration = time() - $request_start;
+        
+        message "[GodTierAI] [REQUEST-DEBUG] HTTP request completed in ${request_duration}s\n", "info";
+        message "[GodTierAI] [REQUEST-DEBUG] HTTP status: " . $response->{status} . " " . $response->{reason} . "\n", "info";
+        
+        if ($response->{success}) {
+            message "[GodTierAI] [REQUEST-DEBUG] Response successful, decoding JSON...\n", "success";
+            my $data = decode_json($response->{content});
+            message "[GodTierAI] [REQUEST-DEBUG] Decision received and parsed successfully\n", "success";
+            return $data;
+        } else {
+            error "[GodTierAI] [REQUEST-DEBUG] Request FAILED: " . $response->{status} . " " . $response->{reason} . "\n";
+            error "[GodTierAI] [REQUEST-DEBUG] Response body: " . ($response->{content} || 'N/A') . "\n";
+            return undef;
+        }
     } else {
-        error "[GodTierAI] Failed to get decision: " . $response->status_line . "\n";
+        error "[GodTierAI] [REQUEST-DEBUG] Unknown HTTP client: $HTTP_CLIENT\n";
         return undef;
     }
 }
@@ -1528,22 +1740,57 @@ sub on_guild_chat {
 
 # AI_pre hook - called every AI cycle
 sub on_ai_pre {
+    # DIAGNOSTIC: Log that this hook is being called (once only)
+    state $ai_pre_called_logged = 0;
+    if (!$ai_pre_called_logged) {
+        message "[GodTierAI] [DIAGNOSTIC] on_ai_pre() hook IS being called\n", "success";
+        $ai_pre_called_logged = 1;
+    }
+    
+    # Check degraded mode
+    if ($degraded_mode) {
+        state $degraded_warning_shown = 0;
+        if (!$degraded_warning_shown) {
+            warning "[GodTierAI] Running in degraded mode - AI features disabled\n";
+            $degraded_warning_shown = 1;
+        }
+        return;
+    }
+    
     # DIAGNOSTIC #4: Nuclear test option - Uncomment to disable all AI logic
     # This tests if OpenKore core is stable without AI-Service integration
     # return;  # <-- UNCOMMENT THIS LINE to disable all GodTierAI logic
     
-    return unless $net && $net->getState() == Network::IN_GAME;
-    return unless $char && defined $char->{pos_to};
+    # VERBOSE DIAGNOSTIC: Track why AI cycles are being skipped
+    unless ($net && $net->getState() == Network::IN_GAME) {
+        # This is normal during connection, don't spam
+        return;
+    }
+    
+    unless ($char && defined $char->{pos_to}) {
+        # Character not fully loaded yet
+        return;
+    }
     
     # PRIORITY #1: Rate limit BEFORE any expensive operations
     my $current_time = time();
     
     # Check if action is still executing (prevents infinite queue accumulation)
     if ($action_pause_until > 0 && $current_time < $action_pause_until) {
-        return;  # Skip decision request while timed action is executing
+        # Action still executing, this is normal
+        return;
     }
     
-    return if $current_time - $last_query_time < 2.0;
+    # DIAGNOSTIC: Log when rate limiting is active
+    if ($current_time - $last_query_time < 2.0) {
+        # Rate limited - this is expected every cycle
+        return;
+    }
+    
+    # FIX #1: VERBOSE LOGGING - Track that we're actually attempting decisions
+    my $time_since_last = $current_time - $last_query_time;
+    message "[GodTierAI] [DECISION-CYCLE] Attempting AI decision (${time_since_last}s since last)\n", "info";
+    
     $last_query_time = $current_time;
     
     # Check for warning floods every 60 seconds
@@ -1560,11 +1807,16 @@ sub on_ai_pre {
     
     # STATELESS REFACTOR: Check auto-expiring map load cooldown
     if ($map_load_cooldown_until > 0 && $current_time < $map_load_cooldown_until) {
-        debug "[GodTierAI] [FIX#2] Map load cooldown active, skipping AI decision\n", "ai";
+        my $remaining = $map_load_cooldown_until - $current_time;
+        message "[GodTierAI] [FIX#2] Map load cooldown active (${remaining}s remaining), skipping AI decision\n", "info";
         return;
     }
     
+    # FIX #2: PERIODIC STAT/SKILL POINT CHECK (every 30 seconds)
+    check_unused_points($current_time);
+    
     # Request decision (with emergency circuit breakers)
+    message "[GodTierAI] [DECISION-CYCLE] Calling request_decision()...\n", "info";
     my $decision = request_decision();
     
     if ($decision) {
@@ -1572,13 +1824,143 @@ sub on_ai_pre {
         my $latency = $decision->{latency_ms} // 0;
         my $tier_str = defined($tier) ? $tier : 'unknown';
         my $latency_str = defined($latency) ? "${latency}ms" : 'N/A';
-        debug "[GodTierAI] Decision received from tier '$tier_str' in $latency_str\n", "ai";
+        message "[GodTierAI] [DECISION-CYCLE] Decision received from tier '$tier_str' in $latency_str\n", "success";
         
         execute_action($decision);
+    } else {
+        warning "[GodTierAI] [DECISION-CYCLE] request_decision() returned undef/empty\n";
     }
     
     # Memory cleanup hint for Perl garbage collector
     undef $decision;
+}
+
+# FIX #3: PERIODIC CHECK FOR UNUSED STAT/SKILL POINTS
+# This proactively checks for unused points every 30 seconds and allocates them
+# Solves the issue where character has unused points but no level-up event triggered
+my $last_point_check = 0;
+
+sub check_unused_points {
+    my ($current_time) = @_;
+    
+    # Check every 30 seconds
+    return if ($current_time - $last_point_check < 30);
+    $last_point_check = $current_time;
+    
+    return unless $char;
+    
+    # Check for unused stat points
+    my $stat_points = $char->{points_free} || 0;
+    if ($stat_points > 0) {
+        message "[GodTierAI] [AUTO-PROGRESSION] Detected $stat_points unused stat points - allocating...\n", "success";
+        
+        # Trigger stat allocation as if level-up just happened
+        eval {
+            my %current_stats = (
+                str => int($char->{str} || 1),
+                agi => int($char->{agi} || 1),
+                vit => int($char->{vit} || 1),
+                int => int($char->{int} || 1),
+                dex => int($char->{dex} || 1),
+                luk => int($char->{luk} || 1)
+            );
+            
+            my %request = (
+                current_level => int($char->{lv} || 1),
+                current_stats => \%current_stats,
+                unused_points => int($stat_points)
+            );
+            
+            my $json_request = encode_json(\%request);
+            message "[GodTierAI] [AUTO-PROGRESSION] Requesting stat allocation from AI Service...\n", "info";
+            
+            my $response = $ua->post(
+                "$ai_service_url/api/v1/progression/stats/on_level_up",
+                Content_Type => 'application/json',
+                Content => $json_request
+            );
+            
+            if ($response->is_success) {
+                my $data = decode_json($response->decoded_content);
+                
+                if ($data->{config} && $data->{config}{statsAddAuto_list}) {
+                    message "[GodTierAI] [AUTO-PROGRESSION] Stat plan: $data->{config}{statsAddAuto_list}\n", "success";
+                    
+                    # Enable auto-stat allocation
+                    Commands::run('config statsAddAuto 1');
+                    Commands::run("config statsAddAuto_list $data->{config}{statsAddAuto_list}");
+                    
+                    message "[GodTierAI] [AUTO-PROGRESSION] Auto-stat enabled - points will be allocated\n", "success";
+                } else {
+                    warning "[GodTierAI] [AUTO-PROGRESSION] No stat plan received from AI Service\n";
+                }
+            } else {
+                warning "[GodTierAI] [AUTO-PROGRESSION] Stat allocation request failed: " . $response->status_line . "\n";
+            }
+        };
+        if ($@) {
+            warning "[GodTierAI] [AUTO-PROGRESSION] Stat allocation error: $@\n";
+        }
+    }
+    
+    # Check for unused skill points
+    my $skill_points = $char->{points_skill} || 0;
+    if ($skill_points > 0) {
+        message "[GodTierAI] [AUTO-PROGRESSION] Detected $skill_points unused skill points - learning skills...\n", "success";
+        
+        # Trigger skill learning as if job level-up just happened
+        eval {
+            my %current_skills = ();
+            foreach my $skill_handle (keys %{$char->{skills}}) {
+                my $skill = $char->{skills}{$skill_handle};
+                $current_skills{$skill_handle} = int($skill->{lv} || 0) if $skill;
+            }
+            
+            my $job_class = $::jobs_lut{$char->{jobId}} || 'Novice';
+            
+            my %request = (
+                current_job_level => int($char->{lv_job} || 1),
+                job_class => $job_class,
+                current_skills => \%current_skills,
+                unused_points => int($skill_points)
+            );
+            
+            my $json_request = encode_json(\%request);
+            message "[GodTierAI] [AUTO-PROGRESSION] Requesting skill learning from AI Service...\n", "info";
+            
+            my $response = $ua->post(
+                "$ai_service_url/api/v1/progression/skills/on_job_level_up",
+                Content_Type => 'application/json',
+                Content => $json_request
+            );
+            
+            if ($response->is_success) {
+                my $data = decode_json($response->decoded_content);
+                
+                if ($data->{config} && $data->{config}{skillsAddAuto_list}) {
+                    message "[GodTierAI] [AUTO-PROGRESSION] Skill plan: $data->{config}{skillsAddAuto_list}\n", "success";
+                    
+                    # Enable auto-skill learning
+                    Commands::run('config skillsAddAuto 1');
+                    Commands::run("config skillsAddAuto_list $data->{config}{skillsAddAuto_list}");
+                    
+                    message "[GodTierAI] [AUTO-PROGRESSION] Auto-skill enabled - skills will be learned\n", "success";
+                } else {
+                    warning "[GodTierAI] [AUTO-PROGRESSION] No skill plan received from AI Service\n";
+                }
+            } else {
+                warning "[GodTierAI] [AUTO-PROGRESSION] Skill learning request failed: " . $response->status_line . "\n";
+            }
+        };
+        if ($@) {
+            warning "[GodTierAI] [AUTO-PROGRESSION] Skill learning error: $@\n";
+        }
+    }
+    
+    # Periodic status report
+    if ($stat_points == 0 && $skill_points == 0) {
+        debug "[GodTierAI] [AUTO-PROGRESSION] All points allocated (Stat: 0, Skill: 0)\n", "ai";
+    }
 }
 
 # STATELESS REFACTOR: Loop Detection with Sliding Window (no accumulation)

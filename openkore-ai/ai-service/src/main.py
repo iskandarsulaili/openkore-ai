@@ -1185,6 +1185,66 @@ async def strategic_metrics():
         }
     }
 
+@app.get("/api/v1/integration/stats")
+async def integration_stats_endpoint():
+    """
+    Get integration statistics for verification.
+    
+    Returns:
+        Dict with detailed integration statistics including:
+        - Total requests
+        - Requests by endpoint
+        - Database query counts
+        - System uptime
+    """
+    global integration_stats, monster_db, item_db
+    
+    # Calculate uptime
+    uptime_seconds = time.time() - integration_stats['start_time']
+    
+    # Get database query counts if available
+    monster_query_count = monster_db.query_count if monster_db else 0
+    item_query_count = item_db.query_count if item_db else 0
+    
+    # Get database sizes
+    monster_count = len(monster_db.monsters) if monster_db else 0
+    item_count = len(item_db.items) if item_db else 0
+    
+    return {
+        "uptime_seconds": int(uptime_seconds),
+        "total_requests": integration_stats['total_requests'],
+        "requests_by_endpoint": integration_stats['requests_by_endpoint'],
+        "decision_requests": integration_stats['decision_requests'],
+        "target_selection_requests": integration_stats['target_selection_requests'],
+        "stat_allocation_requests": integration_stats['stat_allocation_requests'],
+        "skill_allocation_requests": integration_stats['skill_allocation_requests'],
+        "loot_decision_requests": integration_stats['loot_decision_requests'],
+        "database_queries": {
+            "monster": monster_query_count,
+            "item": item_query_count,
+            "total": monster_query_count + item_query_count
+        },
+        "database_info": {
+            "monster_count": monster_count,
+            "item_count": item_count,
+            "monster_db_loaded": monster_db is not None,
+            "item_db_loaded": item_db is not None
+        },
+        "openmemory_operations": integration_stats['openmemory_operations'],
+        "trigger_activations": integration_stats['trigger_activations'],
+        "integration_health": {
+            "openkore_communicating": integration_stats['decision_requests'] > 0,
+            "databases_being_queried": (monster_query_count + item_query_count) > 0,
+            "full_pipeline_active": all([
+                integration_stats['decision_requests'] > 0,
+                monster_query_count > 0 or item_query_count > 0,
+                monster_db is not None,
+                item_db is not None
+            ])
+        },
+        "timestamp": time.time()
+    }
+
 def should_trigger_autobuy(inventory: List[Dict], hp_percent: float, sp_percent: float) -> dict:
     """
     Determine if bot should return to town to buy consumables

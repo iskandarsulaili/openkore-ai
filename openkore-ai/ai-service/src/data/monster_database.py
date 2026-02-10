@@ -116,7 +116,19 @@ class MonsterDatabase:
             Monster data dict or None if not found
         """
         self.query_count += 1
-        return self.monsters_by_id.get(monster_id)
+        
+        # Track query for integration verification
+        logger.debug(f"[MONSTER-DB] Query: get_monster_by_id({monster_id})")
+        
+        result = self.monsters_by_id.get(monster_id)
+        
+        # Log result for integration verification
+        if result:
+            logger.debug(f"[MONSTER-DB] Found: {result.get('name')} (Level {result.get('level')}, HP {result.get('hp')})")
+        else:
+            logger.warning(f"[MONSTER-DB] Not found: ID {monster_id}")
+        
+        return result
     
     def get_monster_by_name(self, name: str, fuzzy: bool = True) -> Optional[Dict]:
         """
@@ -130,11 +142,15 @@ class MonsterDatabase:
             Monster data dict or None if not found
         """
         self.query_count += 1
+        logger.debug(f"[MONSTER-DB] Query: get_monster_by_name('{name}', fuzzy={fuzzy})")
+        
         name_lower = name.lower()
         
         # Exact match first
         if name_lower in self.monsters_by_name:
-            return self.monsters_by_name[name_lower]
+            result = self.monsters_by_name[name_lower]
+            logger.debug(f"[MONSTER-DB] Exact match found: {result.get('name')} (ID {result.get('id')})")
+            return result
         
         # Fuzzy matching for custom content
         if fuzzy:
@@ -172,6 +188,8 @@ class MonsterDatabase:
         player_level = context.get('level', 1)
         available_ids = context.get('monsters', [])
         goal = context.get('goal', 'exp')
+        
+        logger.info(f"[MONSTER-DB] Finding optimal targets: Level {player_level}, Goal '{goal}', Available IDs: {available_ids}")
         
         if not available_ids:
             # Return level-appropriate monsters if no specific list provided

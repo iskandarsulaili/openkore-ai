@@ -22,7 +22,7 @@ class QuestCompleter:
         Initialize quest completer
         
         Args:
-            openkore_client: OpenKore IPC client for commands
+            openkore_client: OpenKore HTTP client (REST API) for commands
         """
         self.openkore = openkore_client
         self._lock = threading.RLock()

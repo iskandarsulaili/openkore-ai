@@ -89,6 +89,456 @@
       "opener": ["Cloaking", "Enchant Poison"],
       "priority": "burst",
       "sp_management": "aggressive"
+    },
+    "Crusader": {
+      "single_target": ["Grand Cross", "Shield Charge", "Heal"],
+      "aoe": ["Grand Cross"],
+      "boss": ["Shield Charge", "Grand Cross", "Heal"],
+      "opener": ["Faith", "Devotion"],
+      "priority": "tank_support",
+      "sp_management": "moderate"
+    },
+    "Monk": {
+      "single_target": ["Combo Finish", "Triple Attack", "Throw Spirit Sphere"],
+      "aoe": ["Occult Impaction"],
+      "boss": ["Asura Strike"],
+      "opener": ["Call Spirits", "Fury"],
+      "priority": "combo_damage",
+      "sp_management": "aggressive"
+    },
+    "Blacksmith": {
+      "single_target": ["Hammerfall", "Cart Revolution", "Mammonite"],
+      "aoe": ["Cart Revolution"],
+      "boss": ["Adrenaline Rush", "Mammonite"],
+      "opener": ["Adrenaline Rush", "Over Thrust"],
+      "priority": "melee_damage",
+      "sp_management": "moderate"
+    },
+    "Alchemist": {
+      "single_target": ["Acid Terror", "Bomb"],
+      "aoe": ["Acid Demonstration"],
+      "boss": ["Acid Demonstration"],
+      "opener": ["Call Homunculus", "Aid Berserk Potion"],
+      "priority": "support_dps",
+      "sp_management": "conservative"
+    },
+    "Sage": {
+      "single_target": ["Cold Bolt", "Fire Bolt", "Lightning Bolt"],
+      "aoe": ["Heaven's Drive"],
+      "boss": ["Dispel", "Fire Bolt", "Cold Bolt"],
+      "opener": ["Dispel", "Land Protector"],
+      "priority": "support_magic",
+      "sp_management": "moderate"
+    },
+    "Rogue": {
+      "single_target": ["Back Stab", "Raid"],
+      "aoe": ["Raid"],
+      "boss": ["Strip Weapon", "Back Stab"],
+      "opener": ["Cloaking", "Preserve"],
+      "priority": "utility",
+      "sp_management": "moderate"
+    },
+    "Bard": {
+      "single_target": ["Double Strafe", "Musical Strike"],
+      "aoe": ["Arrow Shower"],
+      "boss": ["Arrow Vulcan"],
+      "opener": ["Bragi's Poem"],
+      "priority": "support",
+      "sp_management": "conservative",
+      "gender": "male"
+    },
+    "Dancer": {
+      "single_target": ["Double Strafe", "Throw Arrow"],
+      "aoe": ["Arrow Shower"],
+      "boss": ["Arrow Vulcan"],
+      "opener": ["Service for You"],
+      "priority": "support",
+      "sp_management": "conservative",
+      "gender": "female"
+    },
+    "Gunslinger": {
+      "single_target": ["Rapid Shower", "Piercing Shot"],
+      "aoe": ["Desperado", "Spread Attack"],
+      "boss": ["Tracking", "Full Buster"],
+      "opener": ["Coin Flip"],
+      "priority": "ranged_burst",
+      "sp_management": "aggressive"
+    },
+    "Ninja": {
+      "single_target": ["Throw Kunai", "Throw Shuriken"],
+      "aoe": ["Exploding Dragon"],
+      "boss": ["Final Strike"],
+      "opener": ["Cicada Skin Shed"],
+      "priority": "hybrid",
+      "sp_management": "moderate"
+    },
+    "Taekwon": {
+      "single_target": ["Kick", "Flying Kick"],
+      "aoe": ["Whirlwind Kick"],
+      "boss": ["Tornado Kick"],
+      "opener": ["Sprint"],
+      "priority": "kick_damage",
+      "sp_management": "moderate"
+    },
+    "Star_Gladiator": {
+      "single_target": ["Solar Burst", "Lunar Stance Kick"],
+      "aoe": ["Solar Explosion"],
+      "boss": ["Union of Sun Moon and Stars"],
+      "opener": ["Solar Protection"],
+      "priority": "stance_damage",
+      "sp_management": "aggressive"
+    },
+    "Soul_Linker": {
+      "single_target": ["Estin", "Esma"],
+      "aoe": ["Esma"],
+      "boss": ["Esma"],
+      "opener": ["Kaizel", "Kaahi"],
+      "priority": "support_buff",
+      "sp_management": "conservative"
+    },
+    "Super_Novice": {
+      "single_target": ["Bash", "Mammonite", "Fire Bolt"],
+      "aoe": ["Magnum Break"],
+      "boss": ["Bash"],
+      "opener": ["Increase AGI", "Blessing"],
+      "priority": "versatile",
+      "sp_management": "moderate"
+    },
+    "Summoner": {
+      "single_target": ["Picky Peck", "Lunatic Carrot Beat"],
+      "aoe": ["Catnip Meteor"],
+      "boss": ["Scaraba Cry"],
+      "opener": ["Meow Meow"],
+      "priority": "summon_support",
+      "sp_management": "moderate"
+    },
+    "Novice": {
+      "single_target": ["Attack"],
+      "aoe": ["Attack"],
+      "boss": ["Attack"],
+      "opener": ["First Aid"],
+      "priority": "basic",
+      "sp_management": "conservative"
+    },
+    "Rune_Knight": {
+      "single_target": ["Ignition Break", "Dragon Breath", "Hundred Spear"],
+      "aoe": ["Ignition Break", "Dragon Breath"],
+      "boss": ["Dragon Breath", "Hundred Spear", "Sonic Wave"],
+      "opener": ["Rune Mastery", "Abundance"],
+      "priority": "rune_burst",
+      "sp_management": "aggressive"
+    },
+    "Royal_Guard": {
+      "single_target": ["Shield Press", "Overbrand", "Earth Drive"],
+      "aoe": ["Grand Cross", "Earth Drive"],
+      "boss": ["Shield Press", "Overbrand"],
+      "opener": ["Prestige", "Banding"],
+      "priority": "tank_damage",
+      "sp_management": "moderate"
+    },
+    "Warlock": {
+      "single_target": ["Soul Expansion", "Chain Lightning", "Crimson Rock"],
+      "aoe": ["Chain Lightning", "Tetra Vortex", "Comet"],
+      "boss": ["Release", "Crimson Rock", "Soul Expansion"],
+      "opener": ["Recognized Spell", "Reading Spellbook"],
+      "priority": "magic_burst",
+      "sp_management": "aggressive"
+    },
+    "Sorcerer": {
+      "single_target": ["Psychic Wave", "Cloud Kill", "Fire Walk"],
+      "aoe": ["Psychic Wave", "Varetyr Spear"],
+      "boss": ["Summon Elemental", "Diamond Dust", "Varetyr Spear"],
+      "opener": ["Elemental Control", "Summon Elemental"],
+      "priority": "elemental_control",
+      "sp_management": "moderate"
+    },
+    "Ranger": {
+      "single_target": ["Aimed Bolt", "Sharp Shooting", "Arrow Storm"],
+      "aoe": ["Arrow Storm", "Electric Shocker"],
+      "boss": ["Aimed Bolt", "Cluster Bomb"],
+      "opener": ["Warg Mastery", "Camouflage"],
+      "priority": "ranged_control",
+      "sp_management": "moderate"
+    },
+    "Minstrel": {
+      "single_target": ["Metallic Sound", "Severe Rainstorm"],
+      "aoe": ["Severe Rainstorm"],
+      "boss": ["Metallic Sound", "Severe Rainstorm"],
+      "opener": ["Great Echo"],
+      "priority": "support_burst",
+      "sp_management": "moderate",
+      "gender": "male"
+    },
+    "Wanderer": {
+      "single_target": ["Metallic Sound", "Severe Rainstorm"],
+      "aoe": ["Severe Rainstorm"],
+      "boss": ["Metallic Sound", "Severe Rainstorm"],
+      "opener": ["Great Echo"],
+      "priority": "support_burst",
+      "sp_management": "moderate",
+      "gender": "female"
+    },
+    "Arch_Bishop": {
+      "single_target": ["Adoramus", "Judex"],
+      "aoe": ["Judex", "Magnus Exorcismus"],
+      "boss": ["Adoramus", "Duple Light"],
+      "opener": ["Praefatio", "Clementia", "Canto Candidus"],
+      "priority": "holy_support",
+      "sp_management": "conservative"
+    },
+    "Sura": {
+      "single_target": ["Tiger Cannon", "Gates of Hell", "Sky Net Blow"],
+      "aoe": ["Gates of Hell", "Windmill"],
+      "boss": ["Tiger Cannon", "Gates of Hell"],
+      "opener": ["Flash Combo", "Cursed Circle"],
+      "priority": "combo_burst",
+      "sp_management": "aggressive"
+    },
+    "Mechanic": {
+      "single_target": ["Arm Cannon", "Axe Boomerang", "Power Swing"],
+      "aoe": ["Arm Cannon", "Axe Tornado"],
+      "boss": ["Pile Bunker", "Arm Cannon"],
+      "opener": ["Madogear", "Acceleration"],
+      "priority": "mado_damage",
+      "sp_management": "moderate"
+    },
+    "Genetic": {
+      "single_target": ["Cart Cannon", "Spore Explosion"],
+      "aoe": ["Cart Cannon", "Crazy Weed"],
+      "boss": ["Hell's Plant", "Cart Cannon"],
+      "opener": ["Call Homunculus S", "Crazy Weed"],
+      "priority": "plant_bomb",
+      "sp_management": "moderate"
+    },
+    "Guillotine_Cross": {
+      "single_target": ["Cross Ripper Slasher", "Dark Claw", "Soul Breaker"],
+      "aoe": ["Cross Ripper Slasher", "Rolling Cutter"],
+      "boss": ["Dark Claw", "Cross Impact"],
+      "opener": ["Weaponry Research", "Enchant Deadly Poison"],
+      "priority": "poison_burst",
+      "sp_management": "aggressive"
+    },
+    "Shadow_Chaser": {
+      "single_target": ["Triangle Shot", "Feint Bomb"],
+      "aoe": ["Triangle Shot", "Raid"],
+      "boss": ["Fatal Menace", "Feint Bomb"],
+      "opener": ["Auto Shadow Spell", "Reproduce"],
+      "priority": "utility_burst",
+      "sp_management": "moderate"
+    },
+    "Rebellion": {
+      "single_target": ["Slug Shot", "Fire Rain", "Dragon Tail"],
+      "aoe": ["Round Trip", "Fire Rain"],
+      "boss": ["Hammer of God", "Slug Shot"],
+      "opener": ["Platinum Alter", "Mass Spiral"],
+      "priority": "gun_burst",
+      "sp_management": "aggressive"
+    },
+    "Kagerou": {
+      "single_target": ["Cross Slash", "Flame Blossom", "Soul"],
+      "aoe": ["Cross Slash", "Exploding Dragon"],
+      "boss": ["Illusionary Shadow", "Soul"],
+      "opener": ["Ninja Aura", "Killing Stroke"],
+      "priority": "ninja_burst",
+      "sp_management": "moderate",
+      "gender": "male"
+    },
+    "Oboro": {
+      "single_target": ["Cross Slash", "Flame Blossom", "Soul"],
+      "aoe": ["Cross Slash", "Exploding Dragon"],
+      "boss": ["Illusionary Shadow", "Soul"],
+      "opener": ["Ninja Aura", "Killing Stroke"],
+      "priority": "ninja_burst",
+      "sp_management": "moderate",
+      "gender": "female"
+    },
+    "Star_Emperor": {
+      "single_target": ["Solar Burst", "New Moon Kick", "Full Throttle"],
+      "aoe": ["Dimension Crusher", "Star Buster"],
+      "boss": ["Solar Burst", "Dimension Crusher"],
+      "opener": ["Stellar Protection", "Stellar Blessing"],
+      "priority": "stellar_burst",
+      "sp_management": "aggressive"
+    },
+    "Soul_Reaper": {
+      "single_target": ["Soul Exhale", "Soul Reaper"],
+      "aoe": ["Soul Reaper", "Soul Explosion"],
+      "boss": ["Soul Exhale", "Soul Reaper"],
+      "opener": ["Soul Energy", "Soul Gather"],
+      "priority": "soul_magic",
+      "sp_management": "moderate"
+    },
+    "Dragon_Knight": {
+      "single_target": ["Dragon Breath - Water", "Madness Crusher"],
+      "aoe": ["Dragon Breath - Water", "Ignition Crush"],
+      "boss": ["Madness Crusher", "Dragon Breath - Water"],
+      "opener": ["Dragon Howling", "Dragon Combo"],
+      "priority": "dragon_power",
+      "sp_management": "aggressive"
+    },
+    "Imperial_Guard": {
+      "single_target": ["Shield Shooting", "Vanishing Buster"],
+      "aoe": ["Shield Shooting", "Grand Judgment"],
+      "boss": ["Vanishing Buster", "Inspiration"],
+      "opener": ["Prestige", "Shield Spell"],
+      "priority": "shield_burst",
+      "sp_management": "moderate"
+    },
+    "Arch_Mage": {
+      "single_target": ["Crimson Arrow", "Soul Curse"],
+      "aoe": ["Soul Curse", "Crimson Arrow"],
+      "boss": ["Crimson Arrow", "Soul Curse"],
+      "opener": ["Magic Essence"],
+      "priority": "advanced_magic",
+      "sp_management": "aggressive"
+    },
+    "Elemental_Master": {
+      "single_target": ["Elemental Buster", "Elemental Shield"],
+      "aoe": ["Elemental Buster"],
+      "boss": ["Elemental Buster", "Summon Elemental"],
+      "opener": ["Elemental Control", "Elemental Veil"],
+      "priority": "elemental_power",
+      "sp_management": "moderate"
+    },
+    "Windhawk": {
+      "single_target": ["Aimed Bolt", "Unlimit"],
+      "aoe": ["Aimed Bolt", "Crescive Bolt"],
+      "boss": ["Unlimit", "Aimed Bolt"],
+      "opener": ["Warg Mastery"],
+      "priority": "ultimate_range",
+      "sp_management": "aggressive"
+    },
+    "Troubadour": {
+      "single_target": ["Metallic Sound", "Severe Rainstorm"],
+      "aoe": ["Severe Rainstorm"],
+      "boss": ["Metallic Sound"],
+      "opener": ["Song of Mana", "Dance with Warg"],
+      "priority": "advanced_support",
+      "sp_management": "moderate",
+      "gender": "male"
+    },
+    "Trouvere": {
+      "single_target": ["Metallic Sound", "Severe Rainstorm"],
+      "aoe": ["Severe Rainstorm"],
+      "boss": ["Metallic Sound"],
+      "opener": ["Song of Mana", "Dance with Warg"],
+      "priority": "advanced_support",
+      "sp_management": "moderate",
+      "gender": "female"
+    },
+    "Cardinal": {
+      "single_target": ["Adoramus", "Judex"],
+      "aoe": ["Judex", "Magnus Exorcismus"],
+      "boss": ["Adoramus", "Eucharistica"],
+      "opener": ["Pneuma", "Religio"],
+      "priority": "divine_power",
+      "sp_management": "conservative"
+    },
+    "Inquisitor": {
+      "single_target": ["Tiger Cannon", "Gates of Hell"],
+      "aoe": ["Gates of Hell"],
+      "boss": ["Tiger Cannon", "Exploding Dragon"],
+      "opener": ["Meditation"],
+      "priority": "ultimate_combo",
+      "sp_management": "aggressive"
+    },
+    "Meister": {
+      "single_target": ["Arm Cannon", "Pile Bunker"],
+      "aoe": ["Arm Cannon", "Axe Tornado"],
+      "boss": ["Pile Bunker", "Boost Knuckle"],
+      "opener": ["Madogear Mastery"],
+      "priority": "mecha_power",
+      "sp_management": "moderate"
+    },
+    "Biolo": {
+      "single_target": ["Cart Cannon", "Crazy Weed"],
+      "aoe": ["Cart Cannon", "Crazy Weed"],
+      "boss": ["Hell's Plant", "Cart Tornado"],
+      "opener": ["Homunculus S"],
+      "priority": "bio_power",
+      "sp_management": "moderate"
+    },
+    "Shadow_Cross": {
+      "single_target": ["Cross Ripper Slasher", "Dark Claw"],
+      "aoe": ["Rolling Cutter"],
+      "boss": ["Cross Impact", "Dark Claw"],
+      "opener": ["Enchant Deadly Poison"],
+      "priority": "ultimate_poison",
+      "sp_management": "aggressive"
+    },
+    "Abyss_Chaser": {
+      "single_target": ["Triangle Shot", "Feint Bomb"],
+      "aoe": ["Triangle Shot"],
+      "boss": ["Fatal Menace"],
+      "opener": ["Auto Shadow Spell"],
+      "priority": "ultimate_utility",
+      "sp_management": "moderate"
+    },
+    "Night_Watch": {
+      "single_target": ["Slug Shot", "Fire Rain"],
+      "aoe": ["Round Trip", "Fire Rain"],
+      "boss": ["Hammer of God"],
+      "opener": ["Platinum Alter"],
+      "priority": "ultimate_gun",
+      "sp_management": "aggressive"
+    },
+    "Shinkiro": {
+      "single_target": ["Cross Slash", "Flame Blossom"],
+      "aoe": ["Exploding Dragon"],
+      "boss": ["Illusionary Shadow"],
+      "opener": ["Ninja Aura"],
+      "priority": "ultimate_ninja",
+      "sp_management": "moderate",
+      "gender": "male"
+    },
+    "Shiranui": {
+      "single_target": ["Cross Slash", "Flame Blossom"],
+      "aoe": ["Exploding Dragon"],
+      "boss": ["Illusionary Shadow"],
+      "opener": ["Ninja Aura"],
+      "priority": "ultimate_ninja",
+      "sp_management": "moderate",
+      "gender": "female"
+    },
+    "Sky_Emperor": {
+      "single_target": ["Solar Burst", "Dimension Crusher"],
+      "aoe": ["Dimension Crusher", "Star Buster"],
+      "boss": ["Full Throttle", "Solar Burst"],
+      "opener": ["Stellar Protection"],
+      "priority": "ultimate_stellar",
+      "sp_management": "aggressive"
+    },
+    "Soul_Ascetic": {
+      "single_target": ["Soul Exhale", "Soul Reaper"],
+      "aoe": ["Soul Explosion"],
+      "boss": ["Soul Reaper"],
+      "opener": ["Soul Energy"],
+      "priority": "ultimate_soul",
+      "sp_management": "moderate"
+    },
+    "Super_Novice_E": {
+      "single_target": ["Bash", "Mammonite", "Fire Bolt"],
+      "aoe": ["Magnum Break", "Cold Bolt"],
+      "boss": ["Bash", "Fire Bolt"],
+      "opener": ["Increase AGI", "Blessing"],
+      "priority": "enhanced_versatile",
+      "sp_management": "moderate"
+    },
+    "Hyper_Novice": {
+      "single_target": ["Bash", "Mammonite", "Fire Bolt"],
+      "aoe": ["Magnum Break", "Cold Bolt"],
+      "boss": ["Bash", "Fire Bolt"],
+      "opener": ["Increase AGI", "Blessing"],
+      "priority": "ultimate_versatile",
+      "sp_management": "moderate"
+    },
+    "Spirit_Handler": {
+      "single_target": ["Picky Peck", "Lunatic Carrot Beat"],
+      "aoe": ["Catnip Meteor"],
+      "boss": ["Scaraba Cry"],
+      "opener": ["Meow Meow", "Grooming"],
+      "priority": "ultimate_summon",
+      "sp_management": "moderate"
     }
   },
   "skill_priorities": {

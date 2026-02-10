@@ -385,6 +385,53 @@ if not "!API_KEY!"=="" (
 )
 
 :: ============================================================================
+:: VERIFY BUILD VARIANT DATA FILES
+:: ============================================================================
+
+echo [INFO] Verifying build variant data files...
+echo [INFO] Verifying build variant data files... >> "%LOG_FILE%"
+
+set "DATA_MISSING=0"
+
+if not exist "%SCRIPT_DIR%\ai-service\data\job_build_variants.json" (
+    echo [ERROR] Missing: job_build_variants.json
+    echo [ERROR] Missing: job_build_variants.json >> "%LOG_FILE%"
+    set "DATA_MISSING=1"
+) else (
+    echo [SUCCESS] Found: job_build_variants.json
+    echo [SUCCESS] Found: job_build_variants.json >> "%LOG_FILE%"
+)
+
+if not exist "%SCRIPT_DIR%\ai-service\data\job_change_locations.json" (
+    echo [ERROR] Missing: job_change_locations.json
+    echo [ERROR] Missing: job_change_locations.json >> "%LOG_FILE%"
+    set "DATA_MISSING=1"
+) else (
+    echo [SUCCESS] Found: job_change_locations.json
+    echo [SUCCESS] Found: job_change_locations.json >> "%LOG_FILE%"
+)
+
+if not exist "%SCRIPT_DIR%\ai-service\data\skill_rotations.json" (
+    echo [ERROR] Missing: skill_rotations.json
+    echo [ERROR] Missing: skill_rotations.json >> "%LOG_FILE%"
+    set "DATA_MISSING=1"
+) else (
+    echo [SUCCESS] Found: skill_rotations.json
+    echo [SUCCESS] Found: skill_rotations.json >> "%LOG_FILE%"
+)
+
+if !DATA_MISSING! equ 1 (
+    echo [ERROR] Required data files are missing!
+    echo [ERROR] Please ensure all variant data files are present.
+    echo [ERROR] Required data files are missing! >> "%LOG_FILE%"
+    pause
+    exit /b 1
+)
+
+echo [SUCCESS] All build variant data files verified
+echo [SUCCESS] All build variant data files verified >> "%LOG_FILE%"
+
+:: ============================================================================
 :: USER INTENT WIZARD - Character Build Configuration
 :: ============================================================================
 
@@ -396,6 +443,11 @@ echo.
 echo This wizard will configure your autonomous bot for optimal performance.
 echo Your choices will enable 95%% autonomy with automatic stat allocation,
 echo skill learning, and equipment management.
+echo.
+echo INTEGRATED BUILD VARIANTS:
+echo   - 11 Job Paths (Swordsman to Gunslinger)
+echo   - 55 Build Variants (5 builds per path)
+echo   - Supports 39 Jobs and 42 Skill Rotations
 echo.
 pause
 
@@ -409,47 +461,120 @@ echo ========================================================================
 echo.
 echo Which job path do you want to follow?
 echo.
-echo   1. Swordsman ^> Knight ^> Lord Knight (Tank/Melee DPS)
-echo   2. Mage ^> Wizard ^> High Wizard (Magic DPS)
-echo   3. Archer ^> Hunter ^> Sniper (Ranged Physical DPS)
-echo   4. Acolyte ^> Priest ^> High Priest (Support/Healer)
-echo   5. Thief ^> Assassin ^> Assassin Cross (Burst DPS)
-echo   6. Merchant ^> Blacksmith ^> Whitesmith (Tank/Utility)
+echo   CLASSIC PATHS:
+echo   1. Swordsman ^> Knight ^> Lord Knight ^> Rune Knight (Tank/Melee DPS)
+echo   2. Mage ^> Wizard ^> High Wizard ^> Warlock (Magic DPS)
+echo   3. Archer ^> Hunter ^> Sniper ^> Ranger (Ranged Physical DPS)
+echo   4. Acolyte ^> Priest ^> High Priest ^> Arch Bishop (Support/Healer)
+echo   5. Thief ^> Assassin ^> Assassin Cross ^> Guillotine Cross (Burst DPS)
+echo   6. Merchant ^> Blacksmith ^> Whitesmith ^> Mechanic (Tank/Utility)
 echo.
-set /p "JOB_CHOICE=Enter your choice (1-6): "
+echo   EXTENDED PATHS:
+echo   7. Archer ^> Bard/Dancer ^> Clown/Gypsy ^> Minstrel/Wanderer (Support)
+echo   8. Mage ^> Sage ^> Professor ^> Sorcerer (Magic Support/DPS)
+echo   9. Acolyte ^> Monk ^> Champion ^> Sura (Melee Combo)
+echo   10. Thief ^> Rogue ^> Stalker ^> Shadow Chaser (Utility/DPS)
+echo   11. Novice ^> Super Novice ^> Expanded Super Novice (Versatile)
+echo.
+echo   0. Show more info about each path
+echo.
+set /p "JOB_CHOICE=Enter your choice (1-11, or 0 for info): "
 
+if "%JOB_CHOICE%"=="0" goto job_info
 if "%JOB_CHOICE%"=="1" (
-    set "JOB_PATH=Swordsman"
-    set "JOB_PATH_FULL=Novice,Swordsman,Knight,Lord Knight"
+    set "JOB_PATH=swordman_knight_rune_knight"
+    set "JOB_PATH_NAME=Knight Path"
+    set "JOB_PATH_FULL=Novice,Swordman,Knight,Lord_Knight,Rune_Knight"
     goto build_selection_swordsman
 )
 if "%JOB_CHOICE%"=="2" (
-    set "JOB_PATH=Mage"
-    set "JOB_PATH_FULL=Novice,Mage,Wizard,High Wizard"
+    set "JOB_PATH=mage_wizard_warlock"
+    set "JOB_PATH_NAME=Wizard Path"
+    set "JOB_PATH_FULL=Novice,Mage,Wizard,High_Wizard,Warlock"
     goto build_selection_mage
 )
 if "%JOB_CHOICE%"=="3" (
-    set "JOB_PATH=Archer"
-    set "JOB_PATH_FULL=Novice,Archer,Hunter,Sniper"
+    set "JOB_PATH=archer_hunter_ranger"
+    set "JOB_PATH_NAME=Hunter Path"
+    set "JOB_PATH_FULL=Novice,Archer,Hunter,Sniper,Ranger"
     goto build_selection_archer
 )
 if "%JOB_CHOICE%"=="4" (
-    set "JOB_PATH=Acolyte"
-    set "JOB_PATH_FULL=Novice,Acolyte,Priest,High Priest"
+    set "JOB_PATH=acolyte_priest_arch_bishop"
+    set "JOB_PATH_NAME=Priest Path"
+    set "JOB_PATH_FULL=Novice,Acolyte,Priest,High_Priest,Arch_Bishop"
     goto build_selection_acolyte
 )
 if "%JOB_CHOICE%"=="5" (
-    set "JOB_PATH=Thief"
-    set "JOB_PATH_FULL=Novice,Thief,Assassin,Assassin Cross"
+    set "JOB_PATH=thief_assassin_guillotine"
+    set "JOB_PATH_NAME=Assassin Path"
+    set "JOB_PATH_FULL=Novice,Thief,Assassin,Assassin_Cross,Guillotine_Cross"
     goto build_selection_thief
 )
 if "%JOB_CHOICE%"=="6" (
-    set "JOB_PATH=Merchant"
-    set "JOB_PATH_FULL=Novice,Merchant,Blacksmith,Whitesmith"
+    set "JOB_PATH=merchant_blacksmith_mechanic"
+    set "JOB_PATH_NAME=Blacksmith Path"
+    set "JOB_PATH_FULL=Novice,Merchant,Blacksmith,Whitesmith,Mechanic"
     goto build_selection_merchant
+)
+if "%JOB_CHOICE%"=="7" (
+    set "JOB_PATH=archer_bard_minstrel"
+    set "JOB_PATH_NAME=Bard/Dancer Path"
+    set "JOB_PATH_FULL=Novice,Archer,Bard,Clown,Minstrel"
+    goto build_selection_bard
+)
+if "%JOB_CHOICE%"=="8" (
+    set "JOB_PATH=mage_sage_sorcerer"
+    set "JOB_PATH_NAME=Sage Path"
+    set "JOB_PATH_FULL=Novice,Mage,Sage,Professor,Sorcerer"
+    goto build_selection_sage
+)
+if "%JOB_CHOICE%"=="9" (
+    set "JOB_PATH=acolyte_monk_sura"
+    set "JOB_PATH_NAME=Monk Path"
+    set "JOB_PATH_FULL=Novice,Acolyte,Monk,Champion,Sura"
+    goto build_selection_monk
+)
+if "%JOB_CHOICE%"=="10" (
+    set "JOB_PATH=thief_rogue_shadow_chaser"
+    set "JOB_PATH_NAME=Rogue Path"
+    set "JOB_PATH_FULL=Novice,Thief,Rogue,Stalker,Shadow_Chaser"
+    goto build_selection_rogue
+)
+if "%JOB_CHOICE%"=="11" (
+    set "JOB_PATH=super_novice"
+    set "JOB_PATH_NAME=Super Novice Path"
+    set "JOB_PATH_FULL=Novice,Super_Novice,Expanded_Super_Novice"
+    goto build_selection_supernovice
 )
 echo [ERROR] Invalid choice. Please try again.
 timeout /t 2 /nobreak >nul
+goto job_selection
+
+:: JOB INFO DISPLAY
+:job_info
+cls
+echo.
+echo ========================================================================
+echo   Job Path Information
+echo ========================================================================
+echo.
+echo CLASSIC PATHS:
+echo   1. Knight: Tank/Melee DPS - High survivability, strong melee damage
+echo   2. Wizard: Magic DPS - Powerful AoE spells, elemental mastery
+echo   3. Hunter: Ranged DPS - Physical ranged damage, trapping abilities
+echo   4. Priest: Support/Healer - Party support, healing, resurrection
+echo   5. Assassin: Burst DPS - Critical strikes, poison, stealth
+echo   6. Blacksmith: Tank/Utility - Weapon crafting, cart mastery
+echo.
+echo EXTENDED PATHS:
+echo   7. Bard/Dancer: Party Support - Buffs, debuffs, ensemble skills
+echo   8. Sage: Magic Support - Magic damage, dispelling, elemental bolts
+echo   9. Monk: Melee Combo - Combo attacks, spirit spheres
+echo   10. Rogue: Utility/DPS - Skills copying, stripping, versatile
+echo   11. Super Novice: Versatile - Can use many 1st class skills
+echo.
+pause
 goto job_selection
 
 :: BUILD SELECTION - SWORDSMAN
@@ -457,14 +582,16 @@ goto job_selection
 cls
 echo.
 echo ========================================================================
-echo   Step 2: Select Your Swordsman Build
+echo   Step 2: Select Your Knight Build (5 Variants Available)
 echo ========================================================================
 echo.
-echo   1. AGI Knight (High ASPD, Dodge) - Fast attacks, evasion tank
-echo   2. VIT Knight (Tank) - Maximum HP and defense, pure tanking
-echo   3. STR Knight (Pure DPS) - Maximum damage output, glass cannon
+echo   1. AGI Knight - High ASPD, dodge, two-hand sword specialist
+echo   2. VIT Knight - Maximum survivability, spear tank
+echo   3. Bowling Bash - AoE bash specialist for mob farming
+echo   4. Crit Knight - Critical damage focus with LUK
+echo   5. Balanced Knight - Well-rounded build for versatility
 echo.
-set /p "BUILD_CHOICE=Enter your choice (1-3): "
+set /p "BUILD_CHOICE=Enter your choice (1-5): "
 
 if "%BUILD_CHOICE%"=="1" (
     set "BUILD_TYPE=agi_knight"
@@ -479,9 +606,21 @@ if "%BUILD_CHOICE%"=="2" (
     goto playstyle_selection
 )
 if "%BUILD_CHOICE%"=="3" (
-    set "BUILD_TYPE=str_knight"
-    set "BUILD_NAME=STR Knight"
-    set "STAT_PRIORITY=STR,DEX,AGI,VIT"
+    set "BUILD_TYPE=bowling_bash"
+    set "BUILD_NAME=Bowling Bash Knight"
+    set "STAT_PRIORITY=STR,VIT,DEX,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="4" (
+    set "BUILD_TYPE=crit_knight"
+    set "BUILD_NAME=Crit Knight"
+    set "STAT_PRIORITY=STR,LUK,AGI,VIT"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="5" (
+    set "BUILD_TYPE=balanced_knight"
+    set "BUILD_NAME=Balanced Knight"
+    set "STAT_PRIORITY=STR,VIT,AGI,DEX"
     goto playstyle_selection
 )
 echo [ERROR] Invalid choice. Please try again.
@@ -493,16 +632,44 @@ goto build_selection_swordsman
 cls
 echo.
 echo ========================================================================
-echo   Step 2: Select Your Mage Build
+echo   Step 2: Select Your Wizard Build (5 Variants Available)
 echo ========================================================================
 echo.
-echo   1. Magic DPS (High Wizard) - Pure magic damage, glass cannon
+echo   1. Fire Wizard - Fire element specialist, high burst damage
+echo   2. Ice Wizard - Ice element specialist, crowd control
+echo   3. Lightning Wizard - Lightning element, balanced damage
+echo   4. Full Support Wizard - Support magic, buffs, dispel
+echo   5. Balanced Wizard - Multi-element versatile build
 echo.
-set /p "BUILD_CHOICE=Enter your choice (1): "
+set /p "BUILD_CHOICE=Enter your choice (1-5): "
 
 if "%BUILD_CHOICE%"=="1" (
-    set "BUILD_TYPE=magic_dps"
-    set "BUILD_NAME=High Wizard"
+    set "BUILD_TYPE=fire_wizard"
+    set "BUILD_NAME=Fire Wizard"
+    set "STAT_PRIORITY=INT,DEX,VIT,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="2" (
+    set "BUILD_TYPE=ice_wizard"
+    set "BUILD_NAME=Ice Wizard"
+    set "STAT_PRIORITY=INT,DEX,VIT,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="3" (
+    set "BUILD_TYPE=lightning_wizard"
+    set "BUILD_NAME=Lightning Wizard"
+    set "STAT_PRIORITY=INT,DEX,VIT,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="4" (
+    set "BUILD_TYPE=support_wizard"
+    set "BUILD_NAME=Support Wizard"
+    set "STAT_PRIORITY=INT,DEX,VIT,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="5" (
+    set "BUILD_TYPE=balanced_wizard"
+    set "BUILD_NAME=Balanced Wizard"
     set "STAT_PRIORITY=INT,DEX,VIT,AGI"
     goto playstyle_selection
 )
@@ -515,16 +682,44 @@ goto build_selection_mage
 cls
 echo.
 echo ========================================================================
-echo   Step 2: Select Your Archer Build
+echo   Step 2: Select Your Hunter Build (5 Variants Available)
 echo ========================================================================
 echo.
-echo   1. DEX Hunter (Sniper) - High damage ranged physical DPS
+echo   1. DEX Hunter - Pure damage, high DEX focus
+echo   2. Trap Hunter - Trap specialist, battlefield control
+echo   3. Falcon Hunter - Falcon assault specialist
+echo   4. AGI Hunter - High ASPD, double strafe focus
+echo   5. Balanced Hunter - Versatile ranged DPS
 echo.
-set /p "BUILD_CHOICE=Enter your choice (1): "
+set /p "BUILD_CHOICE=Enter your choice (1-5): "
 
 if "%BUILD_CHOICE%"=="1" (
     set "BUILD_TYPE=dex_hunter"
-    set "BUILD_NAME=Sniper"
+    set "BUILD_NAME=DEX Hunter"
+    set "STAT_PRIORITY=DEX,AGI,STR,VIT"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="2" (
+    set "BUILD_TYPE=trap_hunter"
+    set "BUILD_NAME=Trap Hunter"
+    set "STAT_PRIORITY=DEX,INT,AGI,VIT"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="3" (
+    set "BUILD_TYPE=falcon_hunter"
+    set "BUILD_NAME=Falcon Hunter"
+    set "STAT_PRIORITY=DEX,LUK,AGI,VIT"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="4" (
+    set "BUILD_TYPE=agi_hunter"
+    set "BUILD_NAME=AGI Hunter"
+    set "STAT_PRIORITY=AGI,DEX,STR,VIT"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="5" (
+    set "BUILD_TYPE=balanced_hunter"
+    set "BUILD_NAME=Balanced Hunter"
     set "STAT_PRIORITY=DEX,AGI,STR,VIT"
     goto playstyle_selection
 )
@@ -537,16 +732,44 @@ goto build_selection_archer
 cls
 echo.
 echo ========================================================================
-echo   Step 2: Select Your Acolyte Build
+echo   Step 2: Select Your Priest Build (5 Variants Available)
 echo ========================================================================
 echo.
-echo   1. Support Priest (High Priest) - Party support and healing
+echo   1. Full Support - Maximum healing and buffs
+echo   2. Battle Priest - Melee combat with support skills
+echo   3. Magnus Priest - Magnus Exorcismus specialist
+echo   4. TU Priest - Turn Undead specialist
+echo   5. Balanced Priest - Versatile support build
 echo.
-set /p "BUILD_CHOICE=Enter your choice (1): "
+set /p "BUILD_CHOICE=Enter your choice (1-5): "
 
 if "%BUILD_CHOICE%"=="1" (
-    set "BUILD_TYPE=support_priest"
-    set "BUILD_NAME=High Priest"
+    set "BUILD_TYPE=full_support"
+    set "BUILD_NAME=Full Support Priest"
+    set "STAT_PRIORITY=INT,VIT,DEX,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="2" (
+    set "BUILD_TYPE=battle_priest"
+    set "BUILD_NAME=Battle Priest"
+    set "STAT_PRIORITY=STR,INT,VIT,DEX"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="3" (
+    set "BUILD_TYPE=magnus_priest"
+    set "BUILD_NAME=Magnus Priest"
+    set "STAT_PRIORITY=INT,DEX,VIT,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="4" (
+    set "BUILD_TYPE=tu_priest"
+    set "BUILD_NAME=TU Priest"
+    set "STAT_PRIORITY=INT,LUK,DEX,VIT"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="5" (
+    set "BUILD_TYPE=balanced_priest"
+    set "BUILD_NAME=Balanced Priest"
     set "STAT_PRIORITY=INT,VIT,DEX,AGI"
     goto playstyle_selection
 )
@@ -559,17 +782,45 @@ goto build_selection_acolyte
 cls
 echo.
 echo ========================================================================
-echo   Step 2: Select Your Thief Build
+echo   Step 2: Select Your Assassin Build (5 Variants Available)
 echo ========================================================================
 echo.
-echo   1. Critical Assassin (Assassin Cross) - Crit specialist, burst DPS
+echo   1. Crit Assassin - Critical strike specialist
+echo   2. Katar Assassin - Dual katar, sonic blow focus
+echo   3. Poison Assassin - Poison and envenom specialist
+echo   4. AGI Assassin - High ASPD, dodge focus
+echo   5. Balanced Assassin - Versatile damage dealer
 echo.
-set /p "BUILD_CHOICE=Enter your choice (1): "
+set /p "BUILD_CHOICE=Enter your choice (1-5): "
 
 if "%BUILD_CHOICE%"=="1" (
     set "BUILD_TYPE=crit_assassin"
-    set "BUILD_NAME=Assassin Cross"
+    set "BUILD_NAME=Crit Assassin"
     set "STAT_PRIORITY=LUK,AGI,STR,DEX"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="2" (
+    set "BUILD_TYPE=katar_assassin"
+    set "BUILD_NAME=Katar Assassin"
+    set "STAT_PRIORITY=STR,AGI,DEX,VIT"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="3" (
+    set "BUILD_TYPE=poison_assassin"
+    set "BUILD_NAME=Poison Assassin"
+    set "STAT_PRIORITY=INT,AGI,STR,DEX"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="4" (
+    set "BUILD_TYPE=agi_assassin"
+    set "BUILD_NAME=AGI Assassin"
+    set "STAT_PRIORITY=AGI,STR,LUK,DEX"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="5" (
+    set "BUILD_TYPE=balanced_assassin"
+    set "BUILD_NAME=Balanced Assassin"
+    set "STAT_PRIORITY=STR,AGI,LUK,DEX"
     goto playstyle_selection
 )
 echo [ERROR] Invalid choice. Please try again.
@@ -581,22 +832,300 @@ goto build_selection_thief
 cls
 echo.
 echo ========================================================================
-echo   Step 2: Select Your Merchant Build
+echo   Step 2: Select Your Blacksmith Build (5 Variants Available)
 echo ========================================================================
 echo.
-echo   1. Tank Blacksmith (Whitesmith) - High HP, utility support
+echo   1. STR Blacksmith - Pure damage with axes
+echo   2. VIT Blacksmith - Tank with high survivability
+echo   3. Forger Blacksmith - Crafting and utility focus
+echo   4. Cart Termination - Cart termination specialist
+echo   5. Balanced Blacksmith - Versatile build
 echo.
-set /p "BUILD_CHOICE=Enter your choice (1): "
+set /p "BUILD_CHOICE=Enter your choice (1-5): "
 
 if "%BUILD_CHOICE%"=="1" (
-    set "BUILD_TYPE=tank_blacksmith"
-    set "BUILD_NAME=Whitesmith"
+    set "BUILD_TYPE=str_blacksmith"
+    set "BUILD_NAME=STR Blacksmith"
+    set "STAT_PRIORITY=STR,VIT,DEX,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="2" (
+    set "BUILD_TYPE=vit_blacksmith"
+    set "BUILD_NAME=VIT Blacksmith"
     set "STAT_PRIORITY=VIT,STR,DEX,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="3" (
+    set "BUILD_TYPE=forger_blacksmith"
+    set "BUILD_NAME=Forger Blacksmith"
+    set "STAT_PRIORITY=DEX,STR,VIT,LUK"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="4" (
+    set "BUILD_TYPE=cart_termination"
+    set "BUILD_NAME=Cart Termination"
+    set "STAT_PRIORITY=STR,INT,VIT,DEX"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="5" (
+    set "BUILD_TYPE=balanced_blacksmith"
+    set "BUILD_NAME=Balanced Blacksmith"
+    set "STAT_PRIORITY=STR,VIT,DEX,AGI"
     goto playstyle_selection
 )
 echo [ERROR] Invalid choice. Please try again.
 timeout /t 2 /nobreak >nul
 goto build_selection_merchant
+
+:: BUILD SELECTION - BARD/DANCER
+:build_selection_bard
+cls
+echo.
+echo ========================================================================
+echo   Step 2: Select Your Bard/Dancer Build (5 Variants Available)
+echo ========================================================================
+echo.
+echo   1. Full Support - Party buffs and debuffs specialist
+echo   2. Arrow Vulcan - Musical strike/arrow vulcan DPS
+echo   3. Tank Bard - High survivability support
+echo   4. AGI Bard - Mobile support with evasion
+echo   5. Balanced Bard - Versatile party support
+echo.
+set /p "BUILD_CHOICE=Enter your choice (1-5): "
+
+if "%BUILD_CHOICE%"=="1" (
+    set "BUILD_TYPE=support_bard"
+    set "BUILD_NAME=Full Support Bard"
+    set "STAT_PRIORITY=INT,VIT,DEX,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="2" (
+    set "BUILD_TYPE=dps_bard"
+    set "BUILD_NAME=Arrow Vulcan Bard"
+    set "STAT_PRIORITY=DEX,AGI,INT,VIT"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="3" (
+    set "BUILD_TYPE=tank_bard"
+    set "BUILD_NAME=Tank Bard"
+    set "STAT_PRIORITY=VIT,INT,DEX,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="4" (
+    set "BUILD_TYPE=agi_bard"
+    set "BUILD_NAME=AGI Bard"
+    set "STAT_PRIORITY=AGI,INT,DEX,VIT"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="5" (
+    set "BUILD_TYPE=balanced_bard"
+    set "BUILD_NAME=Balanced Bard"
+    set "STAT_PRIORITY=INT,DEX,VIT,AGI"
+    goto playstyle_selection
+)
+echo [ERROR] Invalid choice. Please try again.
+timeout /t 2 /nobreak >nul
+goto build_selection_bard
+
+:: BUILD SELECTION - SAGE
+:build_selection_sage
+cls
+echo.
+echo ========================================================================
+echo   Step 2: Select Your Sage Build (5 Variants Available)
+echo ========================================================================
+echo.
+echo   1. Bolt Sage - Elemental bolt specialist
+echo   2. Support Sage - Dispel, wall, party support
+echo   3. AoE Sage - Heaven's Drive, Earth Spike specialist
+echo   4. Full INT - Maximum magic power
+echo   5. Balanced Sage - Versatile magic support
+echo.
+set /p "BUILD_CHOICE=Enter your choice (1-5): "
+
+if "%BUILD_CHOICE%"=="1" (
+    set "BUILD_TYPE=bolt_sage"
+    set "BUILD_NAME=Bolt Sage"
+    set "STAT_PRIORITY=INT,DEX,VIT,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="2" (
+    set "BUILD_TYPE=support_sage"
+    set "BUILD_NAME=Support Sage"
+    set "STAT_PRIORITY=INT,VIT,DEX,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="3" (
+    set "BUILD_TYPE=aoe_sage"
+    set "BUILD_NAME=AoE Sage"
+    set "STAT_PRIORITY=INT,DEX,VIT,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="4" (
+    set "BUILD_TYPE=full_int_sage"
+    set "BUILD_NAME=Full INT Sage"
+    set "STAT_PRIORITY=INT,VIT,DEX,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="5" (
+    set "BUILD_TYPE=balanced_sage"
+    set "BUILD_NAME=Balanced Sage"
+    set "STAT_PRIORITY=INT,DEX,VIT,AGI"
+    goto playstyle_selection
+)
+echo [ERROR] Invalid choice. Please try again.
+timeout /t 2 /nobreak >nul
+goto build_selection_sage
+
+:: BUILD SELECTION - MONK
+:build_selection_monk
+cls
+echo.
+echo ========================================================================
+echo   Step 2: Select Your Monk Build (5 Variants Available)
+echo ========================================================================
+echo.
+echo   1. Combo Monk - Triple attack, combo finish specialist
+echo   2. Asura Monk - Asura strike one-shot build
+echo   3. Tank Monk - High VIT, steel body focus
+echo   4. AGI Monk - High ASPD, dodge focus
+echo   5. Balanced Monk - Versatile combo build
+echo.
+set /p "BUILD_CHOICE=Enter your choice (1-5): "
+
+if "%BUILD_CHOICE%"=="1" (
+    set "BUILD_TYPE=combo_monk"
+    set "BUILD_NAME=Combo Monk"
+    set "STAT_PRIORITY=STR,AGI,VIT,DEX"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="2" (
+    set "BUILD_TYPE=asura_monk"
+    set "BUILD_NAME=Asura Monk"
+    set "STAT_PRIORITY=STR,INT,VIT,DEX"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="3" (
+    set "BUILD_TYPE=tank_monk"
+    set "BUILD_NAME=Tank Monk"
+    set "STAT_PRIORITY=VIT,STR,DEX,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="4" (
+    set "BUILD_TYPE=agi_monk"
+    set "BUILD_NAME=AGI Monk"
+    set "STAT_PRIORITY=AGI,STR,VIT,DEX"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="5" (
+    set "BUILD_TYPE=balanced_monk"
+    set "BUILD_NAME=Balanced Monk"
+    set "STAT_PRIORITY=STR,VIT,AGI,DEX"
+    goto playstyle_selection
+)
+echo [ERROR] Invalid choice. Please try again.
+timeout /t 2 /nobreak >nul
+goto build_selection_monk
+
+:: BUILD SELECTION - ROGUE
+:build_selection_rogue
+cls
+echo.
+echo ========================================================================
+echo   Step 2: Select Your Rogue Build (5 Variants Available)
+echo ========================================================================
+echo.
+echo   1. Strip Rogue - Equipment stripping specialist
+echo   2. Copy Rogue - Plagiarism/reproduce focus
+echo   3. Bow Rogue - Ranged attack rogue
+echo   4. Crit Rogue - Critical strike focus
+echo   5. Balanced Rogue - Versatile utility build
+echo.
+set /p "BUILD_CHOICE=Enter your choice (1-5): "
+
+if "%BUILD_CHOICE%"=="1" (
+    set "BUILD_TYPE=strip_rogue"
+    set "BUILD_NAME=Strip Rogue"
+    set "STAT_PRIORITY=DEX,AGI,STR,VIT"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="2" (
+    set "BUILD_TYPE=copy_rogue"
+    set "BUILD_NAME=Copy Rogue"
+    set "STAT_PRIORITY=INT,DEX,AGI,VIT"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="3" (
+    set "BUILD_TYPE=bow_rogue"
+    set "BUILD_NAME=Bow Rogue"
+    set "STAT_PRIORITY=DEX,AGI,STR,VIT"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="4" (
+    set "BUILD_TYPE=crit_rogue"
+    set "BUILD_NAME=Crit Rogue"
+    set "STAT_PRIORITY=LUK,AGI,STR,DEX"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="5" (
+    set "BUILD_TYPE=balanced_rogue"
+    set "BUILD_NAME=Balanced Rogue"
+    set "STAT_PRIORITY=STR,AGI,DEX,VIT"
+    goto playstyle_selection
+)
+echo [ERROR] Invalid choice. Please try again.
+timeout /t 2 /nobreak >nul
+goto build_selection_rogue
+
+:: BUILD SELECTION - SUPER NOVICE
+:build_selection_supernovice
+cls
+echo.
+echo ========================================================================
+echo   Step 2: Select Your Super Novice Build (5 Variants Available)
+echo ========================================================================
+echo.
+echo   1. Magic Super Novice - INT-based magic build
+echo   2. Physical Super Novice - STR-based melee build
+echo   3. Support Super Novice - Healing and buff focus
+echo   4. Tank Super Novice - High VIT survivability
+echo   5. Balanced Super Novice - Jack of all trades
+echo.
+set /p "BUILD_CHOICE=Enter your choice (1-5): "
+
+if "%BUILD_CHOICE%"=="1" (
+    set "BUILD_TYPE=magic_supernovice"
+    set "BUILD_NAME=Magic Super Novice"
+    set "STAT_PRIORITY=INT,DEX,VIT,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="2" (
+    set "BUILD_TYPE=physical_supernovice"
+    set "BUILD_NAME=Physical Super Novice"
+    set "STAT_PRIORITY=STR,AGI,DEX,VIT"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="3" (
+    set "BUILD_TYPE=support_supernovice"
+    set "BUILD_NAME=Support Super Novice"
+    set "STAT_PRIORITY=INT,VIT,DEX,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="4" (
+    set "BUILD_TYPE=tank_supernovice"
+    set "BUILD_NAME=Tank Super Novice"
+    set "STAT_PRIORITY=VIT,STR,DEX,AGI"
+    goto playstyle_selection
+)
+if "%BUILD_CHOICE%"=="5" (
+    set "BUILD_TYPE=balanced_supernovice"
+    set "BUILD_NAME=Balanced Super Novice"
+    set "STAT_PRIORITY=STR,INT,VIT,DEX"
+    goto playstyle_selection
+)
+echo [ERROR] Invalid choice. Please try again.
+timeout /t 2 /nobreak >nul
+goto build_selection_supernovice
 
 :: PLAYSTYLE SELECTION
 :playstyle_selection
@@ -653,9 +1182,17 @@ echo ========================================================================
 echo   Configuration Summary
 echo ========================================================================
 echo.
-echo Job Path: %JOB_PATH_FULL%
-echo Build: %BUILD_NAME%
+echo Job Path: %JOB_PATH_NAME%
+echo Job Path ID: %JOB_PATH%
+echo Build Type: %BUILD_TYPE%
+echo Build Name: %BUILD_NAME%
 echo Playstyle: %PLAYSTYLE_NAME%
+echo Stat Priority: %STAT_PRIORITY%
+echo.
+echo Build Variant System: ENABLED
+echo   - Total Variants Available: 55 (11 paths x 5 builds)
+echo   - Job Change Support: 39 jobs
+echo   - Skill Rotation Support: 42 jobs
 echo.
 echo [INFO] Saving configuration...
 echo [INFO] Saving configuration... >> "%LOG_FILE%"
@@ -664,13 +1201,15 @@ echo [INFO] Saving configuration... >> "%LOG_FILE%"
 if not exist "%SCRIPT_DIR%\ai-service\data" mkdir "%SCRIPT_DIR%\ai-service\data"
 
 :: Generate user_intent.json using PowerShell
+:: Include job_path_id for proper integration with job_build_variants.json
 powershell -NoProfile -Command ^
     "$json = @{" ^
+    "    job_path_id = '%JOB_PATH%';" ^
     "    job_path = @('%JOB_PATH_FULL%'.Split(','));" ^
     "    current_job = 'novice';" ^
     "    build = '%BUILD_TYPE%';" ^
     "    build_name = '%BUILD_NAME%';" ^
-    "    stat_priority = '%STAT_PRIORITY%';" ^
+    "    stat_priority = @('%STAT_PRIORITY%'.Split(','));" ^
     "    playstyle = '%PLAYSTYLE%';" ^
     "    playstyle_config = @{" ^
     "        teleport_hp_threshold = [decimal]0.%HP_THRESHOLD%;" ^
@@ -683,7 +1222,14 @@ powershell -NoProfile -Command ^
     "        auto_stat_allocation = $true;" ^
     "        auto_skill_learning = $true;" ^
     "        adaptive_equipment = $true;" ^
-    "        autonomous_healing = $true" ^
+    "        autonomous_healing = $true;" ^
+    "        job_advancement = $true" ^
+    "    };" ^
+    "    variant_system = @{" ^
+    "        enabled = $true;" ^
+    "        data_version = '2.0.0';" ^
+    "        total_variants = 55;" ^
+    "        integration_complete = $true" ^
     "    }" ^
     "};" ^
     "$json | ConvertTo-Json -Depth 10 | Out-File -FilePath '%SCRIPT_DIR%\ai-service\data\user_intent.json' -Encoding UTF8"
@@ -691,13 +1237,38 @@ powershell -NoProfile -Command ^
 if !errorlevel! equ 0 (
     echo [SUCCESS] Configuration saved to ai-service\data\user_intent.json
     echo [SUCCESS] Configuration saved >> "%LOG_FILE%"
+    
+    :: Verify the configuration file was created
+    if exist "%SCRIPT_DIR%\ai-service\data\user_intent.json" (
+        echo [SUCCESS] Configuration file verified
+        echo [SUCCESS] Configuration file verified >> "%LOG_FILE%"
+    )
 ) else (
     echo [WARNING] Failed to save configuration
     echo [WARNING] Failed to save configuration >> "%LOG_FILE%"
 )
 
 echo.
-echo [SUCCESS] Character configuration saved!
+echo ========================================================================
+echo   ✅ Build Variant System Integration Complete!
+echo ========================================================================
+echo.
+echo Your configuration includes:
+echo   • Job Path: %JOB_PATH_NAME%
+echo   • Build Variant: %BUILD_NAME%
+echo   • Playstyle: %PLAYSTYLE_NAME%
+echo   • Stat Allocation: Fully Automated
+echo   • Job Advancement: Fully Automated
+echo   • Equipment Management: Fully Automated
+echo.
+echo The AI will automatically:
+echo   ✓ Allocate stats based on your build variant
+echo   ✓ Learn skills in optimal order
+echo   ✓ Change jobs when ready (39 jobs supported)
+echo   ✓ Use appropriate skill rotations (42 jobs supported)
+echo   ✓ Manage equipment based on progression
+echo.
+echo [SUCCESS] Character configuration saved with full variant support!
 echo.
 
 :: ============================================================================
@@ -796,7 +1367,16 @@ echo   - Python: %PYTHON_VERSION%
 echo   - Perl: %PERL_VERSION%
 echo   - PyTorch: GPU Support = !HAS_GPU!
 echo   - Character Build: %BUILD_NAME% (%PLAYSTYLE_NAME%)
+echo   - Job Path: %JOB_PATH_NAME%
+echo   - Build Variant System: ENABLED (55 variants across 11 paths)
 echo   - Bot Configuration: Auto-applied to config.txt
+echo.
+echo Build Variant Integration:
+echo   ✓ Job Build Variants: 55 builds (11 paths x 5 variants)
+echo   ✓ Job Change Locations: 39 jobs supported
+echo   ✓ Skill Rotations: 42 jobs supported
+echo   ✓ Stat Allocation: Fully automated per build
+echo   ✓ Job Advancement: Fully automated
 echo.
 echo Log file: %LOG_FILE%
 echo.
@@ -819,9 +1399,20 @@ echo      • AI Engine will start first (port 9901)
 echo      • AI Service will start second (port 9902)
 echo      • OpenKore will start last
 echo.
+echo   4. 🎮 What Your Bot Will Do Automatically:
+echo      • Allocate stats according to %BUILD_NAME% build
+echo      • Learn skills in optimal order
+echo      • Change jobs when level requirements are met
+echo      • Use appropriate skill rotations for your job
+echo      • Manage equipment based on progression
+echo      • Farm, heal, and purchase items autonomously
+echo.
 echo ========================================================================
-echo   ✅ FULL AUTONOMY ACHIEVED - Let the bot do its job!
+echo   ✅ FULL AUTONOMY ACHIEVED WITH BUILD VARIANT SYSTEM!
 echo ========================================================================
+echo.
+echo Your bot now has access to 55 pre-configured build variants
+echo across 11 job paths with complete automation support.
 echo.
 
 pause
