@@ -20,17 +20,35 @@ print STDERR "[GodTierAI] *** Using system Perl from PATH (no hardcoded paths) *
 print STDERR "[GodTierAI] *** Perl \@INC will be shown in BEGIN block below ***\n";
 
 # ============================================================================
-# FIX 1: ROBUST DEPENDENCY CHECKING AND GRACEFUL DEGRADATION
+# SIMPLIFIED DEPENDENCY CHECKING (HTTP::Tiny ONLY - like AI_Bridge)
 # ============================================================================
-our $HTTP_AVAILABLE = 0;
-our $HTTP_CLIENT = 'None';
-our $LOAD_ERROR = '';
-our $JSON_AVAILABLE = 0;
+# CRITICAL FIX: Declare without initialization to prevent BEGIN block values from being reset
+our $JSON_AVAILABLE;    # Flag: JSON module loaded successfully (set in BEGIN block)
+our $HTTP_AVAILABLE;    # Flag: HTTP::Tiny module loaded successfully (set in BEGIN block)
+our $HTTP_CLIENT;       # String: HTTP client type ('HTTP::Tiny' or 'LWP') (set in BEGIN block)
 
 # Pre-flight dependency verification with STDERR output for visibility
 print STDERR "[GodTierAI] *** MODULE LOADING STARTED ***\n";
 print STDERR "[GodTierAI] *** Timestamp: " . localtime() . "\n";
 print STDERR "[GodTierAI] *** Perl version: $]\n";
+
+# ============================================================================
+# PACKAGE-LEVEL VARIABLES (must be declared before BEGIN block)
+# ============================================================================
+# HTTP client instance (HTTP::Tiny only)
+my $http_tiny;             # HTTP::Tiny instance
+my $ua;                    # LWP::UserAgent instance (legacy, not used with HTTP::Tiny)
+my $degraded_mode = 0;     # Flag: running in degraded mode (no HTTP)
+
+# Request tracking
+my $request_counter = 0;
+
+# AI service URLs (will be set with dynamic port)
+my $ai_service_url;
+my $ai_engine_url;
+
+# Plugin state
+my $plugin_initialized = 0;
 
 BEGIN {
     # ==========================================================================
@@ -64,126 +82,95 @@ BEGIN {
     eval {
         require JSON;
         JSON->import();
-        $JSON_AVAILABLE = 1;
-        print STDERR "[GodTierAI::BEGIN]  JSON module loaded successfully\n";
+        $GodTierAI::JSON_AVAILABLE = 1;
+        print STDERR "[GodTierAI::BEGIN] OK JSON module loaded successfully\n";
         if ($debug_fh) {
             print $debug_fh " JSON loaded successfully\n";
         }
         1;
     } or do {
         my $json_error = $@ || "Unknown error";
-        $JSON_AVAILABLE = 0;
-        print STDERR "[GodTierAI::BEGIN]  JSON module FAILED: $json_error\n";
-        print STDERR "[GodTierAI::BEGIN]  CRITICAL ERROR: JSON module required!\n";
-        print STDERR "[GodTierAI::BEGIN]  Install with: cpanm JSON\n";
+        $GodTierAI::JSON_AVAILABLE = 0;
+        print STDERR "[GodTierAI::BEGIN] ERROR JSON module FAILED: $json_error\n";
+        print STDERR "[GodTierAI::BEGIN] ERROR FATAL: JSON module required!\n";
+        print STDERR "[GodTierAI::BEGIN] ERROR Install with: cpanm JSON\n";
         if ($debug_fh) {
             print $debug_fh " JSON FAILED: $json_error\n";
         }
+        die "[GodTierAI] FATAL: JSON module required. Install with: cpanm JSON\n";
     };
     
-    # ==========================================================================
-    # FORCE HTTP::Tiny - NO EVAL NEEDED (core module, always available)
-    # ==========================================================================
-    print STDERR "[GodTierAI::BEGIN] Initializing HTTP::Tiny (GUARANTEED)...\n";
-    if ($debug_fh) {
-        print $debug_fh "\nForcing HTTP::Tiny initialization...\n";
-    }
-    
-    require HTTP::Tiny;
-    HTTP::Tiny->import();
-    $HTTP_AVAILABLE = 1;
-    $HTTP_CLIENT = 'HTTP::Tiny';
-    
-    print STDERR "[GodTierAI::BEGIN] ✓ HTTP::Tiny module loaded successfully (GUARANTEED)\n";
-    print STDERR "[GodTierAI::BEGIN]   Module version: " . ($HTTP::Tiny::VERSION || 'unknown') . "\n";
-    
-    # ==========================================================================
-    # CRITICAL FIX: CREATE HTTP::Tiny INSTANCE IMMEDIATELY IN BEGIN BLOCK
-    # This ensures $http_tiny is available as soon as the module loads
-    # ==========================================================================
-    print STDERR "[GodTierAI::BEGIN] Creating HTTP::Tiny instance...\n";
-    
+    # Load HTTP::Tiny module (critical dependency)
     eval {
-        $http_tiny = HTTP::Tiny->new(
-            timeout => 35,
-            agent => 'GodTierAI/1.0',
-            verify_SSL => 0,  # Disable SSL verification for local connections
-        );
-        
-        if (defined($http_tiny) && ref($http_tiny) eq 'HTTP::Tiny') {
-            print STDERR "[GodTierAI::BEGIN] ✓✓✓ HTTP::Tiny INSTANCE CREATED SUCCESSFULLY ✓✓✓\n";
-            print STDERR "[GodTierAI::BEGIN]     Instance type: " . ref($http_tiny) . "\n";
-            print STDERR "[GodTierAI::BEGIN]     Timeout: 35s\n";
-            print STDERR "[GodTierAI::BEGIN]     Agent: GodTierAI/1.0\n";
-            $degraded_mode = 0;  # DISABLE degraded mode - HTTP is ready!
-            print STDERR "[GodTierAI::BEGIN]     DEGRADED MODE: DISABLED (HTTP fully operational)\n";
-            
-            if ($debug_fh) {
-                print $debug_fh " HTTP::Tiny instance created successfully!\n";
-                print $debug_fh "Instance reference: " . ref($http_tiny) . "\n";
-                print $debug_fh "degraded_mode: 0 (DISABLED)\n";
-            }
-        } else {
-            print STDERR "[GodTierAI::BEGIN] ✗ HTTP::Tiny instance creation returned invalid reference\n";
-            $degraded_mode = 1;
-            if ($debug_fh) {
-                print $debug_fh " HTTP::Tiny instance creation failed (invalid ref)\n";
-            }
+        require HTTP::Tiny;
+        HTTP::Tiny->import();
+        $GodTierAI::HTTP_AVAILABLE = 1;
+        $GodTierAI::HTTP_CLIENT = 'HTTP::Tiny';
+        print STDERR "[GodTierAI::BEGIN] OK HTTP::Tiny module loaded successfully\n";
+        if ($debug_fh) {
+            print $debug_fh " HTTP::Tiny loaded successfully\n";
+            print $debug_fh " HTTP_AVAILABLE = $GodTierAI::HTTP_AVAILABLE\n";
+            print $debug_fh " HTTP_CLIENT = $GodTierAI::HTTP_CLIENT\n";
         }
+        1;
+    } or do {
+        my $http_error = $@ || "Unknown error";
+        $GodTierAI::HTTP_AVAILABLE = 0;
+        $GodTierAI::HTTP_CLIENT = '';
+        print STDERR "[GodTierAI::BEGIN] ERROR FATAL: HTTP::Tiny not available\n";
+        print STDERR "[GodTierAI::BEGIN] ERROR Install with: cpanm HTTP::Tiny\n";
+        if ($debug_fh) {
+            print $debug_fh " HTTP::Tiny FAILED: $http_error\n";
+        }
+        die "[GodTierAI] FATAL: HTTP::Tiny required. Install with: cpanm HTTP::Tiny\n";
     };
     
-    if ($@) {
-        my $error = $@;
-        print STDERR "[GodTierAI::BEGIN] ✗✗✗ HTTP::Tiny INSTANCE ERROR: $error\n";
-        print STDERR "[GodTierAI::BEGIN]     DEGRADED MODE: ENABLED (fallback to manual operation)\n";
-        $degraded_mode = 1;
-        if ($debug_fh) {
-            print $debug_fh " HTTP::Tiny instance error: $error\n";
-            print $debug_fh "degraded_mode: 1 (ENABLED)\n";
-        }
-    }
-    
-    # Final verification and logging
+    # Success - close debug log
+    print STDERR "[GodTierAI::BEGIN] OK Required modules loaded: JSON, HTTP::Tiny\n";
     if ($debug_fh) {
-        print $debug_fh " HTTP::Tiny loaded successfully (GUARANTEED)\n";
-        print $debug_fh "Version: " . ($HTTP::Tiny::VERSION || 'unknown') . "\n";
-        print $debug_fh "\nHTTP Client Instance Status:\n";
-        print $debug_fh "http_tiny defined: " . (defined($http_tiny) ? "YES ✓" : "NO ✗") . "\n";
-        print $debug_fh "http_tiny type: " . (defined($http_tiny) ? ref($http_tiny) : "N/A") . "\n";
-        print $debug_fh "degraded_mode: $degraded_mode\n";
-        print $debug_fh "\nFinal Status:\n";
-        print $debug_fh "HTTP_AVAILABLE: YES (GUARANTEED)\n";
-        print $debug_fh "HTTP_CLIENT: HTTP::Tiny\n";
-        print $debug_fh "HTTP_INSTANCE: " . (defined($http_tiny) ? "READY" : "FAILED") . "\n";
-        print $debug_fh "=== END BEGIN Block ===\n\n";
+        print $debug_fh "\n=== BEGIN Block Completed Successfully ===\n";
         close $debug_fh;
     }
-    
-    print STDERR "[GodTierAI::BEGIN] ========================================\n";
-    print STDERR "[GodTierAI::BEGIN] HTTP CLIENT STATUS:\n";
-    print STDERR "[GodTierAI::BEGIN]   Module: HTTP::Tiny ✓\n";
-    print STDERR "[GodTierAI::BEGIN]   Instance: " . (defined($http_tiny) ? "READY ✓✓✓" : "FAILED ✗") . "\n";
-    print STDERR "[GodTierAI::BEGIN]   Mode: " . ($degraded_mode ? "DEGRADED ✗" : "FULL POWER ✓") . "\n";
-    print STDERR "[GodTierAI::BEGIN] ========================================\n";
 }
 
 # VERIFICATION: Plugin file loaded successfully
-print STDERR "[GodTierAI] *** MODULE LOADED (json=$JSON_AVAILABLE, http=$HTTP_AVAILABLE) ***\n";
-print STDERR "[GodTierAI] *** HTTP CLIENT: $HTTP_CLIENT ***\n";
-print STDERR "[GodTierAI] *** DEPENDENCY CHECK: Complete\n";
+print STDERR "[GodTierAI] *** MODULE LOADED (JSON + HTTP::Tiny ready) ***\n";
 
 Plugins::register('GodTierAI', 'Advanced AI system with LLM integration', \&on_unload);
 
 my $hooks;
-my $ai_engine_url = "http://127.0.0.1:9901";
-my $ai_service_url = "http://127.0.0.1:9902";
+
+# Dynamic port configuration function
+sub load_http_port_from_config {
+    # Priority: Environment variable > config file > default
+    return $ENV{GODTIER_AI_SERVICE_PORT} if $ENV{GODTIER_AI_SERVICE_PORT};
+    # Backwards compatibility
+    return $ENV{AI_SIDECAR_HTTP_PORT} if $ENV{AI_SIDECAR_HTTP_PORT};
+    
+    # Try to read from config file
+    my $config_file = "ai_sidecar/config.yaml";
+    if (-f $config_file) {
+        open my $fh, '<', $config_file or return 9901;
+        while (my $line = <$fh>) {
+            if ($line =~ /^\s*port:\s*(\d+)/) {
+                close $fh;
+                return $1;
+            }
+        }
+        close $fh;
+    }
+    
+    return 9901;  # Default port (avoids conflict with other services)
+}
+
+# Initialize service URLs using dynamic port configuration
+my $http_port = load_http_port_from_config();
+$ai_service_url = "http://127.0.0.1:$http_port";
+$ai_engine_url = $ai_service_url;  # Use same port for both
 
 # FIX 2: HTTP CLIENT FACTORY WITH CONNECTION POOLING
-my $http_client;  # Unified HTTP client wrapper
-my $ua;           # LWP::UserAgent instance (when available)
-my $http_tiny;    # HTTP::Tiny instance (when available)
-my $request_counter = 0;
-my $degraded_mode = 0;  # Flag for running without HTTP library
+# Note: Client variables ($http_tiny, $request_counter, $degraded_mode)
+# are already declared before BEGIN block above
 
 # FIX 7: CIRCUIT BREAKERS FOR ERROR RECOVERY
 my %circuit_breakers = (
@@ -484,73 +471,16 @@ sub on_load {
     message "[GodTierAI] File: " . __FILE__ . "\n", "system";
     message "[GodTierAI] Timestamp: " . scalar(localtime) . "\n", "system";
     message "[GodTierAI] ========================================\n", "system";
-    
-    # ==========================================================================
-    # FIX 1: LATE INITIALIZATION - Try LWP::UserAgent after OpenKore fully loaded
-    # ==========================================================================
-    # If BEGIN block only loaded HTTP::Tiny, try LWP::UserAgent now that
-    # OpenKore's environment is fully initialized
-    if ($HTTP_CLIENT eq 'HTTP::Tiny') {
-        message "[GodTierAI] [LATE-INIT] Current HTTP client: HTTP::Tiny (from BEGIN)\n", "info";
-        message "[GodTierAI] [LATE-INIT] Attempting LWP::UserAgent initialization (after OpenKore ready)...\n", "info";
-        
-        my $lwp_success = 0;
-        eval {
-            require LWP::UserAgent;
-            LWP::UserAgent->import();
-            
-            # Create test instance to verify it works
-            my $test_ua = LWP::UserAgent->new(timeout => 5);
-            if ($test_ua) {
-                $HTTP_CLIENT = 'LWP';
-                $lwp_success = 1;
-                message "[GodTierAI] [LATE-INIT]  LWP::UserAgent initialized successfully (upgraded from HTTP::Tiny)\n", "success";
-                message "[GodTierAI] [LATE-INIT]  Version: " . ($LWP::UserAgent::VERSION || 'unknown') . "\n", "success";
-            }
-        };
-        
-        if ($@ || !$lwp_success) {
-            my $error = $@ || "Unknown error";
-            warning "[GodTierAI] [LATE-INIT] LWP::UserAgent late-init failed: $error\n";
-            warning "[GodTierAI] [LATE-INIT] Continuing with HTTP::Tiny (still functional)\n";
-            # HTTP::Tiny is still available, so we're OK
-        }
-    } else {
-        message "[GodTierAI] [LATE-INIT] HTTP client already optimal: $HTTP_CLIENT\n", "info";
+    # Initialize HTTP client (ONLY HTTP::Tiny)
+    unless (defined $http_tiny) {
+        $http_tiny = HTTP::Tiny->new(
+            timeout => 5,
+            agent => 'GodTierAI/2.0',
+            verify_SSL => 0
+        );
+        message "[GodTierAI] HTTP::Tiny client initialized (timeout: 5s)", "success";
     }
-    
-    # DIAGNOSTIC: Check HTTP library availability
-    if (!$HTTP_AVAILABLE) {
-        error "[GodTierAI] ================================\n";
-        error "[GodTierAI] CRITICAL ERROR: HTTP library not available!\n";
-        error "[GodTierAI] Error: $LOAD_ERROR\n";
-        error "[GodTierAI] ================================\n";
-        error "[GodTierAI] The plugin requires LWP::UserAgent or HTTP::Tiny to communicate with AI Service.\n";
-        error "[GodTierAI] Install with: cpanm LWP::UserAgent\n";
-        error "[GodTierAI] Or download: http://search.cpan.org/dist/libwww-perl/\n";
-        error "[GodTierAI] ================================\n";
-        error "[GodTierAI] Plugin will run in DEGRADED mode (no AI features)\n";
-        error "[GodTierAI] ================================\n";
-        
-        # Set flag for degraded mode
-        $degraded_mode = 1;
-    } else {
-        message "[GodTierAI]  HTTP library available: $HTTP_CLIENT\n", "success";
-        $degraded_mode = 0;
-        
-        # Initialize HTTP client based on what's available
-        if ($HTTP_CLIENT eq 'LWP') {
-            $ua = LWP::UserAgent->new(timeout => 35);
-            message "[GodTierAI]  LWP::UserAgent initialized (timeout: 35s)\n", "success";
-        } elsif ($HTTP_CLIENT eq 'HTTP::Tiny') {
-            $http_tiny = HTTP::Tiny->new(timeout => 35);
-            message "[GodTierAI]  HTTP::Tiny initialized (timeout: 35s)\n", "success";
-        }
-        
-        # PHASE 2: Test HTTP connectivity immediately after initialization
-        message "[GodTierAI] Running HTTP connectivity test...\n", "info";
-        test_http_connectivity();
-    }
+
     
     message "[GodTierAI] Initializing plugin...\n", "info";
     
@@ -594,8 +524,12 @@ sub on_load {
     # Initialize hot reload monitoring
     initialize_hot_reload();
     
-    # Check AI Service connectivity
-    check_ai_service_connectivity();
+    # Check AI Service connectivity - only when in-game
+    if (defined $conState && $conState == Network::IN_GAME) {
+        check_ai_service_connectivity();
+    } else {
+        message "[GodTierAI] Deferring connectivity check until in-game\n", "info";
+    }
 }
 
 # Initialize hot reload monitoring for config.txt
@@ -638,30 +572,34 @@ sub check_config_reload {
 
 # Check if AI Service is reachable
 sub check_ai_service_connectivity {
-    # Skip if HTTP client not available or not initialized
-    unless ($HTTP_AVAILABLE && defined $ua) {
-        warning "[GodTierAI] [WARNING] Cannot connect to AI Service at $ai_service_url\n";
-        warning "[GodTierAI] [WARNING] HTTP client not available - running in degraded mode\n";
-        return;
+    message "[GodTierAI] Checking AI service connectivity...\n", "info";
+    unless (defined $http_tiny) {
+        warning "[GodTierAI] HTTP client not initialized\n";
+        return 0;
     }
     
     eval {
-        my $response = $ua->get("$ai_service_url/api/v1/health");
-        if ($response->is_success) {
-            message "[GodTierAI] [OK] AI Service is online and healthy\n", "success";
+        my $response = $http_tiny->get("$ai_service_url/health");
+        
+        if ($response && $response->{success}) {
+            message "[GodTierAI] AI service connectivity OK\n", "success";
+            return 1;
         } else {
-            warning "[GodTierAI] [WARNING] AI Service is not responding (HTTP " . $response->code . ")\n";
-            warning "[GodTierAI] [WARNING] Conscious and Subconscious layers will be offline\n";
+            warning "[GodTierAI] AI service not responding\n";
+            return 0;
         }
     };
+    
     if ($@) {
-        warning "[GodTierAI] [WARNING] Cannot connect to AI Service at $ai_service_url\n";
-        warning "[GodTierAI] [WARNING] Error: $@\n";
+        error "[GodTierAI] Connection check failed: $@\n";
+        return 0;
     }
+    
+    return 0;
 }
 
-# Call initialization
-on_load();
+# NOTE: Initialization is now triggered via start3 hook in godtier_ai.pl
+# on_load();  # Removed - now called from hook
 
 # CRITICAL FIX: Helper function to check if inventory is ready
 # FIX #1: Check the actual inventory() method instead of {inventory} hash property
@@ -696,11 +634,11 @@ sub safe_distance {
 # Check if AI Engine is available
 sub check_engine_health {
     # Skip if HTTP client not available or not initialized
-    return 0 unless $HTTP_AVAILABLE && defined $ua;
+    return 0 unless defined $http_tiny;
     
-    my $response = $ua->get("$ai_engine_url/api/v1/health");
-    if ($response->is_success) {
-        my $data = decode_json($response->decoded_content);
+    my $response = $http_tiny->get("$ai_engine_url/api/v1/health");
+    if ($response->{success}) {
+        my $data = decode_json($response->{content});
         if ($data->{status} eq 'healthy') {
             return 1;
         }
@@ -942,22 +880,8 @@ sub send_action_feedback {
     $feedback_data->{action_id} = $action_id if defined $action_id;
     
     my $payload = encode_json($feedback_data);
-    
-    # Use appropriate HTTP client
-    if ($HTTP_CLIENT eq 'LWP' && defined $ua) {
-        my $response = $ua->post(
-            "$ai_service_url/api/v1/action_feedback",
-            'Content-Type' => 'application/json',
-            Content => $payload
-        );
-        
-        if ($response->is_success) {
-            debug "[GodTierAI] [FEEDBACK] Sent: $action -> $status ($reason)\n", "ai";
-        } else {
-            error "[GodTierAI] [FEEDBACK] Failed to send feedback: " . $response->status_line . "\n";
-        }
-        
-    } elsif ($HTTP_CLIENT eq 'HTTP::Tiny') {
+    # Send HTTP request using HTTP::Tiny
+    {
         my $response = $http_tiny->post(
             "$ai_service_url/api/v1/action_feedback",
             {
@@ -1000,12 +924,12 @@ sub test_http_connectivity {
         if ($HTTP_CLIENT eq 'LWP' && defined $ua) {
             print STDERR "[GodTierAI::TEST] Using LWP::UserAgent...\n";
             eval {
-                my $response = $ua->get($test_url);
-                if ($response->is_success) {
+                my $response = $http_tiny->get($test_url);
+                if ($response->{success}) {
                     $success_count++;
                     print STDERR "[GodTierAI::TEST]  $service_name SUCCESSFUL! \n";
-                    print STDERR "[GodTierAI::TEST] Status: " . $response->code . " " . $response->message . "\n";
-                    my $content = $response->decoded_content;
+                    print STDERR "[GodTierAI::TEST] Status: " . $response->{status} . " " . $response->{reason} . "\n";
+                    my $content = $response->{content};
                     if (length($content) < 500) {
                         print STDERR "[GodTierAI::TEST] Response: $content\n";
                     } else {
@@ -1014,8 +938,8 @@ sub test_http_connectivity {
                     message "[GodTierAI]  HTTP test passed: $service_name\n", "success";
                 } else {
                     print STDERR "[GodTierAI::TEST]  $service_name FAILED\n";
-                    print STDERR "[GodTierAI::TEST] Status: " . $response->status_line . "\n";
-                    warning "[GodTierAI]  HTTP test failed: $service_name - " . $response->status_line . "\n";
+                    print STDERR "[GodTierAI::TEST] Status: " . "$response->{status} $response->{reason}" . "\n";
+                    warning "[GodTierAI]  HTTP test failed: $service_name - " . "$response->{status} $response->{reason}" . "\n";
                 }
             };
             if ($@) {
@@ -1066,8 +990,8 @@ sub test_http_connectivity {
         print STDERR "[GodTierAI::TEST]  ALL TESTS PASSED! \n";
         message "[GodTierAI]  HTTP connectivity fully operational! \n", "success";
     } elsif ($success_count > 0) {
-        print STDERR "[GodTierAI::TEST] ⚠ PARTIAL SUCCESS\n";
-        warning "[GodTierAI] ⚠ Some HTTP endpoints not responding\n";
+        print STDERR "[GodTierAI::TEST] WARNING PARTIAL SUCCESS\n";
+        warning "[GodTierAI] WARNING Some HTTP endpoints not responding\n";
     } else {
         print STDERR "[GodTierAI::TEST]  ALL TESTS FAILED! \n";
         error "[GodTierAI]  HTTP connectivity NOT working\n";
@@ -1089,30 +1013,21 @@ sub request_decision {
     # CRITICAL FIX: Check both HTTP_AVAILABLE and actual instance existence
     # ==========================================================================
     unless ($HTTP_AVAILABLE) {
-        error "[GodTierAI] [REQUEST-DEBUG] ✗ HTTP_AVAILABLE is false - cannot make requests\n";
+        error "[GodTierAI] [REQUEST-DEBUG] [X] HTTP_AVAILABLE is false - cannot make requests\n";
         return undef;
     }
     
     # NEW: Check if HTTP client instance is actually defined
-    if ($HTTP_CLIENT eq 'HTTP::Tiny' && !defined($http_tiny)) {
-        error "[GodTierAI] [REQUEST-DEBUG] ✗✗✗ CRITICAL: http_tiny instance not defined!\n";
-        error "[GodTierAI] [REQUEST-DEBUG]     HTTP_AVAILABLE=$HTTP_AVAILABLE\n";
-        error "[GodTierAI] [REQUEST-DEBUG]     HTTP_CLIENT=$HTTP_CLIENT\n";
-        error "[GodTierAI] [REQUEST-DEBUG]     http_tiny=" . (defined($http_tiny) ? "DEFINED" : "UNDEFINED") . "\n";
-        error "[GodTierAI] [REQUEST-DEBUG]     This should not happen - instance should be created in BEGIN block!\n";
-        error "[GodTierAI] [REQUEST-DEBUG]     Setting degraded_mode=1 and returning undef\n";
+    unless (defined $http_tiny) {
+        error "[GodTierAI] [REQUEST-DEBUG] HTTP client not initialized\n";
         $degraded_mode = 1;
         return undef;
     }
     
-    if ($HTTP_CLIENT eq 'LWP' && !defined($ua)) {
-        error "[GodTierAI] [REQUEST-DEBUG] ✗ LWP::UserAgent instance not defined\n";
-        return undef;
-    }
     
-    message "[GodTierAI] [REQUEST-DEBUG] ✓ HTTP client verified:\n", "success";
-    message "[GodTierAI] [REQUEST-DEBUG]   HTTP_AVAILABLE: YES\n", "success";
-    message "[GodTierAI] [REQUEST-DEBUG]   HTTP_CLIENT: $HTTP_CLIENT\n", "success";
+    
+    message "[GodTierAI] [REQUEST-DEBUG] [OK] HTTP client verified:\n", "success";
+    message "[GodTierAI] [REQUEST-DEBUG]   HTTP client: HTTP::Tiny\n", "success";
     message "[GodTierAI] [REQUEST-DEBUG]   Instance: " . (defined($http_tiny) ? ref($http_tiny) : "N/A") . "\n", "success";
     
     # EMERGENCY CIRCUIT BREAKER #1: Check if we're in emergency pause
@@ -1174,35 +1089,12 @@ sub request_decision {
     my $json_size = length($json_request);
     
     message "[GodTierAI] [REQUEST-DEBUG] JSON payload size: $json_size bytes\n", "info";
-    message "[GodTierAI] [REQUEST-DEBUG] Using HTTP client: $HTTP_CLIENT\n", "info";
+    message "[GodTierAI] [REQUEST-DEBUG] Using HTTP client: HTTP::Tiny\n", "info";
     message "[GodTierAI] [REQUEST-DEBUG] Sending POST to $ai_service_url/api/v1/decide\n", "info";
     
     my $request_start = time();
-    
-    # Use appropriate HTTP client
-    if ($HTTP_CLIENT eq 'LWP' && defined $ua) {
-        my $response = $ua->post(
-            "$ai_service_url/api/v1/decide",
-            Content_Type => 'application/json',
-            Content => $json_request,
-        );
-        my $request_duration = time() - $request_start;
-        
-        message "[GodTierAI] [REQUEST-DEBUG] HTTP request completed in ${request_duration}s\n", "info";
-        message "[GodTierAI] [REQUEST-DEBUG] HTTP status: " . $response->code . " " . $response->message . "\n", "info";
-        
-        if ($response->is_success) {
-            message "[GodTierAI] [REQUEST-DEBUG] Response successful, decoding JSON...\n", "success";
-            my $data = decode_json($response->decoded_content);
-            message "[GodTierAI] [REQUEST-DEBUG] Decision received and parsed successfully\n", "success";
-            return $data;
-        } else {
-            error "[GodTierAI] [REQUEST-DEBUG] Request FAILED: " . $response->status_line . "\n";
-            error "[GodTierAI] [REQUEST-DEBUG] Response body: " . $response->decoded_content . "\n";
-            return undef;
-        }
-        
-    } elsif ($HTTP_CLIENT eq 'HTTP::Tiny') {
+    # Send HTTP request using HTTP::Tiny
+    {
         my $response = $http_tiny->post(
             "$ai_service_url/api/v1/decide",
             {
@@ -1225,9 +1117,6 @@ sub request_decision {
             error "[GodTierAI] [REQUEST-DEBUG] Response body: " . ($response->{content} || 'N/A') . "\n";
             return undef;
         }
-    } else {
-        error "[GodTierAI] [REQUEST-DEBUG] Unknown HTTP client: $HTTP_CLIENT\n";
-        return undef;
     }
 }
 
@@ -1433,21 +1322,23 @@ sub execute_action {
         });
         
         # Check if HTTP client is available
-        unless (defined $ua) {
+        unless (defined $http_tiny) {
             warning "[GodTierAI] [ACTION] Cannot sell items - HTTP client not available (degraded mode)\n";
             send_action_feedback('sell_items', 'failed', 'http_client_unavailable',
                 'Running in degraded mode without HTTP library');
             return;
         }
         
-        my $response = $ua->post(
+        my $response = $http_tiny->post(
             "$ai_service_url/api/v1/inventory/sell_junk",
-            'Content-Type' => 'application/json',
-            Content => $payload
+            {
+                headers => { 'Content-Type' => 'application/json' },
+                content => $payload,
+            }
         );
         
-        if ($response->is_success) {
-            my $result = decode_json($response->decoded_content);
+        if ($response->{success}) {
+            my $result = decode_json($response->{content});
             
             if ($result->{success} && @{$result->{sell_commands}}) {
                 message "[GodTierAI] [ACTION] Got " . scalar(@{$result->{sell_commands}}) . " items to sell for ~" . $result->{estimated_zeny} . "z\n", "info";
@@ -1469,7 +1360,7 @@ sub execute_action {
                 message "[GodTierAI] [ACTION] No items to sell\n", "info";
             }
         } else {
-            error "[GodTierAI] [ACTION] Failed to get sell list from AI-Service: " . $response->status_line . "\n";
+            error "[GodTierAI] [ACTION] Failed to get sell list from AI-Service: " . "$response->{status} $response->{reason}" . "\n";
         }
     } elsif ($type eq 'idle') {
         # CRITICAL FIX #3: New action handler for idle (natural HP/SP regeneration)
@@ -1767,10 +1658,10 @@ sub execute_action {
                     if ($stat_after > $stat_before && $free_after < $free_before) {
                         # Success: stat increased and free points decreased
                         $points_allocated++;
-                        Log::message("[GodTierAI] [PROGRESSION]  $stat_name: $stat_before → $stat_after (points: $free_before → $free_after)\n", "success");
+                        Log::message("[GodTierAI] [PROGRESSION]  $stat_name: $stat_before -> $stat_after (points: $free_before -> $free_after)\n", "success");
                     } else {
                         # Failure: stat didn't change or points didn't decrease
-                        Log::warning("[GodTierAI] [PROGRESSION]  Failed to add point to $stat_name (stat: $stat_before→$stat_after, points: $free_before→$free_after)\n");
+                        Log::warning("[GodTierAI] [PROGRESSION]  Failed to add point to $stat_name (stat: $stat_before->$stat_after, points: $free_before->$free_after)\n");
                         push @failed_stats, "$stat_name (allocation failed)";
                         last;  # Stop trying this stat
                     }
@@ -1910,7 +1801,7 @@ sub handle_player_chat {
     my ($player_name, $message, $type) = @_;
     
     # Skip if HTTP client not available
-    return unless defined $ua;
+    return unless defined $http_tiny;
     
     # Build context
     my %request = (
@@ -1923,17 +1814,19 @@ sub handle_player_chat {
     );
     
     my $json_request = encode_json(\%request);
-    my $response = $ua->post(
-        "$ai_service_url/api/v1/social/chat",
-        Content_Type => 'application/json',
-        Content => $json_request
-    );
+    my $response = $http_tiny->post(
+            "$ai_service_url/api/v1/social/chat",
+            {
+                headers => { 'Content-Type' => 'application/json' },
+                content => $json_request,
+            }
+        );
     
-    if ($response->is_success) {
-        my $data = decode_json($response->decoded_content);
+    if ($response->{success}) {
+        my $data = decode_json($response->{content});
         execute_action({ action => $data });
     } else {
-        debug "[GodTierAI] Social service request failed: " . $response->status_line . "\n", "ai";
+        debug "[GodTierAI] Social service request failed: " . "$response->{status} $response->{reason}" . "\n", "ai";
     }
 }
 
@@ -1970,7 +1863,7 @@ sub on_party_invite {
     return unless $args->{name};
     
     # Skip if HTTP client not available
-    return unless defined $ua;
+    return unless defined $http_tiny;
     
     my $player_name = $args->{name};
     
@@ -1984,14 +1877,16 @@ sub on_party_invite {
     );
     
     my $json_request = encode_json(\%request);
-    my $response = $ua->post(
-        "$ai_service_url/api/v1/social/party_invite",
-        Content_Type => 'application/json',
-        Content => $json_request
-    );
+    my $response = $http_tiny->post(
+            "$ai_service_url/api/v1/social/party_invite",
+            {
+                headers => { 'Content-Type' => 'application/json' },
+                content => $json_request,
+            }
+        );
     
-    if ($response->is_success) {
-        my $data = decode_json($response->decoded_content);
+    if ($response->{success}) {
+        my $data = decode_json($response->{content});
         execute_action({ action => $data });
     }
 }
@@ -2028,6 +1923,11 @@ sub on_guild_chat {
 
 # AI_pre hook - called every AI cycle
 sub on_ai_pre {
+    return unless defined $conState;
+    return unless $conState == Network::IN_GAME;
+    return unless $HTTP_AVAILABLE;
+    return unless (defined $http_tiny);
+    
     # DIAGNOSTIC: Log that this hook is being called (once only)
     state $ai_pre_called_logged = 0;
     if (!$ai_pre_called_logged) {
@@ -2035,43 +1935,7 @@ sub on_ai_pre {
         $ai_pre_called_logged = 1;
     }
     
-    # ==========================================================================
-    # CRITICAL FIX: LAZY INITIALIZATION - Create HTTP client if not yet created
-    # This is a backup in case BEGIN block instance creation somehow failed
-    # ==========================================================================
-    if ($HTTP_AVAILABLE && !defined($http_tiny) && $HTTP_CLIENT eq 'HTTP::Tiny') {
-        state $lazy_init_attempted = 0;
-        
-        if (!$lazy_init_attempted) {
-            message "[GodTierAI] [LAZY-INIT] ⚠ HTTP client instance not found - attempting lazy initialization...\n", "warning";
-            
-            eval {
-                $http_tiny = HTTP::Tiny->new(
-                    timeout => 35,
-                    agent => 'GodTierAI/1.0',
-                    verify_SSL => 0,
-                );
-                
-                if (defined($http_tiny) && ref($http_tiny) eq 'HTTP::Tiny') {
-                    message "[GodTierAI] [LAZY-INIT] ✓ HTTP client initialized successfully (lazy init)\n", "success";
-                    message "[GodTierAI] [LAZY-INIT]   Instance type: " . ref($http_tiny) . "\n", "success";
-                    $degraded_mode = 0;  # Enable full functionality
-                    message "[GodTierAI] [LAZY-INIT] ✓ DEGRADED MODE DISABLED - Full AI operational\n", "success";
-                } else {
-                    error "[GodTierAI] [LAZY-INIT] ✗ HTTP client lazy init returned invalid reference\n";
-                }
-            };
-            
-            if ($@) {
-                error "[GodTierAI] [LAZY-INIT] ✗ HTTP client lazy init failed: $@\n";
-                error "[GodTierAI] [LAZY-INIT]   AI will remain in degraded mode\n";
-            }
-            
-            $lazy_init_attempted = 1;
-        }
-    }
-    
-    # PHASE 2: Enhanced degraded mode check with test bypass option
+    # Degraded mode check
     if ($degraded_mode) {
         state $degraded_warning_shown = 0;
         if (!$degraded_warning_shown) {
@@ -2085,12 +1949,7 @@ sub on_ai_pre {
             warning "[GodTierAI] ========================================\n";
             $degraded_warning_shown = 1;
         }
-        # PHASE 2: TEMPORARILY BYPASS RETURN FOR TESTING
-        # Uncomment the line below to re-enable degraded mode blocking:
-        # return;
-        
-        # Allow execution to continue for testing purposes
-        print STDERR "[GodTierAI] [PHASE2-TEST] Bypassing degraded mode check...\n";
+        return;
     }
     
     # DIAGNOSTIC #4: Nuclear test option - Uncomment to disable all AI logic
@@ -2191,7 +2050,7 @@ sub check_unused_points {
         message "[GodTierAI] [AUTO-PROGRESSION] Detected $stat_points unused stat points - allocating...\n", "success";
         
         # Skip if HTTP client not available
-        unless (defined $ua) {
+        unless (defined $http_tiny) {
             warning "[GodTierAI] [AUTO-PROGRESSION] Cannot allocate stats - HTTP client not available (degraded mode)\n";
             return;
         }
@@ -2216,14 +2075,16 @@ sub check_unused_points {
             my $json_request = encode_json(\%request);
             message "[GodTierAI] [AUTO-PROGRESSION] Requesting stat allocation from AI Service...\n", "info";
             
-            my $response = $ua->post(
-                "$ai_service_url/api/v1/progression/stats/on_level_up",
-                Content_Type => 'application/json',
-                Content => $json_request
-            );
+            my $response = $http_tiny->post(
+            "$ai_service_url/api/v1/progression/stats/on_level_up",
+            {
+                headers => { 'Content-Type' => 'application/json' },
+                content => $json_request,
+            }
+        );
             
-            if ($response->is_success) {
-                my $data = decode_json($response->decoded_content);
+            if ($response->{success}) {
+                my $data = decode_json($response->{content});
                 
                 if ($data->{config} && $data->{config}{statsAddAuto_list}) {
                     message "[GodTierAI] [AUTO-PROGRESSION] Stat plan: $data->{config}{statsAddAuto_list}\n", "success";
@@ -2237,7 +2098,7 @@ sub check_unused_points {
                     warning "[GodTierAI] [AUTO-PROGRESSION] No stat plan received from AI Service\n";
                 }
             } else {
-                warning "[GodTierAI] [AUTO-PROGRESSION] Stat allocation request failed: " . $response->status_line . "\n";
+                warning "[GodTierAI] [AUTO-PROGRESSION] Stat allocation request failed: " . "$response->{status} $response->{reason}" . "\n";
             }
         };
         if ($@) {
@@ -2251,7 +2112,7 @@ sub check_unused_points {
         message "[GodTierAI] [AUTO-PROGRESSION] Detected $skill_points unused skill points - learning skills...\n", "success";
         
         # Skip if HTTP client not available
-        unless (defined $ua) {
+        unless (defined $http_tiny) {
             warning "[GodTierAI] [AUTO-PROGRESSION] Cannot learn skills - HTTP client not available (degraded mode)\n";
             return;
         }
@@ -2276,14 +2137,16 @@ sub check_unused_points {
             my $json_request = encode_json(\%request);
             message "[GodTierAI] [AUTO-PROGRESSION] Requesting skill learning from AI Service...\n", "info";
             
-            my $response = $ua->post(
-                "$ai_service_url/api/v1/progression/skills/on_job_level_up",
-                Content_Type => 'application/json',
-                Content => $json_request
-            );
+            my $response = $http_tiny->post(
+            "$ai_service_url/api/v1/progression/skills/on_job_level_up",
+            {
+                headers => { 'Content-Type' => 'application/json' },
+                content => $json_request,
+            }
+        );
             
-            if ($response->is_success) {
-                my $data = decode_json($response->decoded_content);
+            if ($response->{success}) {
+                my $data = decode_json($response->{content});
                 
                 if ($data->{config} && $data->{config}{skillsAddAuto_list}) {
                     message "[GodTierAI] [AUTO-PROGRESSION] Skill plan: $data->{config}{skillsAddAuto_list}\n", "success";
@@ -2297,7 +2160,7 @@ sub check_unused_points {
                     warning "[GodTierAI] [AUTO-PROGRESSION] No skill plan received from AI Service\n";
                 }
             } else {
-                warning "[GodTierAI] [AUTO-PROGRESSION] Skill learning request failed: " . $response->status_line . "\n";
+                warning "[GodTierAI] [AUTO-PROGRESSION] Skill learning request failed: " . "$response->{status} $response->{reason}" . "\n";
             }
         };
         if ($@) {
@@ -2448,7 +2311,7 @@ sub on_log_message {
         # Call AI Service self-heal endpoint
         eval {
             # Skip if HTTP client not available
-            unless (defined $ua) {
+            unless (defined $http_tiny) {
                 warning "[GodTierAI] [SELF-HEAL] Cannot auto-configure - HTTP client not available (degraded mode)\n";
                 return;
             }
@@ -2459,14 +2322,16 @@ sub on_log_message {
                 character_class => $character_class
             });
             
-            my $response = $ua->post(
+            my $response = $http_tiny->post(
                 "$ai_service_url/api/v1/self_heal/fix_plugin_config",
-                'Content-Type' => 'application/json',
-                Content => $payload
+                {
+                    headers => { 'Content-Type' => 'application/json' },
+                    content => $payload,
+                }
             );
             
-            if ($response->is_success) {
-                my $result = decode_json($response->decoded_content);
+            if ($response->{success}) {
+                my $result = decode_json($response->{content});
                 
                 if ($result->{success}) {
                     message "[GodTierAI] [SELF-HEAL] teleToDest config auto-generated successfully!\n", "success";
@@ -2476,7 +2341,7 @@ sub on_log_message {
                     error "[GodTierAI] [SELF-HEAL] Failed to auto-configure: " . ($result->{error} || "Unknown error") . "\n";
                 }
             } else {
-                error "[GodTierAI] [SELF-HEAL] AI Service request failed: " . $response->status_line . "\n";
+                error "[GodTierAI] [SELF-HEAL] AI Service request failed: " . "$response->{status} $response->{reason}" . "\n";
             }
         };
         
@@ -2511,7 +2376,7 @@ sub on_base_level_up {
     # Request stat allocation from AI Service
     eval {
         # Skip if HTTP client not available
-        unless (defined $ua) {
+        unless (defined $http_tiny) {
             warning "[GodTierAI] Cannot allocate stats - HTTP client not available (degraded mode)\n";
             return;
         }
@@ -2522,14 +2387,16 @@ sub on_base_level_up {
         );
         
         my $json_request = encode_json(\%request);
-        my $response = $ua->post(
+        my $response = $http_tiny->post(
             "$ai_service_url/api/v1/progression/stats/on_level_up",
-            Content_Type => 'application/json',
-            Content => $json_request
+            {
+                headers => { 'Content-Type' => 'application/json' },
+                content => $json_request,
+            }
         );
         
-        if ($response->is_success) {
-            my $data = decode_json($response->decoded_content);
+        if ($response->{success}) {
+            my $data = decode_json($response->{content});
             
             if ($data->{config} && $data->{config}{statsAddAuto_list}) {
                 message "[GodTierAI] Stat allocation plan: $data->{config}{statsAddAuto_list}\n", "info";
@@ -2542,7 +2409,7 @@ sub on_base_level_up {
                 message "[GodTierAI] Auto-stat allocation enabled\n", "success";
             }
         } else {
-            warning "[GodTierAI] Failed to get stat allocation: " . $response->status_line . "\n";
+            warning "[GodTierAI] Failed to get stat allocation: " . "$response->{status} $response->{reason}" . "\n";
         }
     };
     if ($@) {
@@ -2569,7 +2436,7 @@ sub on_job_level_up {
     # Request skill learning from AI Service
     eval {
         # Skip if HTTP client not available
-        unless (defined $ua) {
+        unless (defined $http_tiny) {
             warning "[GodTierAI] Cannot learn skills - HTTP client not available (degraded mode)\n";
             return;
         }
@@ -2581,14 +2448,16 @@ sub on_job_level_up {
         );
         
         my $json_request = encode_json(\%request);
-        my $response = $ua->post(
+        my $response = $http_tiny->post(
             "$ai_service_url/api/v1/progression/skills/on_job_level_up",
-            Content_Type => 'application/json',
-            Content => $json_request
+            {
+                headers => { 'Content-Type' => 'application/json' },
+                content => $json_request,
+            }
         );
         
-        if ($response->is_success) {
-            my $data = decode_json($response->decoded_content);
+        if ($response->{success}) {
+            my $data = decode_json($response->{content});
             
             if ($data->{config} && $data->{config}{skillsAddAuto_list}) {
                 message "[GodTierAI] Skill learning plan: $data->{config}{skillsAddAuto_list}\n", "info";
@@ -2601,7 +2470,7 @@ sub on_job_level_up {
                 message "[GodTierAI] Auto-skill learning enabled\n", "success";
             }
         } else {
-            warning "[GodTierAI] Failed to get skill learning: " . $response->status_line . "\n";
+            warning "[GodTierAI] Failed to get skill learning: " . "$response->{status} $response->{reason}" . "\n";
         }
     };
     if ($@) {
@@ -2646,7 +2515,7 @@ sub notify_equipment_map_change {
     
     eval {
         # Skip if HTTP client not available
-        return unless defined $ua;
+        return unless defined $http_tiny;
         
         my %request = (
             new_map => $map_name,
@@ -2654,14 +2523,16 @@ sub notify_equipment_map_change {
         );
         
         my $json_request = encode_json(\%request);
-        my $response = $ua->post(
+        my $response = $http_tiny->post(
             "$ai_service_url/api/v1/progression/equipment/on_map_change",
-            Content_Type => 'application/json',
-            Content => $json_request
+            {
+                headers => { 'Content-Type' => 'application/json' },
+                content => $json_request,
+            }
         );
         
-        if ($response->is_success) {
-            my $data = decode_json($response->decoded_content);
+        if ($response->{success}) {
+            my $data = decode_json($response->{content});
             
             if ($data->{commands}) {
                 debug "[GodTierAI] Equipment recommendations for $map_name:\n", "ai";

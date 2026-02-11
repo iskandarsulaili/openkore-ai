@@ -3,7 +3,7 @@ package CombatIntelligence;
 use strict;
 use warnings;
 use JSON;
-use LWP::UserAgent;
+use HTTP::Tiny;
 use Log qw(message warning error debug);
 use Time::HiRes qw(time);
 
@@ -23,8 +23,16 @@ Flow: Game Server -> OpenKore -> AI Service -> Combat Intelligence
 
 =cut
 
-my $ai_service_url = "http://127.0.0.1:9902";
-my $ua = LWP::UserAgent->new(timeout => 5);  # Fast timeout for combat
+# Dynamic port configuration
+sub load_http_port_from_config {
+    return $ENV{GODTIER_AI_SERVICE_PORT} if $ENV{GODTIER_AI_SERVICE_PORT};
+    # Backwards compatibility
+    return $ENV{AI_SIDECAR_HTTP_PORT} if $ENV{AI_SIDECAR_HTTP_PORT};
+    return 9901;  # Default port (avoids conflict with other services)
+}
+
+my $ai_service_url = "http://127.0.0.1:" . load_http_port_from_config();
+my $http_tiny = HTTP::Tiny->new(timeout => 5);  # Fast timeout for combat
 my $threat_cache = {};
 my $last_target_id = undef;
 
@@ -81,14 +89,16 @@ sub assess_threat_before_attack {
         };
         
         # Call AI Service
-        my $response = $ua->post(
+        my $response = $http_tiny->post(
             "$ai_service_url/api/v1/combat/threat/assess",
+            {
+                headers => { 'Content-Type' => 'application/json' },
             Content_Type => 'application/json',
             Content => encode_json($data)
         );
         
-        if ($response->is_success) {
-            my $result = decode_json($response->decoded_content);
+        if ($response->{success}) {
+            my $result = decode_json($response->{content});
             
             # Cache result
             $threat_cache->{$cache_key} = {
@@ -130,14 +140,16 @@ sub update_kiting_position {
             enemy_targeting_us => $enemy_targeting_us ? JSON::true : JSON::false
         };
         
-        my $response = $ua->post(
+        my $response = $http_tiny->post(
             "$ai_service_url/api/v1/combat/kiting/update",
-            Content_Type => 'application/json',
-            Content => encode_json($data)
+            {
+                headers => { 'Content-Type' => 'application/json' },
+                content => encode_json($data),
+            }
         );
         
-        if ($response->is_success) {
-            return decode_json($response->decoded_content);
+        if ($response->{success}) {
+            return decode_json($response->{content});
         } else {
             warning "[CombatIntelligence] Kiting update failed: " . $response->status_line . "\n";
             return undef;
@@ -175,14 +187,16 @@ sub select_best_target {
             quest_targets => $quest_targets || []
         };
         
-        my $response = $ua->post(
+        my $response = $http_tiny->post(
             "$ai_service_url/api/v1/combat/target/select",
-            Content_Type => 'application/json',
-            Content => encode_json($data)
+            {
+                headers => { 'Content-Type' => 'application/json' },
+                content => encode_json($data),
+            }
         );
         
-        if ($response->is_success) {
-            my $result = decode_json($response->decoded_content);
+        if ($response->{success}) {
+            my $result = decode_json($response->{content});
             if ($result->{status} eq 'success') {
                 $last_target_id = $result->{target}->{monster_id};
                 return $result->{target};
@@ -221,14 +235,16 @@ sub find_optimal_position {
             aoe_range => $aoe_range
         };
         
-        my $response = $ua->post(
+        my $response = $http_tiny->post(
             "$ai_service_url/api/v1/combat/positioning/optimal",
-            Content_Type => 'application/json',
-            Content => encode_json($data)
+            {
+                headers => { 'Content-Type' => 'application/json' },
+                content => encode_json($data),
+            }
         );
         
-        if ($response->is_success) {
-            return decode_json($response->decoded_content);
+        if ($response->{success}) {
+            return decode_json($response->{content});
         }
         return undef;
     };
@@ -248,7 +264,7 @@ Clear current target (when target dies).
 sub clear_target {
     eval {
         $last_target_id = undef;
-        $ua->post("$ai_service_url/api/v1/combat/target/clear");
+        $http_tiny->post("$ai_service_url/api/v1/combat/target/clear");
     };
 }
 

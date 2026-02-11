@@ -191,19 +191,11 @@ message "[godtier_ai] [HOT-RELOAD] Monitoring: $module_path\n", "info";
 message "[godtier_ai] [HOT-RELOAD] Check interval: ${check_interval}s\n", "info";
 
 if (load_godtier_module()) {
-    print STDERR "[godtier_ai.pl] *** Verifying module initialization...\n";
-    
-    # Verify the module loaded successfully
-    if (defined &GodTierAI::on_load) {
-        print STDERR "[godtier_ai.pl]  on_load() function found\n";
-        message "[godtier_ai]  GodTierAI module loaded successfully\n", "success";
-        message "[godtier_ai]  Functions available\n", "success";
-    } else {
-        print STDERR "[godtier_ai.pl]  ERROR: on_load() function NOT found\n";
-        error "[godtier_ai]  GodTierAI module FAILED TO LOAD\n";
-        error "[godtier_ai]  Check for missing Perl modules\n";
-        error "[godtier_ai]  Plugin will not function\n";
-    }
+    # Register hook to call on_load when OpenKore is ready
+    Plugins::addHook('start3', sub {
+        GodTierAI::on_load();
+    }, undef);
+    message "[godtier_ai] Plugin registered, will initialize on start3 hook\n", "success";
     
     # Check HTTP library availability
     if ($GodTierAI::HTTP_AVAILABLE) {
@@ -211,11 +203,7 @@ if (load_godtier_module()) {
         message "[godtier_ai]  HTTP client available ($GodTierAI::HTTP_CLIENT)\n", "success";
     } else {
         print STDERR "[godtier_ai.pl]  WARNING: HTTP client NOT available\n";
-        print STDERR "[godtier_ai.pl]  Error details: $GodTierAI::LOAD_ERROR\n" if $GodTierAI::LOAD_ERROR;
-        error "[godtier_ai]  HTTP client NOT available\n";
-        error "[godtier_ai]  Error: $GodTierAI::LOAD_ERROR\n";
-        error "[godtier_ai]  Install LWP::UserAgent: cpanm LWP::UserAgent\n";
-        error "[godtier_ai]  Or install system package: apt-get install libwww-perl (Debian/Ubuntu)\n";
+        warning "[godtier_ai]  HTTP client NOT available - will run in degraded mode\n";
     }
     
     # Register hot-reload periodic checker

@@ -24,6 +24,7 @@ set "AI_ENGINE_EXE=%SCRIPT_DIR%\ai-engine.exe"
 set "AI_SERVICE_MAIN=%AI_SERVICE_DIR%\src\main.py"
 
 :: Port configuration
+set "GODTIER_AI_SERVICE_PORT=9901"
 set "AI_ENGINE_PORT=9901"
 set "AI_SERVICE_PORT=9902"
 
