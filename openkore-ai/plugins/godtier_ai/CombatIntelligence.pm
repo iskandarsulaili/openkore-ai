@@ -340,12 +340,18 @@ sub count_item_by_name {
     my ($name) = @_;
     my $count = 0;
     
-    if ($char && $char->{inventory}) {
-        foreach my $item (@{$char->{inventory}}) {
-            if ($item && $item->{name} eq $name) {
-                $count += $item->{amount} || 1;
+    # CRITICAL FIX: Use proper inventory() method call instead of hash accessor
+    if ($char && $char->can('inventory')) {
+        eval {
+            my $inv = $char->inventory;
+            if ($inv && $inv->can('getItems')) {
+                foreach my $item (@{$inv->getItems()}) {
+                    if ($item && $item->can('name') && $item->name() eq $name) {
+                        $count += $item->{amount} || 1;
+                    }
+                }
             }
-        }
+        };
     }
     
     return $count;
@@ -371,6 +377,13 @@ In GodTierAI.pm:
             # Cancel attack
             message "[ThreatAssessor] DANGER: $assessment->{threat_level} - ".
                     "Win prob: $assessment->{win_probability}%. AVOIDING.\n", "warning";
+            
+            # CRITICAL FIX: Auto-stand before movement if character is sitting
+            if ($char->{sitting}) {
+                Commands::run("stand");
+                sleep 0.2;  # Allow stand command to complete
+            }
+            
             Commands::run('move ' . $char->{pos_to}{x} . ' ' . $char->{pos_to}{y});
             return 0;  # Cancel
         }
@@ -388,6 +401,13 @@ In GodTierAI.pm:
         
         if ($kiting && $kiting->{movement_position}) {
             my ($x, $y) = @{$kiting->{movement_position}};
+            
+            # CRITICAL FIX: Auto-stand before movement if character is sitting
+            if ($char->{sitting}) {
+                Commands::run("stand");
+                sleep 0.2;  # Allow stand command to complete
+            }
+            
             Commands::run("move $x $y");
         }
     }

@@ -37,8 +37,9 @@
 # as you see fit.
 
 
-# All items not mentioned in this file will be automatically stored in storage.
-all 0 1 0
+# All items not mentioned in this file will be sold to NPCs (vendor trash)
+# FIX 7: Changed from "0 1 0" (auto-store) to "1 0 0" (sell) to enable zeny collection
+all 1 0 0
 
 
 ##### HEAL/SUPPORT ITEMS #####

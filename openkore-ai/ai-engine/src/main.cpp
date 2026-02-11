@@ -422,6 +422,86 @@ int main() {
         res.status = 200;
     });
     
+        // POST /api/v1/strategic/plan - Strategic planning endpoint
+        server->Post("/api/v1/strategic/plan", [](const httplib::Request& req, httplib::Response& res) {
+        using namespace openkore_ai::logging;
+        auto start_time = std::chrono::steady_clock::now();
+        
+        try {
+            Logger::log_request("POST", "/api/v1/strategic/plan", req.body, req.body.size());
+            Logger::info("Strategic planning request received", "STRATEGIC");
+            
+            // Forward request to Python AI Service on port 9902
+            httplib::Client client("127.0.0.1", 9902);
+            client.set_connection_timeout(0, 300000); // 300 seconds timeout for strategic planning
+            client.set_read_timeout(300, 0);          // 300 seconds read timeout
+            
+            auto response = client.Post("/api/v1/strategic/plan",
+                                       req.body,
+                                       "application/json");
+            
+            if (!response) {
+                Logger::error("Failed to connect to AI Service for strategic planning", "STRATEGIC");
+                
+                json error_json;
+                error_json["status"] = "error";
+                error_json["message"] = "Failed to connect to AI Service (port 9902)";
+                error_json["fallback_plan"] = "tactical_only";
+                
+                res.set_content(error_json.dump(), "application/json");
+                res.status = 503; // Service Unavailable
+                
+                auto end_time = std::chrono::steady_clock::now();
+                auto latency_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+                Logger::log_response("/api/v1/strategic/plan", 503, latency_ms, error_json.dump());
+                return;
+            }
+            
+            if (response->status != 200) {
+                Logger::warning(std::string("AI Service returned error: ") + std::to_string(response->status), "STRATEGIC");
+                
+                json error_json;
+                error_json["status"] = "error";
+                error_json["message"] = "AI Service strategic planning failed";
+                error_json["fallback_plan"] = "tactical_only";
+                error_json["details"] = response->body;
+                
+                res.set_content(error_json.dump(), "application/json");
+                res.status = response->status;
+                
+                auto end_time = std::chrono::steady_clock::now();
+                auto latency_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+                Logger::log_response("/api/v1/strategic/plan", response->status, latency_ms, error_json.dump());
+                return;
+            }
+            
+            // Success - forward response from AI Service
+            Logger::info("Strategic planning completed successfully", "STRATEGIC");
+            
+            res.set_content(response->body, "application/json");
+            res.status = 200;
+            
+            auto end_time = std::chrono::steady_clock::now();
+            auto latency_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+            Logger::log_response("/api/v1/strategic/plan", 200, latency_ms, response->body);
+            
+        } catch (const std::exception& e) {
+            Logger::error(std::string("Exception in strategic planning: ") + e.what(), "STRATEGIC");
+            
+            json error_json;
+            error_json["status"] = "error";
+            error_json["message"] = e.what();
+            error_json["fallback_plan"] = "tactical_only";
+            
+            res.set_content(error_json.dump(), "application/json");
+            res.status = 500;
+            
+            auto end_time = std::chrono::steady_clock::now();
+            auto latency_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+            Logger::log_response("/api/v1/strategic/plan", 500, latency_ms, error_json.dump());
+        }
+    });
+    
         Logger::info("All HTTP endpoints registered");
         std::cout << "[STARTUP] HTTP endpoints registered successfully" << std::endl;
         

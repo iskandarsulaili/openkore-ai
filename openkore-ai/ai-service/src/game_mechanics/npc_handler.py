@@ -12,6 +12,8 @@ from pathlib import Path
 import asyncio
 
 logger = logging.getLogger(__name__)
+# FIX 6: Ensure verbose sell debug logs are visible
+logger.setLevel(logging.INFO)
 
 class NPCHandler:
     """
@@ -214,6 +216,7 @@ class NPCHandler:
     ) -> Dict:
         """
         Categorize inventory items into sellable vs keep
+        WITH VERBOSE DEBUGGING to solve "13 items but all protected" issue
         
         Args:
             inventory: List of inventory items
@@ -227,61 +230,193 @@ class NPCHandler:
                 "reasons": Dict  # Why each item was categorized
             }
         """
+        logger.info(f"[SELL-DEBUG] ========================================")
+        logger.info(f"[SELL-DEBUG] CATEGORIZING {len(inventory)} ITEMS")
+        logger.info(f"[SELL-DEBUG] ========================================")
+        
         # Use provided quest items or empty list
         quest_items_set = set(quest_items) if quest_items else set()
         
         # Equipment types to protect
         EQUIPMENT_TYPES = {"weapon", "armor", "accessory", "garment", "footgear", "headgear"}
         
+        # CRITICAL FIX: Explicit vendor trash IDs (common monster drops)
+        # These should NEVER be protected - they're meant to be sold
+        VENDOR_TRASH_IDS = {
+            909,   # Jellopy
+            713,   # Empty Bottle
+            705,   # Clover
+            715,   # Yellow Gemstone (sellable if excess)
+            716,   # Red Gemstone (sellable if excess)
+            717,   # Blue Gemstone (sellable if excess)
+            915,   # Chrysalis
+            938,   # Sticky Mucus
+            949,   # Feather
+            914,   # Fluff
+            916,   # Feather of Birds
+            955,   # Worm Peeling
+            948,   # Bear's Footskin
+            935,   # Shell
+            946,   # Snail's Shell
+            1055,  # Earthworm Peeling
+            941,   # Skorpion's Tail
+            942,   # Yoyo Tail
+            943,   # Solid Shell
+            945,   # Raccoon Leaf
+            7006,  # Claw of Desert Wolf
+            920,   # Wolf Claw
+            947,   # Horn
+            904,   # Scorpion Tail
+            928,   # Frozen Heart
+            950,   # Heart of Mermaid
+            7033,  # Poison Spore
+            512,   # Apple
+            513,   # Banana
+            514,   # Grape
+            515,   # Carrot
+            516,   # Sweet Potato
+            517,   # Meat
+            518,   # Honey
+            519,   # Milk
+            520,   # Leaflet of Hinal
+            521,   # Leaflet of Aloe
+            522,   # Fruit of Mastela (keep if low HP items)
+        }
+        
+        # Consumables to KEEP (healing items for survival)
+        CONSUMABLES_TO_KEEP = {
+            "Red Potion", "Orange Potion", "Yellow Potion", "White Potion",
+            "Blue Potion", "Green Potion",
+            "Fly Wing", "Butterfly Wing",
+            "Fruit of Mastela",  # High-tier heal
+        }
+        
+        # Gemstones: Keep 10, sell excess
+        GEMSTONE_IDS = {715, 716, 717}  # Yellow, Red, Blue Gemstone
+        gemstone_counts = {}
+        
         sell_list = []
         keep_list = []
         reasons = {}
         
+        item_num = 0
         for item in inventory:
+            item_num += 1
             item_name = item.get("name", "Unknown")
-            item_id = item.get("id", 0)
+            
+            # CRITICAL FIX: Convert string item_id to int (OpenKore sends strings)
+            try:
+                item_id = int(item.get("id", 0))
+            except (ValueError, TypeError):
+                item_id = 0
+                logger.warning(f"[SELL-DEBUG] [{item_num}] Invalid item ID for {item_name}, defaulting to 0")
+            
+            try:
+                amount = int(item.get("amount", 1))
+            except (ValueError, TypeError):
+                amount = 1
+            
             item_type = item.get("type", "").lower()
             is_equipped = item.get("equipped", False)
+            inv_index = item.get("invIndex", -1)
+            
+            logger.info(f"[SELL-DEBUG] [{item_num}] {item_name} x{amount} (ID:{item_id}, Type:{item_type}, Equipped:{is_equipped}, InvIdx:{inv_index})")
+            
+            # Rule 0: ALWAYS sell vendor trash (highest priority)
+            if item_id in VENDOR_TRASH_IDS and item_id not in GEMSTONE_IDS:
+                sell_list.append(item)
+                reasons[item_name] = f"Vendor trash (ID: {item_id})"
+                logger.info(f"[SELL-DEBUG] [{item_num}] ✓ SELL: Vendor trash (ID: {item_id})")
+                continue
+            
+            # Rule 0b: Gemstones - keep 10, sell excess
+            if item_id in GEMSTONE_IDS:
+                gemstone_counts[item_id] = gemstone_counts.get(item_id, 0) + amount
+                if gemstone_counts[item_id] > 10:
+                    excess = gemstone_counts[item_id] - 10
+                    # Sell excess gemstones
+                    item_copy = item.copy()
+                    item_copy['amount'] = excess
+                    sell_list.append(item_copy)
+                    reasons[item_name] = f"Excess gemstone (keeping 10, selling {excess})"
+                    logger.info(f"[SELL-DEBUG] [{item_num}] ✓ SELL: Excess gemstone (keep 10, sell {excess})")
+                    # Keep remaining
+                    item_keep = item.copy()
+                    item_keep['amount'] = 10
+                    keep_list.append(item_keep)
+                    continue
+                else:
+                    keep_list.append(item)
+                    reasons[item_name] = f"Gemstone reserve (keeping for skills)"
+                    logger.info(f"[SELL-DEBUG] [{item_num}] ✗ KEEP: Gemstone reserve")
+                    continue
             
             # Rule 1: Never sell cards (use table_loader if available)
             if is_card_func and is_card_func(item_name):
                 keep_list.append(item)
                 reasons[item_name] = "Card (valuable)"
+                logger.info(f"[SELL-DEBUG] [{item_num}] ✗ KEEP: Card (valuable)")
                 continue
             elif 4001 <= item_id <= 4999:
                 keep_list.append(item)
                 reasons[item_name] = "Card (valuable)"
+                logger.info(f"[SELL-DEBUG] [{item_num}] ✗ KEEP: Card range (4001-4999)")
                 continue
             
             # Rule 2: Never sell quest items (from table_loader)
             if item_name in quest_items_set:
                 keep_list.append(item)
                 reasons[item_name] = "Quest item"
+                logger.info(f"[SELL-DEBUG] [{item_num}] ✗ KEEP: Quest item")
                 continue
             
             # Rule 3: Never sell equipped items
             if is_equipped:
                 keep_list.append(item)
                 reasons[item_name] = "Currently equipped"
+                logger.info(f"[SELL-DEBUG] [{item_num}] ✗ KEEP: Currently equipped")
                 continue
             
             # Rule 4: Never sell equipment (unless junk)
             if item_type in EQUIPMENT_TYPES:
                 keep_list.append(item)
                 reasons[item_name] = "Equipment"
+                logger.info(f"[SELL-DEBUG] [{item_num}] ✗ KEEP: Equipment type")
                 continue
             
-            # Rule 5: Keep consumables (potions, food)
-            if item_type == "consumable" or "Potion" in item_name or item_name in ["Apple", "Meat", "Fly Wing"]:
+            # Rule 5: Keep essential consumables (healing items for survival)
+            if item_name in CONSUMABLES_TO_KEEP:
                 keep_list.append(item)
-                reasons[item_name] = "Consumable (needed for survival)"
+                reasons[item_name] = "Essential consumable (needed for survival)"
+                logger.info(f"[SELL-DEBUG] [{item_num}] ✗ KEEP: Essential consumable")
                 continue
             
-            # Rule 6: Sell everything else (monster drops, misc items)
+            # Rule 6: Sell everything else (monster drops, misc items, food items)
+            # This includes: Apple, Meat, Monster drops, etc.
             sell_list.append(item)
             reasons[item_name] = f"Sellable (type: {item_type})"
+            logger.info(f"[SELL-DEBUG] [{item_num}] ✓ SELL: Sellable item (type: {item_type})")
         
-        logger.info(f"[SELL] Categorized inventory: {len(sell_list)} sellable, {len(keep_list)} keep")
+        logger.info(f"[SELL-DEBUG] ========================================")
+        logger.info(f"[SELL-DEBUG] CATEGORIZATION COMPLETE")
+        logger.info(f"[SELL-DEBUG] Sellable: {len(sell_list)} items")
+        logger.info(f"[SELL-DEBUG] Keep: {len(keep_list)} items")
+        logger.info(f"[SELL-DEBUG] ========================================")
+        
+        if sell_list:
+            logger.info(f"[SELL-DEBUG] Items TO SELL:")
+            for item in sell_list[:20]:  # Show first 20
+                logger.info(f"[SELL-DEBUG]   - {item.get('name')} x{item.get('amount', 1)} (ID:{item.get('id')})")
+        else:
+            logger.warning(f"[SELL-DEBUG] ⚠️ NO ITEMS TO SELL - All items were protected!")
+            logger.warning(f"[SELL-DEBUG] Protected items:")
+            for item in keep_list[:10]:
+                logger.warning(f"[SELL-DEBUG]   - {item.get('name')} x{item.get('amount', 1)} (Reason: {reasons.get(item.get('name'), 'unknown')})")
+        
+        if keep_list:
+            logger.info(f"[SELL-DEBUG] Items TO KEEP:")
+            for item in keep_list[:20]:  # Show first 20
+                logger.info(f"[SELL-DEBUG]   - {item.get('name')} x{item.get('amount', 1)} (Reason: {reasons.get(item.get('name'), 'unknown')})")
         
         return {
             "sell": sell_list,
@@ -325,9 +460,19 @@ class NPCHandler:
         
         for item in categorized["sell"]:
             item_name = item.get("name", "Unknown")
-            # Rough estimation: Most low-level drops sell for 2-50z each
-            sell_price = item.get("sell_price", 10)  # Default 10z if unknown
-            amount = item.get("amount", 1)
+            
+            # CRITICAL FIX: Convert string amounts to int (OpenKore sends strings)
+            try:
+                sell_price = int(item.get("sell_price", 10))
+            except (ValueError, TypeError):
+                sell_price = 10
+                logger.debug(f"[SELL] Invalid sell_price for {item_name}, using default 10z")
+            
+            try:
+                amount = int(item.get("amount", 1))
+            except (ValueError, TypeError):
+                amount = 1
+                logger.warning(f"[SELL] Invalid amount for {item_name}, defaulting to 1")
             
             estimated_value += sell_price * amount
             items_to_sell.append(item_name)
@@ -336,12 +481,34 @@ class NPCHandler:
         logger.info(f"[SELL] Items: {', '.join(items_to_sell[:10])}...")  # Log first 10
         
         # Generate sell command for OpenKore
-        # OpenKore command: "sell <item name> <amount>"
+        # CRITICAL FIX: OpenKore syntax is "sell <invIndex> [amount]"
+        # invIndex is the inventory slot number (0, 1, 2, ...), NOT the item name
         sell_commands = []
         for item in categorized["sell"]:
             item_name = item.get("name", "Unknown")
-            amount = item.get("amount", 1)
-            sell_commands.append(f"sell {item_name} {amount}")
+            
+            # CRITICAL FIX: Get invIndex (inventory slot number) for correct sell syntax
+            try:
+                inv_index = int(item.get("invIndex", -1))
+            except (ValueError, TypeError):
+                inv_index = -1
+                logger.error(f"[SELL] Missing or invalid invIndex for {item_name}, cannot sell")
+                continue
+            
+            if inv_index < 0:
+                logger.error(f"[SELL] Invalid invIndex {inv_index} for {item_name}, skipping")
+                continue
+            
+            # CRITICAL FIX: Convert string amount to int (OpenKore sends strings)
+            try:
+                amount = int(item.get("amount", 1))
+            except (ValueError, TypeError):
+                amount = 1
+                logger.warning(f"[SELL] Invalid amount for {item_name} in sell_commands, defaulting to 1")
+            
+            # Correct OpenKore sell syntax: sell <invIndex> [amount]
+            sell_commands.append(f"sell {inv_index} {amount}")
+            logger.info(f"[SELL] Generated command: sell {inv_index} {amount} (item: {item_name})")
         
         # Get tool dealer location from config (never hardcoded)
         tool_dealer_location = None

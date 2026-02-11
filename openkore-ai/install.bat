@@ -1545,9 +1545,10 @@ echo      - Bot will AUTO-BUY items - no manual purchasing needed!
 echo.
 echo   3. [Start the system]:
 echo      - Run: start.bat
-echo      - AI Engine will start first (port 9901)
-echo      - AI Service will start second (port 9902)
-echo      - OpenKore will start last
+echo      - AI Engine will start first on port 9901
+echo      - AI Service will start second on port 9902
+echo      - OpenKore will connect to AI Service (port 9902)
+echo      - All services start automatically in order
 echo.
 echo   4. [What Your Bot Will Do Automatically]:
 echo      - Allocate stats according to %BUILD_NAME% build

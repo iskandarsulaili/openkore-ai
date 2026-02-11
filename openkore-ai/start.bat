@@ -24,9 +24,11 @@ set "AI_ENGINE_EXE=%SCRIPT_DIR%\ai-engine.exe"
 set "AI_SERVICE_MAIN=%AI_SERVICE_DIR%\src\main.py"
 
 :: Port configuration
-set "GODTIER_AI_SERVICE_PORT=9901"
 set "AI_ENGINE_PORT=9901"
 set "AI_SERVICE_PORT=9902"
+set "AI_SERVICE_HOST=127.0.0.1"
+set "AI_SERVICE_URL=http://127.0.0.1:9902"
+set "GODTIER_AI_SERVICE_PORT=9902"
 
 :: Process IDs (will be populated)
 set "AI_ENGINE_PID="

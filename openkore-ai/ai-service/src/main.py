@@ -130,6 +130,7 @@ from routers import macro_router
 # Import Phase 10 Autonomous Self-Healing components
 from autonomous_healing import AutonomousHealingSystem
 from autonomous_healing.plugin_configs import generate_teledest_config
+from autonomous_healing.config_generator import get_config_generator
 
 # Import Priority 1 Game Mechanics components (rathena extraction)
 from routers import game_mechanics_router
@@ -1168,6 +1169,218 @@ async def health_check():
         }
     }
 
+@app.post("/api/v1/strategic/plan")
+async def strategic_plan(request: Request):
+    """
+    Strategic Planning Endpoint - Called by AI-Engine (Port 9901)
+    
+    Uses conscious planner, PDCA cycle, and CrewAI for long-term strategic planning.
+    This is the high-level strategic layer that influences OpenKore's decision-making.
+    
+    Request body:
+        {
+            "game_state": {
+                "character": { ... },
+                "monsters": [ ... ],
+                "inventory": [ ... ],
+                ...
+            },
+            "context": "general_planning" | "leveling" | "questing" | etc.
+        }
+    
+    Returns:
+        {
+            "status": "success",
+            "strategic_goals": [ ... ],
+            "action_plan": { ... },
+            "planning_tier": "conscious",
+            "timestamp": "ISO8601",
+            "execution_time_ms": int
+        }
+    """
+    start_time = time.time()
+    
+    try:
+        # Parse request
+        body = await request.json()
+        game_state = body.get("game_state", {})
+        context = body.get("context", "general_planning")
+        
+        logger.info(f"[STRATEGIC] Strategic planning request received (context: {context})")
+        
+        # Extract character info for logging
+        character = game_state.get("character", {})
+        char_name = character.get("name", "Unknown")
+        char_level = character.get("level", 0)
+        char_job = character.get("job_class", "Unknown")
+        
+        logger.info(f"[STRATEGIC] Planning for {char_name} (Lv {char_level} {char_job})")
+        
+        # ==================================================================
+        # STRATEGIC PLANNING LOGIC
+        # ==================================================================
+        
+        strategic_goals = []
+        action_plan = {}
+        planning_method = "heuristic"
+        
+        # Try to use CrewAI strategic planner if LLM is available
+        if llm_chain and llm_chain.is_available():
+            try:
+                logger.info("[STRATEGIC] Using CrewAI strategic planner...")
+                planning_method = "crewai"
+                
+                from agents.strategic_agents import get_strategic_planner
+                planner = get_strategic_planner(llm_chain)
+                
+                # Execute strategic planning (with timeout)
+                strategic_result = await asyncio.wait_for(
+                    planner.plan_next_strategic_action(game_state),
+                    timeout=120.0  # 2 minute timeout for strategic planning
+                )
+                
+                # Extract strategic goals from CrewAI result
+                if strategic_result and strategic_result.get("action"):
+                    strategic_goals.append({
+                        "type": "primary_goal",
+                        "action": strategic_result.get("action"),
+                        "reasoning": strategic_result.get("reasoning", ""),
+                        "priority": strategic_result.get("priority", "medium"),
+                        "params": strategic_result.get("params", {})
+                    })
+                    
+                    action_plan = {
+                        "immediate_action": strategic_result.get("action"),
+                        "next_steps": strategic_result.get("next_steps", []),
+                        "estimated_duration": strategic_result.get("estimated_duration", "unknown"),
+                        "success_criteria": strategic_result.get("success_criteria", [])
+                    }
+                    
+                logger.info(f"[STRATEGIC] CrewAI planning complete: {strategic_result.get('action')}")
+                
+            except asyncio.TimeoutError:
+                logger.warning("[STRATEGIC] CrewAI strategic planning timed out, using fallback")
+                planning_method = "fallback_heuristic"
+            except Exception as e:
+                logger.error(f"[STRATEGIC] CrewAI strategic planning failed: {e}")
+                planning_method = "fallback_heuristic"
+        else:
+            logger.info("[STRATEGIC] LLM not available, using heuristic planning")
+            planning_method = "heuristic"
+        
+        # Fallback heuristic planning if CrewAI unavailable/failed
+        if not strategic_goals:
+            logger.info("[STRATEGIC] Generating heuristic strategic plan...")
+            
+            # Analyze character state
+            hp_percent = (character.get("hp", 0) / character.get("max_hp", 1)) * 100
+            sp_percent = (character.get("sp", 0) / character.get("max_sp", 1)) * 100
+            weight_percent = (character.get("weight", 0) / character.get("max_weight", 1)) * 100
+            level = character.get("level", 1)
+            zeny = character.get("zeny", 0)
+            
+            # Generate strategic goals based on state
+            if weight_percent > 80:
+                strategic_goals.append({
+                    "type": "resource_management",
+                    "action": "manage_inventory",
+                    "reasoning": f"Weight at {weight_percent:.1f}%, need to store items",
+                    "priority": "high",
+                    "params": {"target": "storage", "weight_threshold": 80}
+                })
+            
+            if zeny < 1000:
+                strategic_goals.append({
+                    "type": "economy",
+                    "action": "gather_zeny",
+                    "reasoning": f"Low funds ({zeny} zeny), prioritize farming valuable monsters",
+                    "priority": "high",
+                    "params": {"target_zeny": 5000, "method": "farming"}
+                })
+            
+            if hp_percent < 80 or sp_percent < 50:
+                strategic_goals.append({
+                    "type": "preparation",
+                    "action": "restock_supplies",
+                    "reasoning": f"HP/SP resources low (HP: {hp_percent:.1f}%, SP: {sp_percent:.1f}%)",
+                    "priority": "medium",
+                    "params": {"items": ["Red Potion", "Blue Potion"]}
+                })
+            
+            # Default farming goal if no urgent needs
+            if not strategic_goals:
+                strategic_goals.append({
+                    "type": "leveling",
+                    "action": "continue_farming",
+                    "reasoning": f"Character stable, continue efficient leveling (Lv {level})",
+                    "priority": "medium",
+                    "params": {"focus": "exp_optimization"}
+                })
+            
+            # Build action plan
+            if strategic_goals:
+                primary_goal = strategic_goals[0]
+                action_plan = {
+                    "immediate_action": primary_goal["action"],
+                    "next_steps": [g["action"] for g in strategic_goals[1:3]],
+                    "estimated_duration": "10-30 minutes",
+                    "success_criteria": ["Goals completed", "Resources stable"]
+                }
+        
+        # Try to use PDCA planner for additional insights (non-blocking)
+        try:
+            from pdca.planner import PDCAPlanner
+            pdca_planner = PDCAPlanner()
+            
+            # Generate macros if needed (async, don't wait)
+            logger.info("[STRATEGIC] PDCA planner available for macro generation")
+            
+        except Exception as e:
+            logger.debug(f"[STRATEGIC] PDCA planner not available: {e}")
+        
+        # Calculate execution time
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        
+        # Build response
+        response = {
+            "status": "success",
+            "strategic_goals": strategic_goals,
+            "action_plan": action_plan,
+            "planning_tier": "conscious",
+            "planning_method": planning_method,
+            "timestamp": datetime.now().isoformat(),
+            "execution_time_ms": execution_time_ms,
+            "character": {
+                "name": char_name,
+                "level": char_level,
+                "job_class": char_job
+            }
+        }
+        
+        logger.info(f"[STRATEGIC] Strategic planning complete ({execution_time_ms}ms, {len(strategic_goals)} goals)")
+        return response
+        
+    except Exception as e:
+        logger.error(f"[STRATEGIC] Strategic planning failed: {e}", exc_info=True)
+        
+        # Return fallback response
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        
+        return {
+            "status": "error",
+            "message": str(e),
+            "fallback_plan": "tactical_only",
+            "strategic_goals": [{
+                "type": "fallback",
+                "action": "continue_current_activity",
+                "reasoning": "Strategic planning failed, continuing with tactical decisions",
+                "priority": "medium",
+                "params": {}
+            }],
+            "timestamp": datetime.now().isoformat(),
+            "execution_time_ms": execution_time_ms
+        }
+
 @app.get("/api/v1/strategic/metrics")
 async def strategic_metrics():
     """
@@ -1478,12 +1691,12 @@ def blacklist_action(action: str, duration: int = BLACKLIST_DURATION):
     with action_blacklist_lock:
         expiry_time = time.time() + duration
         action_blacklist[action] = expiry_time
-        logger.warning(f"[ADAPTIVE] Blacklisted action '{action}' for {duration}s")
+        logger.error(f"[ADAPTIVE-BLACKLIST]  Action '{action}' BLACKLISTED for {duration}s (expires: {time.strftime('%H:%M:%S', time.localtime(expiry_time))})")
         
         # CRITICAL FIX #14-2: Invalidate strategic cache for blacklisted actions
         global _crewai_cache
         if _crewai_cache.get("result") and _crewai_cache["result"].get("action") == action:
-            logger.info(f"[ADAPTIVE] Invalidating strategic cache for blacklisted action '{action}'")
+            logger.info(f"[ADAPTIVE-CACHE] Invalidating strategic cache for blacklisted action '{action}'")
             _crewai_cache["result"] = None
             _crewai_cache["timestamp"] = None
             _crewai_cache["game_state_hash"] = None
@@ -1497,7 +1710,7 @@ def is_action_blacklisted(action: str) -> bool:
         # Check if blacklist expired
         if time.time() > action_blacklist[action]:
             del action_blacklist[action]
-            logger.info(f"[ADAPTIVE] Blacklist expired for '{action}'")
+            logger.info(f"[ADAPTIVE-BLACKLIST]  Blacklist EXPIRED for '{action}' - action available again")
             return False
         
         return True
@@ -1553,10 +1766,16 @@ def record_action_failure(action: str, reason: str = ""):
         ]
         
         failure_count = len(action_failure_tracker[action])
+        
+        # ENHANCED LOGGING: Always log failures
+        logger.warning(
+            f"[ADAPTIVE-FAILURE] Action '{action}' failed (count: {failure_count}/{get_failure_threshold()}): {reason}"
+        )
+        
         if failure_count >= get_failure_threshold():
-            logger.warning(
-                f"[ADAPTIVE] Action '{action}' has failed {failure_count} times in last {get_failure_window()}s. "
-                f"Reasons: {[f['reason'] for f in action_failure_tracker[action][-3:]]}"
+            logger.error(
+                f"[ADAPTIVE-THRESHOLD] Action '{action}' EXCEEDED threshold! {failure_count} failures in last {get_failure_window()}s. "
+                f"Recent reasons: {[f['reason'] for f in action_failure_tracker[action][-3:]]}"
             )
             
             # CRITICAL FIX #2: Auto-blacklist after threshold exceeded
@@ -1566,7 +1785,7 @@ def record_action_failure(action: str, reason: str = ""):
             action_failure_tracker[action] = []
             
             # Trigger strategic rethink
-            logger.info(f"[ADAPTIVE] Triggering strategy rethink due to repeated '{action}' failures")
+            logger.warning(f"[ADAPTIVE-STRATEGY] Triggering strategy rethink due to repeated '{action}' failures")
 
 def is_action_failing_repeatedly(action: str) -> bool:
     """
@@ -1597,7 +1816,7 @@ def get_alternative_action(failed_action: str, game_state: Dict[str, Any], inven
     Returns:
         Alternative action dict with action/params/layer
     """
-    logger.info(f"[ADAPTIVE] Finding alternative for failing action: '{failed_action}'")
+    logger.error(f"[ADAPTIVE-ALTERNATIVE]  Finding alternative action for repeatedly failing: '{failed_action}'")
     
     character_data = game_state.get("character", {})
     current_hp = int(character_data.get("hp", 0) or 0)
@@ -1606,7 +1825,7 @@ def get_alternative_action(failed_action: str, game_state: Dict[str, Any], inven
     
     # Alternative strategies based on what's failing
     if failed_action == "rest":
-        logger.warning("[ADAPTIVE] 'rest' failing (likely no Basic Skill Lv3)")
+        logger.error("[ADAPTIVE-ALTERNATIVE] 'rest' action failing repeatedly (likely no Basic Skill Lv3 or blacklisted)")
         
         # Alternative 1: Use healing item if available
         healing_items = ["Red Herb", "Apple", "Meat", "Red Potion", "Orange Potion"]
@@ -1617,7 +1836,7 @@ def get_alternative_action(failed_action: str, game_state: Dict[str, Any], inven
             )
             if has_item and f"use_{item_name}" not in alternative_actions_attempted[failed_action]:
                 alternative_actions_attempted[failed_action].add(f"use_{item_name}")
-                logger.info(f"[ADAPTIVE] Alternative 1: Use {item_name} instead of resting")
+                logger.warning(f"[ADAPTIVE-ALTERNATIVE]  Alternative 1: Use {item_name} instead of resting")
                 return {
                     "action": "use_item",
                     "params": {
@@ -1685,13 +1904,94 @@ def get_alternative_action(failed_action: str, game_state: Dict[str, Any], inven
             "layer": "ADAPTIVE_STRATEGIC"
         }
     
+    elif failed_action == "sell_items":
+        logger.error("[ADAPTIVE-ALTERNATIVE] 'sell_items' failing repeatedly - finding alternative money-making strategy")
+        
+        # Get game state context
+        character_data = game_state.get("character", {})
+        current_hp = int(character_data.get("hp", 0) or 0)
+        max_hp = int(character_data.get("hp_max", 1) or 1)
+        hp_percent = (current_hp / max_hp * 100) if max_hp > 0 else 0
+        
+        current_sp = int(character_data.get("sp", 0) or 0)
+        max_sp = int(character_data.get("sp_max", 1) or 1)
+        sp_percent = (current_sp / max_sp * 100) if max_sp > 0 else 0
+        
+        zeny = int(character_data.get("zeny", 0) or 0)
+        
+        # Alternative 1: Hunt monsters for drops and exp if HP/SP are good
+        if hp_percent > 70 and sp_percent > 50:
+            logger.warning("[ADAPTIVE-ALTERNATIVE] Cannot sell - Alternative 1: Hunt monsters for drops and exp")
+            return {
+                "action": "hunt_monsters",
+                "params": {
+                    "reason": "sell_failed_hunt_for_drops",
+                    "priority": "high",
+                    "target_count": 10
+                },
+                "layer": "ADAPTIVE_STRATEGIC"
+            }
+        
+        # Alternative 2: Use remaining zeny to buy minimal supplies if we have some
+        elif zeny >= 100 and hp_percent < 70:
+            logger.warning("[ADAPTIVE-ALTERNATIVE] Cannot sell - Alternative 2: Buy minimal healing with remaining zeny")
+            return {
+                "action": "auto_buy",
+                "params": {
+                    "items": [table_loader.get_healing_items()[0][0]],  # Just basic healing
+                    "reason": "sell_failed_buy_minimal_supplies",
+                    "max_spend": min(zeny, 500)
+                },
+                "layer": "ADAPTIVE_TACTICAL"
+            }
+        
+        # Alternative 3: Explore map for better opportunities
+        elif hp_percent > 50:
+            logger.warning("[ADAPTIVE-ALTERNATIVE] Cannot sell - Alternative 3: Explore for quest NPCs or opportunities")
+            return {
+                "action": "explore_map",
+                "params": {
+                    "reason": "sell_failed_explore_for_opportunities",
+                    "priority": "medium"
+                },
+                "layer": "ADAPTIVE_STRATEGIC"
+            }
+        
+        # Alternative 4: Emergency - just farm with what we have
+        else:
+            logger.warning("[ADAPTIVE-ALTERNATIVE] Cannot sell - Alternative 4: Farm weak monsters carefully")
+            return {
+                "action": "hunt_monsters",
+                "params": {
+                    "reason": "sell_failed_emergency_farming",
+                    "priority": "medium",
+                    "target_level_range": "weak_only",  # Only attack monsters much weaker
+                    "retreat_threshold": 40  # Retreat early if HP drops
+                },
+                "layer": "ADAPTIVE_TACTICAL"
+            }
+    
     elif failed_action == "auto_buy":
         logger.warning("[ADAPTIVE] 'auto_buy' failing (likely NPC issue or no zeny)")
         
-        # Alternative: Sell items first
+        # Alternative: Sell items first to get zeny
+        if "sell_items" not in alternative_actions_attempted[failed_action]:
+            alternative_actions_attempted[failed_action].add("sell_items")
+            logger.warning("[ADAPTIVE-ALTERNATIVE] Cannot buy - trying to sell items for zeny first")
+            return {
+                "action": "sell_items",
+                "params": {"reason": "cannot_buy_need_zeny_from_selling"},
+                "layer": "ADAPTIVE_STRATEGIC"
+            }
+        
+        # If selling also failed, hunt for items/zeny
+        logger.warning("[ADAPTIVE-ALTERNATIVE] Cannot buy or sell - hunting for drops")
         return {
-            "action": "sell_items",
-            "params": {"reason": "cannot_buy_need_zeny_from_selling"},
+            "action": "hunt_monsters",
+            "params": {
+                "reason": "cannot_buy_hunt_for_resources",
+                "priority": "high"
+            },
             "layer": "ADAPTIVE_STRATEGIC"
         }
     
@@ -1723,6 +2023,7 @@ def get_alternative_action(failed_action: str, game_state: Dict[str, Any], inven
 def clear_failure_tracking_for_action(action: str):
     """Clear failure history when action succeeds"""
     if action in action_failure_tracker:
+        logger.info(f"[ADAPTIVE-SUCCESS]  Action '{action}' succeeded - clearing failure history")
         del action_failure_tracker[action]
     if action in alternative_actions_attempted:
         del alternative_actions_attempted[action]
@@ -2061,7 +2362,7 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
                             
                             console_logger.log(
                                 LayerType.TACTICAL,
-                                f"📋 Sequential Plan: {next_action['action']} (step {plan.current_step}/{len(plan.steps)})"
+                                f" Sequential Plan: {next_action['action']} (step {plan.current_step}/{len(plan.steps)})"
                             )
                             
                             return {
@@ -2081,7 +2382,7 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
                     
                     console_logger.log(
                         LayerType.TACTICAL,
-                        f"⏳ Queued Action: {queued_action['action_type']}"
+                        f" Queued Action: {queued_action['action_type']}"
                     )
                     
                     return {
@@ -2104,6 +2405,11 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
         # Check trigger system first - it can handle multi-layered autonomous responses
         if trigger_coordinator:
             try:
+                # CRITICAL FIX: Calculate weight_percent properly
+                current_weight = int(character_data.get("weight", 0) or 0)
+                max_weight = int(character_data.get("max_weight", 1) or 1)
+                weight_percent = int((current_weight / max_weight) * 100) if max_weight > 0 else 0
+                
                 # Enrich game state with calculated percentages and derived data
                 enriched_game_state = {
                     **game_state,
@@ -2111,7 +2417,7 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
                         **character_data,
                         "hp_percent": hp_percent,
                         "sp_percent": sp_percent,
-                        "weight_percent": 0,  # TODO: Calculate from game_state
+                        "weight_percent": weight_percent,
                     },
                     "inventory": {
                         "items": {item.get("name"): item.get("amount", 0) for item in inventory},
@@ -2134,7 +2440,7 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
                 if trigger_action:
                     console_logger.log(
                         LayerType.REFLEX,
-                        f"🎯 Trigger System Action: {trigger_action.get('action', 'unknown')}"
+                        f" Trigger System Action: {trigger_action.get('action', 'unknown')}"
                     )
                     logger.info(f"[DECIDE] Trigger system returned action: {trigger_action}")
                     
@@ -2634,16 +2940,46 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
         if current_zeny < ZENY_LOW:
             logger.warning(f"[DECIDE] Low zeny ({current_zeny}z) - should consider selling items")
             
+            # CRITICAL FIX: Check if sell_items is blacklisted (failed 3+ times)
+            if is_action_blacklisted("sell_items"):
+                remaining = get_blacklist_time_remaining("sell_items")
+                logger.error(f"[ADAPTIVE] sell_items is BLACKLISTED ({remaining}s remaining) - cannot earn zeny via selling")
+                logger.warning(f"[ADAPTIVE] Using alternative zeny strategy: hunt monsters for drops")
+                
+                # Alternative: Hunt monsters for drops and zeny (if HP/SP allow)
+                if hp_percent > 70 and sp_percent > 50:
+                    return {
+                        "action": "hunt_monsters",
+                        "params": {
+                            "reason": "sell_failed_hunt_for_drops_and_zeny",
+                            "priority": "high",
+                            "target_count": 10
+                        },
+                        "layer": "ADAPTIVE_STRATEGIC"
+                    }
+                else:
+                    # Low HP/SP - rest first before hunting
+                    return {
+                        "action": "rest",
+                        "params": {
+                            "reason": "low_resources_before_hunting",
+                            "priority": "medium"
+                        },
+                        "layer": "TACTICAL"
+                    }
+            
             # Count sellable items (protect quest items from table loader)
             quest_items = table_loader.get_quest_items()
-            sellable_count = sum(
-                1 for item in inventory
-                if item.get("type") not in ["consumable", "equipment", "weapon", "armor"]
-                and item.get("name") not in quest_items
-                and not table_loader.is_card(item.get("name", ""))
-            )
             
-            if sellable_count > 5 and current_zeny < ZENY_CRITICAL:
+            # CRITICAL FIX: Use NPC handler's categorization (respects vendor trash logic)
+            categorized = npc_handler.categorize_inventory_for_selling(
+                inventory,
+                quest_items=quest_items,
+                is_card_func=table_loader.is_card
+            )
+            sellable_count = len(categorized["sell"])
+            
+            if sellable_count > 0 and current_zeny < ZENY_CRITICAL:
                 logger.warning(f"[DECIDE] CRITICAL: Only {current_zeny}z left, {sellable_count} sellable items")
                 return {
                     "action": "sell_items",
@@ -2653,6 +2989,30 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
                     },
                     "layer": "STRATEGIC"
                 }
+            elif sellable_count == 0 and current_zeny < ZENY_CRITICAL:
+                # NO sellable items but critical zeny shortage - MUST hunt for drops
+                logger.error(f"[DECIDE] CRITICAL: {current_zeny}z, NO items to sell - MUST hunt monsters")
+                
+                if hp_percent > 60 and sp_percent > 40:
+                    return {
+                        "action": "hunt_monsters",
+                        "params": {
+                            "reason": "no_items_to_sell_critical_zeny",
+                            "priority": "critical",
+                            "target_count": 15  # Hunt more to get drops to sell
+                        },
+                        "layer": "STRATEGIC"
+                    }
+                else:
+                    # Too low to hunt safely - rest first
+                    return {
+                        "action": "rest",
+                        "params": {
+                            "reason": "low_resources_need_rest_before_emergency_hunt",
+                            "priority": "high"
+                        },
+                        "layer": "TACTICAL"
+                    }
         
         # Check if we need to restock consumables
         try:
@@ -2907,11 +3267,40 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
         else:
             logger.debug("[COMBAT] No monsters nearby for combat")
             
+            # FIX #13: Autonomous Farming Transition Logic
+            # When idle in town with good HP/SP, automatically move to farming map
+            current_map = character_data.get("position", {}).get("map", "unknown")
+            current_level = int(character_data.get("level", 1) or 1)
+            
+            # Check if character is in town and idle
+            if is_town_map(current_map):
+                # FIX #13: Character idle in town with good health - move to farm
+                if hp_percent > 80 and sp_percent > 60 and current_level < 99:
+                    logger.info(f"[AUTONOMOUS] Idle in town ({current_map}) with HP {hp_percent:.1f}%, SP {sp_percent:.1f}% - Moving to farming map")
+                    
+                    # Get optimal farming map for current level (from map metadata)
+                    farming_map = "prt_fild08"  # Default for low levels
+                    if MAP_METADATA and "farming_maps" in MAP_METADATA:
+                        for map_name, map_data in MAP_METADATA["farming_maps"].items():
+                            min_level = map_data.get("recommended_level_min", 1)
+                            max_level = map_data.get("recommended_level_max", 99)
+                            if min_level <= current_level <= max_level:
+                                farming_map = map_name
+                                logger.info(f"[AUTONOMOUS] Selected {farming_map} for level {current_level}")
+                                break
+                    
+                    return {
+                        "action": "move_to_map",
+                        "params": {
+                            "target_map": farming_map,
+                            "map": farming_map,
+                            "reason": "autonomous_farming_idle_in_town"
+                        },
+                        "layer": "STRATEGIC"
+                    }
+            
             # FIX #10: Monster Search with Movement
             # When monsters array is empty in farming map, move away from spawn point
-            current_map = character_data.get("position", {}).get("map", "unknown")
-            
-            # Check if we're in a farming map
             if current_map and current_map.lower() not in ["prontera", "payon", "geffen", "morocc", "alberta", "aldebaran", "izlude"]:
                 char_pos = character_data.get("position", {})
                 char_x = char_pos.get("x", 0)
@@ -3127,19 +3516,42 @@ async def npc_buy_items(request: Request, items: List[str] = Body(...)):
 
 
 @app.post("/api/v1/inventory/sell_junk")
-async def inventory_sell_junk(request: Request, inventory: List[Dict] = Body(...), min_zeny: int = 1000):
+async def inventory_sell_junk(request: Request, request_body: Dict[str, Any] = Body(...)):
     """
     Analyze inventory and determine which items can be safely sold
     Priority 2 Fix: Item selling logic with protection rules
+    
+    CRITICAL FIX: Accept flexible JSON body format to prevent 422 validation errors
+    
+    Expected body:
+    {
+        "inventory": [...],  # List of inventory items
+        "min_zeny": 1000     # Optional minimum zeny threshold
+    }
     """
-    logger.info(f"[INVENTORY/SELL] Analyzing {len(inventory)} items for selling")
-    
-    result = await npc_handler.sell_junk_items(inventory, min_zeny_threshold=min_zeny)
-    
-    if result["success"]:
-        logger.info(f"[INVENTORY/SELL] Can sell {len(result['items_sold'])} items for ~{result['estimated_zeny']}z")
-    
-    return result
+    try:
+        inventory = request_body.get("inventory", [])
+        min_zeny = request_body.get("min_zeny", 1000)
+        
+        logger.info(f"[INVENTORY/SELL] Analyzing {len(inventory)} items for selling (min_zeny: {min_zeny}z)")
+        
+        result = await npc_handler.sell_junk_items(inventory, min_zeny_threshold=min_zeny)
+        
+        if result["success"]:
+            logger.info(f"[INVENTORY/SELL] Can sell {len(result.get('items_sold', []))} items for ~{result.get('estimated_zeny', 0)}z")
+        else:
+            logger.warning(f"[INVENTORY/SELL] Failed: {result.get('reason', 'unknown')}")
+        
+        return result
+    except Exception as e:
+        logger.error(f"[INVENTORY/SELL] Error: {e}", exc_info=True)
+        return {
+            "success": False,
+            "reason": "internal_error",
+            "error": str(e),
+            "items_sold": [],
+            "estimated_zeny": 0
+        }
 
 
 @app.post("/api/v1/inventory/categorize")
@@ -3748,12 +4160,16 @@ async def handle_guild_invite(character_name: str, player_name: str, context: di
 # ============================================================================
 
 @app.post("/api/v1/progression/stats/on_level_up")
-async def handle_stat_level_up(current_level: int, current_stats: dict):
+async def handle_stat_level_up(request: Request, request_body: Dict[str, Any] = Body(...)):
     """
     Called by GodTierAI when character levels up.
     Returns stat allocation plan for raiseStat.pl plugin.
+    
+    FIX 3: Changed from function params to request body to fix 422 error
     """
     try:
+        current_level = request_body.get("current_level")
+        current_stats = request_body.get("current_stats", {})
         result = stat_allocator.on_level_up(current_level, current_stats)
         return result
     except Exception as e:
@@ -3951,17 +4367,40 @@ async def learn_skill_immediate(request: Request, request_body: Dict[str, Any] =
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/v1/progression/skills/on_job_level_up")
-async def handle_skill_job_level_up(current_job_level: int, job: str, current_skills: dict):
+async def handle_skill_job_level_up(request: Request, request_body: Dict[str, Any] = Body(...)):
     """
     Called by GodTierAI when job level increases.
     Returns skill learning plan for raiseSkill.pl plugin.
+    
+    CRITICAL FIX: Accept flexible JSON body format to prevent 422 validation errors
+    
+    Expected body:
+    {
+        "current_job_level": 10,
+        "job": "Novice",
+        "current_skills": {"NV_BASIC": 3, ...}
+    }
     """
     try:
+        current_job_level = int(request_body.get("current_job_level", 1))
+        job = request_body.get("job", "Novice")
+        current_skills = request_body.get("current_skills", {})
+        
+        logger.info(f"[SKILL_LEVEL_UP] Job: {job}, Level: {current_job_level}, Skills: {list(current_skills.keys())}")
+        
         result = skill_learner.on_job_level_up(current_job_level, job, current_skills)
+        
+        logger.info(f"[SKILL_LEVEL_UP] Result: {result.get('next_skills_to_learn', [])}")
+        
         return result
     except Exception as e:
-        logger.error(f"Skill learning error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"[SKILL_LEVEL_UP] Error: {e}", exc_info=True)
+        return {
+            "success": False,
+            "reason": "internal_error",
+            "error": str(e),
+            "next_skills_to_learn": []
+        }
 
 @app.post("/api/v1/progression/skills/update_combat_stats")
 async def update_skill_combat_stats(combat_stats: dict):
@@ -4088,6 +4527,443 @@ async def get_progression_status():
         }
     except Exception as e:
         logger.error(f"Progression status error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/allocate_stats")
+async def allocate_stats_endpoint(request: Request, request_body: Dict[str, Any] = Body(...)):
+    """
+    Autonomous stat allocation endpoint for AI-driven stat point distribution.
+    
+    This endpoint is called by OpenKore's AI-Engine.pm when the AI decides
+    to allocate stat points. It analyzes the game state and returns optimal
+    stat allocation based on job class, level, and build configuration.
+    
+    Request body:
+    {
+        "game_state": {
+            "character": {
+                "job_class": "Novice",
+                "level": 5,
+                "job_level": 1,
+                "str": 5,
+                "agi": 5,
+                "vit": 5,
+                "int": 5,
+                "dex": 5,
+                "luk": 5,
+                "points_free": 10,
+                "points_str": 1,
+                "points_agi": 1,
+                "points_vit": 1,
+                "points_int": 1,
+                "points_dex": 1,
+                "points_luk": 1
+            }
+        }
+    }
+    
+    Returns:
+    {
+        "action": "allocate_stats",
+        "params": {
+            "stats": {"STR": 2, "DEX": 3},
+            "reason": "Following balanced_novice build",
+            "priority": "high"
+        },
+        "recommendations": {
+            "str": 2,
+            "dex": 3
+        },
+        "build_type": "balanced_novice",
+        "reasoning": "Allocating 5 points total based on character progression"
+    }
+    """
+    try:
+        logger.info("[ALLOCATE_STATS] Received stat allocation request")
+        
+        # Extract game state
+        game_state = request_body.get("game_state", {})
+        character = game_state.get("character", {})
+        
+        # Extract character info
+        job_class = character.get("job_class", "Novice")
+        current_level = int(character.get("level", 1) or 1)
+        available_points = int(character.get("points_free", 0) or 0)
+        
+        logger.info(f"[ALLOCATE_STATS] Job: {job_class}, Level: {current_level}, Available points: {available_points}")
+        
+        # Validate available points
+        if available_points <= 0:
+            logger.info("[ALLOCATE_STATS] No stat points available")
+            return {
+                "action": "continue",
+                "params": {
+                    "reason": "no_stat_points_available"
+                },
+                "recommendations": {},
+                "build_type": "none",
+                "reasoning": "Character has no free stat points to allocate"
+            }
+        
+        # Get current stats
+        current_stats = {
+            "str": int(character.get("str", 1) or 1),
+            "agi": int(character.get("agi", 1) or 1),
+            "vit": int(character.get("vit", 1) or 1),
+            "int": int(character.get("int", 1) or 1),
+            "dex": int(character.get("dex", 1) or 1),
+            "luk": int(character.get("luk", 1) or 1)
+        }
+        
+        logger.debug(f"[ALLOCATE_STATS] Current stats: {current_stats}")
+        
+        # Calculate stat costs using RO formula
+        stat_costs = {}
+        for stat_name in ["str", "agi", "vit", "int", "dex", "luk"]:
+            current_value = current_stats.get(stat_name, 1)
+            calculated_cost = calculate_stat_cost(current_value)
+            received_cost = int(character.get(f"points_{stat_name}", calculated_cost) or calculated_cost)
+            
+            # Validate and warn if mismatch
+            if received_cost != calculated_cost:
+                logger.warning(f"[ALLOCATE_STATS] Cost mismatch for {stat_name.upper()}: "
+                             f"received={received_cost}, calculated={calculated_cost}, "
+                             f"using calculated={calculated_cost}")
+            
+            stat_costs[stat_name] = calculated_cost
+        
+        logger.debug(f"[ALLOCATE_STATS] Stat costs: {stat_costs}")
+        
+        # Get recommendations from StatAllocator
+        try:
+            recommendations = stat_allocator.get_allocation_recommendations(
+                current_stats=current_stats,
+                free_points=available_points
+            )
+            
+            if not recommendations:
+                logger.warning(f"[ALLOCATE_STATS] No recommendations from StatAllocator for {job_class}")
+                return {
+                    "action": "continue",
+                    "params": {
+                        "reason": "no_stat_recommendations"
+                    },
+                    "recommendations": {},
+                    "build_type": "unknown",
+                    "reasoning": f"No stat allocation recommendations available for {job_class}"
+                }
+            
+            # Filter recommendations by affordability
+            affordable_stats = {}
+            total_cost = 0
+            
+            for stat_name, points_to_add in recommendations.items():
+                stat_cost = stat_costs.get(stat_name.lower(), 1)
+                cost_for_allocation = stat_cost * points_to_add
+                
+                if cost_for_allocation <= (available_points - total_cost):
+                    affordable_stats[stat_name] = points_to_add
+                    total_cost += cost_for_allocation
+                    logger.debug(f"[ALLOCATE_STATS] Can afford {stat_name.upper()} +{points_to_add} (cost: {cost_for_allocation})")
+                else:
+                    logger.debug(f"[ALLOCATE_STATS] Cannot afford {stat_name.upper()} +{points_to_add} (cost: {cost_for_allocation}, remaining: {available_points - total_cost})")
+            
+            if not affordable_stats:
+                logger.warning(f"[ALLOCATE_STATS] Cannot afford any recommended stats with {available_points} points")
+                return {
+                    "action": "continue",
+                    "params": {
+                        "reason": "cannot_afford_stat_increases"
+                    },
+                    "recommendations": recommendations,
+                    "build_type": stat_allocator.selected_build,
+                    "reasoning": f"Need more stat points to afford recommended increases (need {total_cost}, have {available_points})"
+                }
+            
+            # Build response
+            build_name = stat_allocator.selected_build or "default"
+            
+            logger.info(f"[ALLOCATE_STATS] Recommending {affordable_stats} for {job_class} ({build_name} build)")
+            
+            return {
+                "action": "allocate_stats",
+                "params": {
+                    "stats": affordable_stats,
+                    "reason": f"following_{build_name}_build",
+                    "priority": "high"
+                },
+                "recommendations": affordable_stats,
+                "build_type": build_name,
+                "reasoning": f"Allocating {sum(affordable_stats.values())} points based on {build_name} build for {job_class}"
+            }
+            
+        except Exception as e:
+            logger.error(f"[ALLOCATE_STATS] StatAllocator error: {e}", exc_info=True)
+            
+            # Fallback: Simple balanced allocation for Novice
+            if job_class == "Novice" and available_points >= 1:
+                logger.info("[ALLOCATE_STATS] Using fallback allocation for Novice")
+                
+                fallback_stats = {}
+                points_remaining = available_points
+                
+                # Prioritize STR and DEX for early game combat
+                if points_remaining >= 1 and stat_costs.get("str", 1) <= points_remaining:
+                    cost = stat_costs.get("str", 1)
+                    fallback_stats["STR"] = 1
+                    points_remaining -= cost
+                
+                if points_remaining >= 1 and stat_costs.get("dex", 1) <= points_remaining:
+                    cost = stat_costs.get("dex", 1)
+                    fallback_stats["DEX"] = 1
+                    points_remaining -= cost
+                
+                return {
+                    "action": "allocate_stats",
+                    "params": {
+                        "stats": fallback_stats,
+                        "reason": "fallback_balanced_build",
+                        "priority": "medium"
+                    },
+                    "recommendations": fallback_stats,
+                    "build_type": "fallback_balanced",
+                    "reasoning": "Using fallback allocation (StatAllocator unavailable)"
+                }
+            
+            # Cannot allocate
+            return {
+                "action": "continue",
+                "params": {
+                    "reason": "stat_allocation_error"
+                },
+                "recommendations": {},
+                "build_type": "error",
+                "reasoning": f"Error during stat allocation: {str(e)}"
+            }
+        
+    except Exception as e:
+        logger.error(f"[ALLOCATE_STATS] Endpoint error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/learn_skill")
+async def learn_skill_endpoint(request: Request, request_body: Dict[str, Any] = Body(...)):
+    """
+    Autonomous skill learning endpoint for AI-driven skill point allocation.
+    
+    This endpoint is called by OpenKore's AI-Engine.pm when the AI decides
+    to learn skills. It analyzes the game state and returns optimal skill
+    learning recommendations based on job class, level, and skill priorities.
+    
+    CRITICAL: Prioritizes Basic Skill Lv3 first (required for sit/rest functionality).
+    
+    Request body:
+    {
+        "game_state": {
+            "character": {
+                "job_class": "Novice",
+                "level": 5,
+                "job_level": 3,
+                "points_skill": 3
+            },
+            "skills": [
+                {"name": "NV_BASIC", "level": 2},
+                {"name": "NV_FIRSTAID", "level": 0}
+            ]
+        }
+    }
+    
+    Returns:
+    {
+        "action": "learn_skill",
+        "params": {
+            "skill_name": "NV_BASIC",
+            "skill_display_name": "Basic Skill",
+            "current_level": 2,
+            "target_level": 3,
+            "points_to_add": 1,
+            "reason": "prerequisite_for_rest",
+            "priority": "critical"
+        },
+        "skills_to_learn": [...],
+        "reasoning": "Learning Basic Skill Lv3 (required for sit/rest)"
+    }
+    """
+    try:
+        logger.info("[LEARN_SKILL] Received skill learning request")
+        
+        # Extract game state
+        game_state = request_body.get("game_state", {})
+        character = game_state.get("character", {})
+        skills_list = game_state.get("skills", [])
+        
+        # Extract character info
+        job_class = character.get("job_class", "Novice")
+        current_level = int(character.get("level", 1) or 1)
+        job_level = int(character.get("job_level", 1) or 1)
+        available_points = int(character.get("points_skill", 0) or 0)
+        
+        logger.info(f"[LEARN_SKILL] Job: {job_class}, Job Level: {job_level}, Available points: {available_points}")
+        
+        # Validate available points
+        if available_points <= 0:
+            logger.info("[LEARN_SKILL] No skill points available")
+            return {
+                "action": "continue",
+                "params": {
+                    "reason": "no_skill_points_available"
+                },
+                "skills_to_learn": [],
+                "reasoning": "Character has no free skill points to allocate"
+            }
+        
+        # Convert skills list to dict
+        current_skills = {}
+        for skill in skills_list:
+            if isinstance(skill, dict):
+                skill_name = skill.get("name", "")
+                skill_level = skill.get("level", 0)
+                if skill_name:
+                    current_skills[skill_name] = skill_level
+        
+        logger.debug(f"[LEARN_SKILL] Current skills: {current_skills}")
+        
+        # CRITICAL PRIORITY: Check if Basic Skill needs learning
+        basic_skill_level = current_skills.get("NV_BASIC", 0) or current_skills.get("Basic Skill", 0)
+        
+        if basic_skill_level < 3:
+            points_needed = 3 - basic_skill_level
+            points_to_allocate = min(points_needed, available_points)
+            
+            logger.warning(f"[LEARN_SKILL] CRITICAL: Learning Basic Skill Lv{basic_skill_level} → Lv{basic_skill_level + points_to_allocate}")
+            
+            return {
+                "action": "learn_skill",
+                "params": {
+                    "skill_name": "NV_BASIC",
+                    "skill_display_name": "Basic Skill",
+                    "current_level": basic_skill_level,
+                    "target_level": basic_skill_level + points_to_allocate,
+                    "points_to_add": points_to_allocate,
+                    "reason": "prerequisite_for_rest",
+                    "priority": "critical"
+                },
+                "skills_to_learn": [{
+                    "skill_name": "NV_BASIC",
+                    "skill_display_name": "Basic Skill",
+                    "current_level": basic_skill_level,
+                    "target_level": basic_skill_level + points_to_allocate,
+                    "points_to_add": points_to_allocate,
+                    "priority": "critical",
+                    "reason": "Required for sit/rest functionality"
+                }],
+                "reasoning": f"Learning Basic Skill to Lv{basic_skill_level + points_to_allocate} (CRITICAL: required for sit/rest)"
+            }
+        
+        # Basic Skill is ready, learn job-specific skills
+        logger.info(f"[LEARN_SKILL] Basic Skill ready (Lv{basic_skill_level}), checking job-specific skills")
+        
+        try:
+            # Get skill learning plan from SkillLearner
+            skill_plan = skill_learner.on_job_level_up(
+                current_job_level=job_level,
+                job=job_class,
+                current_skills=current_skills
+            )
+            
+            # Get next skills to learn
+            next_skills = skill_plan.get("next_skills_to_learn", [])
+            
+            if not next_skills:
+                logger.info(f"[LEARN_SKILL] No job-specific skills to learn at Job Lv{job_level}")
+                return {
+                    "action": "continue",
+                    "params": {
+                        "reason": "no_skills_to_learn"
+                    },
+                    "skills_to_learn": [],
+                    "reasoning": f"No skills available to learn for {job_class} at Job Level {job_level}"
+                }
+            
+            # Get highest priority skill
+            next_skill = next_skills[0]
+            skill_name = next_skill.get("name", "")
+            current_level = next_skill.get("current_level", 0)
+            target_level = next_skill.get("target_level", 1)
+            description = next_skill.get("description", "")
+            
+            # Allocate one level at a time for safety
+            points_to_add = min(1, target_level - current_level, available_points)
+            
+            logger.info(f"[LEARN_SKILL] Recommending {skill_name} Lv{current_level} → Lv{current_level + points_to_add}")
+            
+            return {
+                "action": "learn_skill",
+                "params": {
+                    "skill_name": skill_name,
+                    "skill_display_name": skill_name,  # SkillLearner should provide proper name
+                    "current_level": current_level,
+                    "target_level": current_level + points_to_add,
+                    "points_to_add": points_to_add,
+                    "reason": "job_progression",
+                    "priority": "high",
+                    "description": description
+                },
+                "skills_to_learn": [{
+                    "skill_name": skill_name,
+                    "current_level": current_level,
+                    "target_level": current_level + points_to_add,
+                    "points_to_add": points_to_add,
+                    "priority": "high",
+                    "reason": "Job progression",
+                    "description": description
+                }],
+                "reasoning": f"Learning {skill_name} for {job_class} progression"
+            }
+            
+        except Exception as e:
+            logger.error(f"[LEARN_SKILL] SkillLearner error: {e}", exc_info=True)
+            
+            # Fallback: Try to learn First Aid for Novices
+            if job_class == "Novice" and available_points >= 1:
+                first_aid_level = current_skills.get("NV_FIRSTAID", 0) or current_skills.get("First Aid", 0)
+                
+                if first_aid_level < 1:
+                    logger.info("[LEARN_SKILL] Using fallback: Learning First Aid")
+                    return {
+                        "action": "learn_skill",
+                        "params": {
+                            "skill_name": "NV_FIRSTAID",
+                            "skill_display_name": "First Aid",
+                            "current_level": 0,
+                            "target_level": 1,
+                            "points_to_add": 1,
+                            "reason": "fallback_novice_skill",
+                            "priority": "medium"
+                        },
+                        "skills_to_learn": [{
+                            "skill_name": "NV_FIRSTAID",
+                            "skill_display_name": "First Aid",
+                            "current_level": 0,
+                            "target_level": 1,
+                            "points_to_add": 1,
+                            "priority": "medium",
+                            "reason": "Fallback skill (SkillLearner unavailable)"
+                        }],
+                        "reasoning": "Learning First Aid (fallback allocation)"
+                    }
+            
+            # No fallback available
+            return {
+                "action": "continue",
+                "params": {
+                    "reason": "skill_learning_error"
+                },
+                "skills_to_learn": [],
+                "reasoning": f"Error during skill learning: {str(e)}"
+            }
+        
+    except Exception as e:
+        logger.error(f"[LEARN_SKILL] Endpoint error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/v1/progression/export_config")
@@ -4439,6 +5315,82 @@ async def fix_plugin_config(
             "supported_plugins": ["teleToDest"]
         }
 
+@app.post("/api/v1/config/generate_farming")
+async def generate_farming_config(
+    character_level: int = Body(...),
+    character_class: str = Body("Novice"),
+    target_map: str = Body("prt_fild08"),
+    apply_immediately: bool = Body(True)
+):
+    """
+    Generate optimal farming configuration using CrewAI
+    
+    User requirement: "We should never fix config.txt manually.
+    If it's config or macro issue, it should be done by the CrewAI or
+    autonomous self healing with hot reload!"
+    
+    Args:
+        character_level: Current character level
+        character_class: Current job class
+        target_map: Target farming map
+        apply_immediately: If True, write to config.txt and trigger hot-reload
+    
+    Returns:
+        JSON with generated config and application status
+    """
+    logger.info(f"[CONFIG-API] Generating farming config for Lv{character_level} {character_class}")
+    logger.info(f"[CONFIG-API] Target map: {target_map}, Apply: {apply_immediately}")
+    
+    try:
+        config_gen = get_config_generator()
+        
+        if apply_immediately:
+            # Generate and apply config in one step
+            success = config_gen.generate_and_apply_farming_config(
+                character_level=character_level,
+                character_class=character_class,
+                target_map=target_map
+            )
+            
+            if success:
+                logger.info(f"[CONFIG-API] ✓ Farming config generated and applied")
+                return {
+                    "success": True,
+                    "message": "Farming config generated and applied to config.txt",
+                    "character": f"Lv{character_level} {character_class}",
+                    "target_map": target_map,
+                    "hot_reload": "GodTierAI will detect change and reload within ~5 seconds",
+                    "next_steps": "Bot should start autonomous farming automatically"
+                }
+            else:
+                logger.error(f"[CONFIG-API] Failed to apply farming config")
+                return {
+                    "success": False,
+                    "error": "Failed to generate or apply config",
+                    "message": "Check logs for details"
+                }
+        else:
+            # Just generate config without applying
+            config_dict = config_gen.generate_farming_config(
+                character_level=character_level,
+                character_class=character_class,
+                target_map=target_map
+            )
+            
+            logger.info(f"[CONFIG-API] ✓ Farming config generated (not applied)")
+            return {
+                "success": True,
+                "message": "Farming config generated successfully",
+                "config": config_dict,
+                "character": f"Lv{character_level} {character_class}",
+                "target_map": target_map,
+                "note": "Config not applied - set apply_immediately=true to write to config.txt"
+            }
+    
+    except Exception as e:
+        logger.error(f"[CONFIG-API] Exception during config generation: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/v1/healing/knowledge")
 async def healing_knowledge():
     """Get knowledge base statistics"""
@@ -4702,6 +5654,8 @@ async def root():
             "/api/v1/healing/status",
             "/api/v1/healing/knowledge",
             "/api/v1/healing/manual_fix",
+            "/api/v1/allocate_stats",
+            "/api/v1/learn_skill",
             "/api/v1/progression/stats/on_level_up",
             "/api/v1/progression/stats/update_performance",
             "/api/v1/progression/stats/recommendations",
