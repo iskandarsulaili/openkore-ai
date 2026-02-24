@@ -974,7 +974,7 @@ sub menuGithubURL {
 	if ($config{'githubURL'}) {
 		$url = $config{'githubURL'};
 	} else {
-		$url = 'https://github.com/OpenKore/openkore/';
+		$url = 'https://github.com/iskandarsulaili/openkore-ai/';
 	}
 	launchURL($url);
 }
@@ -985,7 +985,7 @@ sub menuGithubIssueURL {
 	if ($config{'githubIssueURL'}) {
 		$url = $config{'githubIssueURL'};
 	} else {
-		$url = 'https://github.com/OpenKore/openkore/issues/new';
+		$url = 'https://github.com/iskandarsulaili/openkore-ai/issues/new';
 	}
 	launchURL($url);
 }

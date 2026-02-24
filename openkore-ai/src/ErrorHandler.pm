@@ -68,7 +68,7 @@ sub errorHandler {
 	                 "version, search the forums first to see if your problem had already been solved, " . 
 	                 "or has already been reported. If you truly believe you have encountered a bug in " .
 	                 "the program, please include the contents of the errors.txt in your bug report " .
-	                 "(https://github.com/openkore/openkore/issues), or we may not be able to help you!\n\n" .
+	                 "(https://github.com/iskandarsulaili/openkore-ai/issues), or we may not be able to help you!\n\n" .
 	                 "The error message is:\n" .
 	                 "%s",
 	                 $errorMessage);
