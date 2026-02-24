@@ -1,0 +1,160 @@
+{
+  "version": "1.0.0",
+  "description": "Autonomous System Global Configuration",
+  "enabled": true,
+  "modules": {
+    "job_advancement": {
+      "enabled": true,
+      "auto_execute": true,
+      "require_confirmation_for_valuable_classes": false,
+      "max_navigation_time_seconds": 300,
+      "retry_attempts": 3
+    },
+    "quest_monitor": {
+      "enabled": true,
+      "auto_complete": true,
+      "auto_accept": false,
+      "priority_quest_types": ["job_change", "story", "daily"],
+      "max_active_quests": 10
+    },
+    "equipment_manager": {
+      "enabled": true,
+      "auto_equip": true,
+      "combat_swapping": true,
+      "swap_speed_target_ms": 1000,
+      "revert_after_combat": true,
+      "never_unequip_slots": ["weapon", "armor"]
+    },
+    "skill_rotation": {
+      "enabled": true,
+      "context_aware": true,
+      "sp_management_profile": "moderate",
+      "cooldown_tracking": true,
+      "adaptive_learning": true
+    },
+    "inventory_manager": {
+      "enabled": true,
+      "auto_storage": true,
+      "auto_sell": true,
+      "weight_threshold": 80,
+      "slot_threshold": 90,
+      "reserved_slots": 10,
+      "storage_priority": ["cards", "rare_equipment", "quest_items"]
+    },
+    "resource_gatherer": {
+      "enabled": true,
+      "auto_restock": true,
+      "restocking_thresholds": {
+        "healing_potions": 50,
+        "blue_potions": 30,
+        "fly_wings": 100
+      },
+      "max_restock_cost": 50000
+    },
+    "refinement": {
+      "enabled": false,
+      "require_user_confirmation": true,
+      "max_auto_refine_level": 4,
+      "value_threshold": 100000,
+      "never_refine_without_confirmation": true,
+      "card_slotting_enabled": false
+    }
+  },
+  "safety_constraints": {
+    "max_zeny_per_action": 100000,
+    "require_confirmation_above": 100000,
+    "never_drop_equipped_items": true,
+    "emergency_stop_on_critical_error": true,
+    "max_consecutive_failures": 3,
+    "adaptive_cooldown_on_failure": true
+  },
+  "risk_tolerance": {
+    "level": "moderate",
+    "profiles": {
+      "conservative": {
+        "max_zeny_per_action": 50000,
+        "enable_risky_actions": false
+      },
+      "moderate": {
+        "max_zeny_per_action": 100000,
+        "enable_risky_actions": true
+      },
+      "aggressive": {
+        "max_zeny_per_action": 500000,
+        "enable_risky_actions": true
+      }
+    }
+  },
+  "layer_settings": {
+    "reflex": {
+      "enabled": true,
+      "max_response_time_ms": 1000,
+      "bypass_cooldowns_in_emergency": true
+    },
+    "tactical": {
+      "enabled": true,
+      "max_response_time_ms": 5000,
+      "crewai_mode": "single_agent_optimizer"
+    },
+    "subconscious": {
+      "enabled": true,
+      "max_response_time_ms": 30000,
+      "crewai_mode": "single_agent_planner"
+    },
+    "conscious": {
+      "enabled": true,
+      "max_response_time_ms": 300000,
+      "crewai_mode": "full_crew"
+    },
+    "system": {
+      "enabled": true,
+      "run_in_background": true,
+      "independent_from_hierarchy": true
+    }
+  },
+  "performance_settings": {
+    "trigger_evaluation_interval_ms": 500,
+    "max_concurrent_triggers": 3,
+    "enable_caching": true,
+    "cache_ttl_seconds": 1,
+    "max_execution_history": 1000
+  },
+  "logging": {
+    "level": "INFO",
+    "log_all_triggers": true,
+    "log_all_executions": true,
+    "log_failures": true,
+    "performance_monitoring": true
+  },
+  "adaptive_learning": {
+    "enabled": true,
+    "failure_threshold": 3,
+    "strategy_switching": true,
+    "performance_tracking": true,
+    "ml_model_updates": true
+  },
+  "emergency_protocols": {
+    "auto_teleport_on_danger": true,
+    "auto_heal_critical_hp": true,
+    "auto_flee_from_mvp": true,
+    "death_recovery_enabled": true
+  },
+  "integration": {
+    "openkore_ipc": {
+      "enabled": true,
+      "host": "localhost",
+      "port": 1239,
+      "timeout_seconds": 5
+    },
+    "crewai": {
+      "enabled": true,
+      "max_agents_concurrent": 4,
+      "timeout_per_agent_seconds": 30
+    },
+    "database": {
+      "enabled": true,
+      "persist_state": true,
+      "cleanup_interval_hours": 24
+    }
+  }
+}

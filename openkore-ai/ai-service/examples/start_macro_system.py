@@ -49,13 +49,13 @@ async def main():
     if health['deployment_service']:
         logger.info("[OK] MacroHotReload plugin is accessible")
     else:
-        logger.warning("✗ MacroHotReload plugin not responding")
+        logger.warning(" MacroHotReload plugin not responding")
         logger.warning("  Make sure OpenKore is running with MacroHotReload plugin")
     
     if health['ml_model_trained']:
         logger.info("[OK] ML model is trained and ready")
     else:
-        logger.warning("✗ ML model not trained yet")
+        logger.warning(" ML model not trained yet")
         logger.info("  The system will collect data and train automatically")
     
     logger.info(f"Training samples collected: {health['training_samples']}")

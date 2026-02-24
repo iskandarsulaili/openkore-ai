@@ -363,14 +363,15 @@ class AutonomousHealingSystem:
                 # crew.kickoff() is SYNCHRONOUS, so we run it in executor
                 loop = asyncio.get_event_loop()
                 
-                # Add timeout protection (300 seconds = 5 minutes)
+                # PHASE 10 FIX #2: Reduce timeout from 300s to 30s (match Phase 9 pattern)
+                # 30s is sufficient for self-healing while preventing long blocking
                 result = await asyncio.wait_for(
                     loop.run_in_executor(
                         self.executor,
                         self.crew.kickoff,
                         context
                     ),
-                    timeout=300
+                    timeout=30
                 )
                 
                 # Calculate duration
@@ -380,24 +381,35 @@ class AutonomousHealingSystem:
                 # Console output for completion
                 print(f"   [SUCCESS] Completed in {duration:.1f}s")
                 
+                # PHASE 8 FIX #3: Handle CrewOutput object (not dict) from CrewAI
+                # CrewOutput is a Pydantic model, not a dictionary
+                success = getattr(result, 'success', None)
+                if success is None:
+                    # Fallback: Check if result.raw exists (indicates completion)
+                    success = bool(getattr(result, 'raw', None))
+                
                 # Log result
-                if result.get('success'):
+                if success:
                     self.logger.info(f"[SUCCESS] Issue resolved: {issue_type}")
                     print(f"   [OK] Issue resolved: {issue_type}")
-                    if 'solution' in result:
-                        self.logger.info(f"Solution applied: {result['solution'].get('action', 'N/A')}")
-                        solution_action = result['solution'].get('action', 'N/A')
-                        if solution_action != 'N/A':
-                            print(f"   💾 Solution: {solution_action}")
+                    
+                    # Try to get solution from result attributes
+                    solution = getattr(result, 'solution', None)
+                    if solution:
+                        action = getattr(solution, 'action', None) or solution.get('action', 'N/A') if isinstance(solution, dict) else 'N/A'
+                        self.logger.info(f"Solution applied: {action}")
+                        if action != 'N/A':
+                            print(f"   💾 Solution: {action}")
                 else:
-                    self.logger.warning(f"✗ Issue resolution failed: {issue_type}")
+                    self.logger.warning(f" Issue resolution failed: {issue_type}")
                     print(f"   [WARNING] Issue resolution incomplete: {issue_type}")
-                    if 'error' in result:
-                        self.logger.error(f"Error: {result['error']}")
+                    error = getattr(result, 'error', None)
+                    if error:
+                        self.logger.error(f"Error: {error}")
                         
             except asyncio.TimeoutError:
                 duration = time.time() - start_time
-                self.logger.error(f"[WARNING] CrewAI workflow timeout ({duration:.1f}s / 300s max)")
+                self.logger.error(f"[WARNING] CrewAI workflow timeout ({duration:.1f}s / 30s max)")
                 self.logger.error(f"Issue may require manual intervention: {issue_type}")
                 
                 # Console output for timeout
@@ -418,19 +430,26 @@ class AutonomousHealingSystem:
             self.logger.error(f"Failed to process issue: {e}", exc_info=True)
             self.logger.info("="*60)
     
-    async def _learn_from_result(self, issue: dict, result: dict):
-        """Update knowledge base based on fix result"""
+    async def _learn_from_result(self, issue: dict, result):
+        """Update knowledge base based on fix result (handles both dict and CrewOutput)"""
         try:
+            # PHASE 8 FIX #3: Handle CrewOutput object from CrewAI
+            solution = getattr(result, 'solution', None) or (result.get('solution') if isinstance(result, dict) else None)
+            success = getattr(result, 'success', None)
+            if success is None:
+                success = result.get('success', False) if isinstance(result, dict) else bool(getattr(result, 'raw', None))
+            confidence = getattr(result, 'confidence', None) or (result.get('confidence', 0.5) if isinstance(result, dict) else 0.5)
+            
             # Store in knowledge base
             await self.knowledge_base.record_fix(
                 issue_type=issue['type'],
                 context=issue,
-                solution=result.get('solution'),
-                success=result.get('success', False),
-                confidence=result.get('confidence', 0.5)
+                solution=solution,
+                success=success,
+                confidence=confidence
             )
             
-            self.logger.debug(f"Learned from result: {result.get('success')}")
+            self.logger.debug(f"Learned from result: {success}")
             
         except Exception as e:
             self.logger.error(f"Failed to learn from result: {e}")

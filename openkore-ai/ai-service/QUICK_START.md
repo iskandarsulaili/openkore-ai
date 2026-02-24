@@ -17,17 +17,17 @@ python src/main.py
 ```
 fastapi       0.111.0   → target: 0.128.2+
 uvicorn       0.40.0    → target: 0.40.0+
-crewai        1.9.3     → target: 1.9.3+ ✓
+crewai        1.9.3     → target: 1.9.3+ 
 anthropic     0.75.0    → target: 0.78.0+
 openai        1.83.0    → target: 2.17.0+
-numpy         1.26.4    → pinned correctly ✓
-scikit-learn  1.8.0     → target: 1.8.0+ ✓
+numpy         1.26.4    → pinned correctly 
+scikit-learn  1.8.0     → target: 1.8.0+ 
 aiosqlite     0.21.0    → target: 0.22.1+
 pydantic      2.11.10   → target: 2.12.5+
-httpx         0.28.1    → target: 0.28.1+ ✓
-loguru        0.7.3     → target: 0.7.3+ ✓
-pyyaml        (latest)  ✓
-python-dotenv (latest)  ✓
+httpx         0.28.1    → target: 0.28.1+ 
+loguru        0.7.3     → target: 0.7.3+ 
+pyyaml        (latest)  
+python-dotenv (latest)  
 ```
 
 ## Upgrade Command

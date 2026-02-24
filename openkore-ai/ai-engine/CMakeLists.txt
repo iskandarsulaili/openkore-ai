@@ -49,6 +49,7 @@ FetchContent_MakeAvailable(json)
 # Source files
 file(GLOB_RECURSE SOURCES
     "src/main.cpp"
+    "src/logger.cpp"
     "src/decision/*.cpp"
     "src/coordinators/*.cpp"
 )

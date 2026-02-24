@@ -1,0 +1,342 @@
+{
+  "version": "1.0.0",
+  "description": "Multi-Layered Autonomous Trigger System Configuration",
+  "triggers": [
+    {
+      "trigger_id": "hp_critical_emergency",
+      "name": "Emergency Heal - HP Critical",
+      "description": "Immediate healing when HP drops below critical threshold",
+      "layer": "REFLEX",
+      "priority": 1,
+      "condition": {
+        "type": "simple",
+        "field": "character.hp_percent",
+        "operator": "<=",
+        "value": 25
+      },
+      "action": {
+        "handler": "triggers.trigger_executor.handler_emergency_heal",
+        "params": {
+          "method": "fastest_available"
+        },
+        "async_execution": false,
+        "timeout": 1.0
+      },
+      "cooldown": 1,
+      "enabled": true,
+      "tags": ["emergency", "healing", "survival"]
+    },
+    {
+      "trigger_id": "hp_low_warning",
+      "name": "HP Low Warning",
+      "description": "Healing when HP drops below 75% (PRO player safety margin)",
+      "layer": "REFLEX",
+      "priority": 2,
+      "condition": {
+        "type": "compound",
+        "compound_operator": "AND",
+        "checks": [
+          {
+            "type": "simple",
+            "field": "character.hp_percent",
+            "operator": "<=",
+            "value": 75
+          },
+          {
+            "type": "simple",
+            "field": "character.hp_percent",
+            "operator": ">",
+            "value": 25
+          }
+        ]
+      },
+      "action": {
+        "handler": "triggers.trigger_executor.handler_emergency_heal",
+        "params": {
+          "method": "fastest_available"
+        },
+        "async_execution": false,
+        "timeout": 2.0
+      },
+      "cooldown": 3,
+      "enabled": true,
+      "tags": ["healing", "preventive"]
+    },
+    {
+      "trigger_id": "under_attack_retreat",
+      "name": "Tactical Retreat - Under Attack",
+      "description": "Retreat when being attacked with low HP",
+      "layer": "TACTICAL",
+      "priority": 1,
+      "condition": {
+        "type": "compound",
+        "compound_operator": "AND",
+        "checks": [
+          {
+            "type": "simple",
+            "field": "character.hp_percent",
+            "operator": "<=",
+            "value": 40
+          },
+          {
+            "type": "simple",
+            "field": "combat.attacking_monster_count",
+            "operator": ">",
+            "value": 0
+          }
+        ]
+      },
+      "action": {
+        "handler": "triggers.trigger_executor.handler_combat_retreat",
+        "params": {},
+        "async_execution": false,
+        "timeout": 3.0
+      },
+      "cooldown": 5,
+      "enabled": true,
+      "tags": ["combat", "tactical", "retreat"]
+    },
+    {
+      "trigger_id": "inventory_full_storage",
+      "name": "Auto Storage - Inventory Full",
+      "description": "Automatically go to storage when inventory is full",
+      "layer": "SUBCONSCIOUS",
+      "priority": 5,
+      "condition": {
+        "type": "simple",
+        "field": "inventory.usage_percent",
+        "operator": ">=",
+        "value": 90
+      },
+      "action": {
+        "handler": "triggers.trigger_executor.handler_auto_storage",
+        "params": {
+          "trigger_type": "inventory_full"
+        },
+        "async_execution": true,
+        "timeout": 60.0
+      },
+      "cooldown": 300,
+      "enabled": true,
+      "tags": ["inventory", "storage", "maintenance"]
+    },
+    {
+      "trigger_id": "weight_heavy_storage",
+      "name": "Auto Storage - Weight Heavy",
+      "description": "Go to storage when carrying too much weight",
+      "layer": "SUBCONSCIOUS",
+      "priority": 6,
+      "condition": {
+        "type": "simple",
+        "field": "character.weight_percent",
+        "operator": ">=",
+        "value": 80
+      },
+      "action": {
+        "handler": "triggers.trigger_executor.handler_auto_storage",
+        "params": {
+          "trigger_type": "weight_heavy"
+        },
+        "async_execution": true,
+        "timeout": 60.0
+      },
+      "cooldown": 300,
+      "enabled": true,
+      "tags": ["weight", "storage", "maintenance"]
+    },
+    {
+      "trigger_id": "inventory_cleanup_sell",
+      "name": "Auto Sell - Inventory Cleanup",
+      "description": "Sell junk items when inventory reaches 70%",
+      "layer": "SUBCONSCIOUS",
+      "priority": 10,
+      "condition": {
+        "type": "simple",
+        "field": "inventory.usage_percent",
+        "operator": ">=",
+        "value": 70
+      },
+      "action": {
+        "handler": "triggers.trigger_executor.handler_auto_sell",
+        "params": {},
+        "async_execution": true,
+        "timeout": 60.0
+      },
+      "cooldown": 600,
+      "enabled": true,
+      "tags": ["inventory", "selling", "maintenance"]
+    },
+    {
+      "trigger_id": "job_advancement_ready",
+      "name": "Job Advancement Ready",
+      "description": "Initiate job change when requirements are met",
+      "layer": "CONSCIOUS",
+      "priority": 1,
+      "condition": {
+        "type": "compound",
+        "compound_operator": "AND",
+        "checks": [
+          {
+            "type": "simple",
+            "field": "character.level",
+            "operator": ">=",
+            "value": 10
+          },
+          {
+            "type": "simple",
+            "field": "character.job_level",
+            "operator": ">=",
+            "value": 10
+          },
+          {
+            "type": "simple",
+            "field": "character.job_class",
+            "operator": "==",
+            "value": "Novice"
+          }
+        ]
+      },
+      "action": {
+        "handler": "triggers.trigger_executor.handler_job_advancement",
+        "params": {},
+        "async_execution": true,
+        "timeout": 300.0
+      },
+      "cooldown": 3600,
+      "enabled": true,
+      "tags": ["progression", "job_change", "strategic"]
+    },
+    {
+      "trigger_id": "sp_low_recovery",
+      "name": "SP Recovery",
+      "description": "Recover SP when running low",
+      "layer": "TACTICAL",
+      "priority": 5,
+      "condition": {
+        "type": "simple",
+        "field": "character.sp_percent",
+        "operator": "<=",
+        "value": 20
+      },
+      "action": {
+        "handler": "triggers.trigger_executor.handler_emergency_heal",
+        "params": {
+          "method": "sp_recovery"
+        },
+        "async_execution": false,
+        "timeout": 2.0
+      },
+      "cooldown": 5,
+      "enabled": true,
+      "tags": ["sp", "recovery", "resources"]
+    },
+    {
+      "trigger_id": "skill_training_idle",
+      "name": "Skill Training - Idle Time",
+      "description": "Train skills when character is idle",
+      "layer": "SUBCONSCIOUS",
+      "priority": 20,
+      "condition": {
+        "type": "compound",
+        "compound_operator": "AND",
+        "checks": [
+          {
+            "type": "simple",
+            "field": "state",
+            "operator": "in",
+            "value": ["idle", "standing"]
+          },
+          {
+            "type": "simple",
+            "field": "character.sp_percent",
+            "operator": ">",
+            "value": 50
+          }
+        ]
+      },
+      "action": {
+        "handler": "triggers.trigger_executor.handler_skill_training",
+        "params": {
+          "skill_id": "auto_detect"
+        },
+        "async_execution": true,
+        "timeout": 30.0
+      },
+      "cooldown": 60,
+      "enabled": false,
+      "tags": ["training", "skills", "idle"]
+    },
+    {
+      "trigger_id": "buff_renewal",
+      "name": "Buff Renewal",
+      "description": "Renew important buffs when they expire",
+      "layer": "SUBCONSCIOUS",
+      "priority": 15,
+      "condition": {
+        "type": "simple",
+        "field": "buffs.active_count",
+        "operator": "<",
+        "value": 1
+      },
+      "action": {
+        "handler": "triggers.trigger_executor.handler_skill_training",
+        "params": {
+          "skill_id": "buff_renewal"
+        },
+        "async_execution": false,
+        "timeout": 5.0
+      },
+      "cooldown": 30,
+      "enabled": false,
+      "tags": ["buffs", "maintenance", "combat_prep"]
+    },
+    {
+      "trigger_id": "death_recovery",
+      "name": "Death Recovery Protocol",
+      "description": "Handle death and recovery process",
+      "layer": "REFLEX",
+      "priority": 10,
+      "condition": {
+        "type": "simple",
+        "field": "character.is_dead",
+        "operator": "==",
+        "value": true
+      },
+      "action": {
+        "handler": "triggers.trigger_executor.handler_emergency_heal",
+        "params": {
+          "method": "death_recovery"
+        },
+        "async_execution": true,
+        "timeout": 10.0
+      },
+      "cooldown": 60,
+      "enabled": true,
+      "tags": ["death", "recovery", "emergency"]
+    },
+    {
+      "trigger_id": "system_health_check",
+      "name": "System Health Check",
+      "description": "Periodic system health monitoring",
+      "layer": "SYSTEM",
+      "priority": 1,
+      "condition": {
+        "type": "simple",
+        "field": "system.last_health_check",
+        "operator": ">",
+        "value": 300
+      },
+      "action": {
+        "handler": "triggers.trigger_executor.handler_emergency_heal",
+        "params": {
+          "method": "health_check"
+        },
+        "async_execution": true,
+        "timeout": 5.0
+      },
+      "cooldown": 300,
+      "enabled": true,
+      "tags": ["system", "monitoring", "maintenance"]
+    }
+  ]
+}

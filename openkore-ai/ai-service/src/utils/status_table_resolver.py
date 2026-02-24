@@ -263,4 +263,4 @@ if __name__ == "__main__":
             if status_id:
                 print(f"  [OK] {status}: {status_id}")
             else:
-                print(f"  ✗ {status}: NOT FOUND")
+                print(f"   {status}: NOT FOUND")

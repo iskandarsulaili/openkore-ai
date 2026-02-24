@@ -147,6 +147,61 @@ CREATE TABLE IF NOT EXISTS player_reputation (
 CREATE INDEX IF NOT EXISTS idx_reputation_character ON player_reputation(character_name);
 CREATE INDEX IF NOT EXISTS idx_reputation_player ON player_reputation(player_name);
 CREATE INDEX IF NOT EXISTS idx_reputation_score ON player_reputation(reputation_score);
+
+-- Table 9: Loot Attempts (intelligent loot prioritization tracking)
+CREATE TABLE IF NOT EXISTS loot_attempts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    item_id INTEGER,
+    item_name TEXT,
+    priority_level INTEGER,
+    category TEXT,
+    risk_level INTEGER,
+    tactic_used TEXT,
+    success BOOLEAN,
+    hp_percent REAL,
+    nearby_enemies INTEGER,
+    distance_to_item REAL,
+    time_taken REAL,
+    died BOOLEAN,
+    context_json TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_loot_item ON loot_attempts(item_id);
+CREATE INDEX IF NOT EXISTS idx_loot_tactic ON loot_attempts(tactic_used, success);
+CREATE INDEX IF NOT EXISTS idx_loot_timestamp ON loot_attempts(timestamp);
+CREATE INDEX IF NOT EXISTS idx_loot_risk ON loot_attempts(risk_level, tactic_used);
+
+-- Table 10: Trigger Executions (autonomous trigger system tracking)
+CREATE TABLE IF NOT EXISTS trigger_executions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    trigger_id TEXT NOT NULL,
+    trigger_name TEXT,
+    layer TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    game_state_json TEXT,
+    action_taken TEXT,
+    success BOOLEAN,
+    execution_time_ms REAL,
+    error_message TEXT,
+    context_json TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_trigger_id ON trigger_executions(trigger_id);
+CREATE INDEX IF NOT EXISTS idx_trigger_timestamp ON trigger_executions(timestamp);
+CREATE INDEX IF NOT EXISTS idx_trigger_success ON trigger_executions(trigger_id, success);
+CREATE INDEX IF NOT EXISTS idx_trigger_layer ON trigger_executions(layer, timestamp);
+
+-- Table 11: Trigger State (persistent state for trigger system)
+CREATE TABLE IF NOT EXISTS trigger_state (
+    key TEXT PRIMARY KEY,
+    value TEXT,
+    layer TEXT,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_trigger_state_layer ON trigger_state(layer);
+CREATE INDEX IF NOT EXISTS idx_trigger_state_updated ON trigger_state(updated_at);
 """
 
 class Database:

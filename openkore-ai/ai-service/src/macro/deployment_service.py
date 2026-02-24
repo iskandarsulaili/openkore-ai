@@ -102,12 +102,12 @@ class MacroDeploymentService:
             return result
             
         except httpx.HTTPStatusError as e:
-            logger.error(f"✗ Macro injection failed: {e.response.status_code} - {e.response.text}")
+            logger.error(f" Macro injection failed: {e.response.status_code} - {e.response.text}")
             
             # Log deployment failure to console
             console_logger.log_macro_deployment(
                 macro_name=macro.name,
-                deployment_status=f"✗ Deployment Failed (HTTP {e.response.status_code})"
+                deployment_status=f" Deployment Failed (HTTP {e.response.status_code})"
             )
             
             self._injection_history.append({
@@ -118,7 +118,7 @@ class MacroDeploymentService:
             })
             raise
         except Exception as e:
-            logger.error(f"✗ Macro injection error: {e}")
+            logger.error(f" Macro injection error: {e}")
             raise
     
     async def inject_batch(self, macros: List[MacroDefinition]) -> Dict:
@@ -211,7 +211,7 @@ class MacroDeploymentService:
             return result
             
         except Exception as e:
-            logger.error(f"✗ Failed to delete macro '{name}': {e}")
+            logger.error(f" Failed to delete macro '{name}': {e}")
             raise
     
     async def get_statistics(self) -> Dict:

@@ -1,0 +1,1349 @@
+{
+  "version": "2.0.0",
+  "description": "Comprehensive Job Build Variants - Integrated from opkAI advanced system",
+  "total_variants": 55,
+  "comment": "Each job path has 5 build variants: specialized builds 1-4 + balanced build 5",
+  
+  "build_variants": {
+    "swordman_knight_rune_knight": {
+      "path_name": "Knight Path (Tank/Melee DPS)",
+      "progression": ["Novice", "Swordman", "Knight", "Rune_Knight", "Dragon_Knight"],
+      "builds": {
+        "agi_knight": {
+          "name": "Agi Knight",
+          "primary_stats": ["AGI", "STR"],
+          "secondary_stats": ["VIT", "DEX"],
+          "stat_targets": {"str": 80, "agi": 80, "vit": 40, "dex": 30, "int": 1, "luk": 1},
+          "stat_priority": ["AGI", "STR", "VIT", "DEX", "INT", "LUK"],
+          "description": "Two-hand sword specialist with high ASPD and evasion",
+          "recommended_for": "Solo farming, MVP hunting, high damage output",
+          "weapon_type": "Two-handed Sword",
+          "playstyle": "fast_melee_dps"
+        },
+        "vit_knight": {
+          "name": "Vit Knight",
+          "primary_stats": ["VIT", "STR"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 70, "agi": 20, "vit": 90, "dex": 30, "int": 1, "luk": 1},
+          "stat_priority": ["VIT", "STR", "DEX", "AGI", "INT", "LUK"],
+          "description": "Spear tank with maximum survivability",
+          "recommended_for": "Party tanking, WoE, grinding tough monsters",
+          "weapon_type": "Spear",
+          "playstyle": "tank"
+        },
+        "bowling_bash": {
+          "name": "Bowling Bash",
+          "primary_stats": ["STR", "VIT"],
+          "secondary_stats": ["DEX", "AGI"],
+          "stat_targets": {"str": 90, "agi": 30, "vit": 70, "dex": 20, "int": 1, "luk": 1},
+          "stat_priority": ["STR", "VIT", "DEX", "AGI", "INT", "LUK"],
+          "description": "AoE bash specialist for multi-target damage",
+          "recommended_for": "Mob farming, leveling zones with grouped monsters",
+          "weapon_type": "Two-handed Sword/Spear",
+          "playstyle": "aoe_melee"
+        },
+        "crit_knight": {
+          "name": "Crit Knight",
+          "primary_stats": ["STR", "LUK"],
+          "secondary_stats": ["AGI", "VIT"],
+          "stat_targets": {"str": 80, "agi": 40, "vit": 40, "dex": 20, "int": 1, "luk": 70},
+          "stat_priority": ["STR", "LUK", "AGI", "VIT", "DEX", "INT"],
+          "description": "Critical strike build for consistent damage",
+          "recommended_for": "PvM farming, high flee targets",
+          "weapon_type": "Katar/Two-handed Sword",
+          "playstyle": "critical_melee"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["STR", "VIT", "AGI"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 70, "agi": 50, "vit": 60, "dex": 30, "int": 1, "luk": 20},
+          "stat_priority": ["STR", "VIT", "AGI", "DEX", "LUK", "INT"],
+          "description": "Well-rounded stats for versatile gameplay",
+          "recommended_for": "General use, beginners, mixed content",
+          "weapon_type": "Any",
+          "playstyle": "balanced_melee"
+        }
+      }
+    },
+    
+    "swordman_crusader_royal_guard": {
+      "path_name": "Crusader Path (Holy Tank/Support)",
+      "progression": ["Novice", "Swordman", "Crusader", "Royal_Guard", "Imperial_Guard"],
+      "builds": {
+        "holy_cross": {
+          "name": "Holy Cross",
+          "primary_stats": ["STR", "INT"],
+          "secondary_stats": ["VIT", "DEX"],
+          "stat_targets": {"str": 80, "agi": 20, "vit": 50, "int": 60, "dex": 30, "luk": 1},
+          "stat_priority": ["STR", "INT", "VIT", "DEX", "AGI", "LUK"],
+          "description": "Grand Cross specialist with holy magic damage",
+          "recommended_for": "Undead/Shadow farming, solo grinding",
+          "weapon_type": "Mace/Sword + Shield",
+          "playstyle": "holy_magic_tank"
+        },
+        "shield_tank": {
+          "name": "Shield Tank",
+          "primary_stats": ["VIT", "DEX"],
+          "secondary_stats": ["STR", "INT"],
+          "stat_targets": {"str": 50, "agi": 20, "vit": 99, "int": 30, "dex": 50, "luk": 1},
+          "stat_priority": ["VIT", "DEX", "STR", "INT", "AGI", "LUK"],
+          "description": "Maximum defense tank with shield skills",
+          "recommended_for": "WoE, MVP tanking, party content",
+          "weapon_type": "Any + Shield (Required)",
+          "playstyle": "pure_tank"
+        },
+        "sacrifice": {
+          "name": "Sacrifice",
+          "primary_stats": ["VIT", "STR"],
+          "secondary_stats": ["INT", "DEX"],
+          "stat_targets": {"str": 70, "agi": 20, "vit": 90, "int": 40, "dex": 30, "luk": 1},
+          "stat_priority": ["VIT", "STR", "INT", "DEX", "AGI", "LUK"],
+          "description": "Sacrifice skill specialist with high HP",
+          "recommended_for": "PvP, WoE, boss fights",
+          "weapon_type": "Spear + Shield",
+          "playstyle": "hp_tank"
+        },
+        "support": {
+          "name": "Support",
+          "primary_stats": ["INT", "VIT"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 40, "agi": 20, "vit": 70, "int": 80, "dex": 40, "luk": 1},
+          "stat_priority": ["INT", "VIT", "DEX", "STR", "AGI", "LUK"],
+          "description": "Hybrid tank/healer with buffs and healing",
+          "recommended_for": "Party support, healing backup",
+          "weapon_type": "Mace + Shield",
+          "playstyle": "tank_support"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["VIT", "STR", "INT"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 60, "agi": 20, "vit": 70, "int": 50, "dex": 40, "luk": 1},
+          "stat_priority": ["VIT", "STR", "INT", "DEX", "AGI", "LUK"],
+          "description": "Well-rounded holy tank",
+          "recommended_for": "General use, mixed content",
+          "weapon_type": "Any + Shield",
+          "playstyle": "balanced_tank"
+        }
+      }
+    },
+    
+    "mage_wizard_warlock": {
+      "path_name": "Wizard Path (Pure Magic DPS)",
+      "progression": ["Novice", "Mage", "Wizard", "Warlock", "Arch_Mage"],
+      "builds": {
+        "pure_int": {
+          "name": "Pure INT",
+          "primary_stats": ["INT", "DEX"],
+          "secondary_stats": ["VIT"],
+          "stat_targets": {"str": 1, "agi": 1, "vit": 20, "int": 99, "dex": 70, "luk": 1},
+          "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+          "description": "Maximum magic damage output",
+          "recommended_for": "One-shotting, high-level farming",
+          "spell_focus": "All elements",
+          "playstyle": "glass_cannon_mage"
+        },
+        "fast_cast": {
+          "name": "Fast Cast",
+          "primary_stats": ["INT", "DEX", "VIT"],
+          "secondary_stats": ["AGI"],
+          "stat_targets": {"str": 1, "agi": 20, "vit": 40, "int": 90, "dex": 80, "luk": 1},
+          "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+          "description": "Reduced cast time for faster spell rotation",
+          "recommended_for": "PvP, MVP support, fast-paced farming",
+          "spell_focus": "Quick cast spells",
+          "playstyle": "fast_caster"
+        },
+        "storm_gust": {
+          "name": "Storm Gust",
+          "primary_stats": ["INT", "VIT"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 1, "agi": 1, "vit": 60, "int": 99, "dex": 60, "luk": 1},
+          "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+          "description": "AoE specialist with freeze control",
+          "recommended_for": "Mob farming, AoE grinding spots",
+          "spell_focus": "Water (Storm Gust)",
+          "playstyle": "aoe_mage"
+        },
+        "fire_bolt": {
+          "name": "Fire Bolt",
+          "primary_stats": ["INT", "DEX"],
+          "secondary_stats": ["AGI"],
+          "stat_targets": {"str": 1, "agi": 30, "vit": 20, "int": 99, "dex": 70, "luk": 1},
+          "stat_priority": ["INT", "DEX", "AGI", "VIT", "STR", "LUK"],
+          "description": "Single target nuker with fire magic",
+          "recommended_for": "Boss hunting, single target farming",
+          "spell_focus": "Fire",
+          "playstyle": "single_target_mage"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["INT", "DEX", "VIT"],
+          "secondary_stats": ["AGI"],
+          "stat_targets": {"str": 1, "agi": 20, "vit": 40, "int": 90, "dex": 70, "luk": 1},
+          "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+          "description": "Versatile magic DPS with survivability",
+          "recommended_for": "General use, mixed content",
+          "spell_focus": "All elements",
+          "playstyle": "balanced_mage"
+        }
+      }
+    },
+    
+    "mage_sage_sorcerer": {
+      "path_name": "Sage Path (Support Magic/Elemental)",
+      "progression": ["Novice", "Mage", "Sage", "Sorcerer", "Elemental_Master"],
+      "builds": {
+        "elemental": {
+          "name": "Elemental",
+          "primary_stats": ["INT", "DEX"],
+          "secondary_stats": ["VIT"],
+          "stat_targets": {"str": 1, "agi": 20, "vit": 30, "int": 99, "dex": 80, "luk": 1},
+          "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+          "description": "Elemental bolt specialist with field magic",
+          "recommended_for": "Elemental advantage farming",
+          "spell_focus": "Bolt spells + Volcano/Deluge/Violent Gale",
+          "playstyle": "elemental_mage"
+        },
+        "support": {
+          "name": "Support",
+          "primary_stats": ["INT", "VIT"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 1, "agi": 20, "vit": 70, "int": 80, "dex": 60, "luk": 1},
+          "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+          "description": "Dispel and debuff specialist",
+          "recommended_for": "Party support, PvP",
+          "spell_focus": "Dispel, Field magic, Debuffs",
+          "playstyle": "support_mage"
+        },
+        "magic_tank": {
+          "name": "Magic Tank",
+          "primary_stats": ["VIT", "INT"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 1, "agi": 20, "vit": 90, "int": 70, "dex": 50, "luk": 1},
+          "stat_priority": ["VIT", "INT", "DEX", "AGI", "STR", "LUK"],
+          "description": "Survivable caster with high defense",
+          "recommended_for": "Solo dangerous areas",
+          "spell_focus": "Defensive casting",
+          "playstyle": "tanky_mage"
+        },
+        "autospell": {
+          "name": "Auto-spell",
+          "primary_stats": ["DEX", "INT"],
+          "secondary_stats": ["AGI"],
+          "stat_targets": {"str": 1, "agi": 40, "vit": 20, "int": 90, "dex": 99, "luk": 1},
+          "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+          "description": "Minimal cast delay for fast spellcasting",
+          "recommended_for": "PvP, instant cast strategies",
+          "spell_focus": "Quick bolts",
+          "playstyle": "instant_cast_mage"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["INT", "DEX", "VIT"],
+          "secondary_stats": [],
+          "stat_targets": {"str": 1, "agi": 20, "vit": 50, "int": 90, "dex": 70, "luk": 1},
+          "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+          "description": "Well-rounded sage build",
+          "recommended_for": "General use, versatile play",
+          "spell_focus": "All spells",
+          "playstyle": "balanced_mage"
+        }
+      }
+    },
+    
+    "archer_hunter_ranger": {
+      "path_name": "Hunter Path (Ranged Physical DPS)",
+      "progression": ["Novice", "Archer", "Hunter", "Ranger", "Windhawk"],
+      "builds": {
+        "crit_hunter": {
+          "name": "Crit Hunter",
+          "primary_stats": ["DEX", "LUK"],
+          "secondary_stats": ["AGI"],
+          "stat_targets": {"str": 20, "agi": 50, "vit": 20, "int": 1, "dex": 90, "luk": 70},
+          "stat_priority": ["DEX", "LUK", "AGI", "VIT", "STR", "INT"],
+          "description": "Critical strike archer with high crit rate",
+          "recommended_for": "Fast farming, consistent damage",
+          "weapon_type": "Bow",
+          "playstyle": "critical_archer"
+        },
+        "ds_hunter": {
+          "name": "DS Hunter",
+          "primary_stats": ["DEX", "AGI"],
+          "secondary_stats": ["INT", "STR"],
+          "stat_targets": {"str": 30, "agi": 70, "vit": 20, "int": 30, "dex": 99, "luk": 1},
+          "stat_priority": ["DEX", "AGI", "INT", "STR", "VIT", "LUK"],
+          "description": "Double Strafe specialist with ASPD",
+          "recommended_for": "Single target DPS, boss hunting",
+          "weapon_type": "Bow",
+          "playstyle": "fast_archer"
+        },
+        "trap_hunter": {
+          "name": "Trap Hunter",
+          "primary_stats": ["DEX", "INT"],
+          "secondary_stats": ["AGI"],
+          "stat_targets": {"str": 1, "agi": 40, "vit": 30, "int": 70, "dex": 99, "luk": 1},
+          "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+          "description": "Trap and AoE specialist",
+          "recommended_for": "Mob control, strategic farming",
+          "weapon_type": "Bow",
+          "playstyle": "trap_specialist"
+        },
+        "blitz_beat": {
+          "name": "Blitz Beat",
+          "primary_stats": ["DEX", "INT"],
+          "secondary_stats": ["AGI", "LUK"],
+          "stat_targets": {"str": 1, "agi": 40, "vit": 20, "int": 80, "dex": 90, "luk": 30},
+          "stat_priority": ["DEX", "INT", "AGI", "LUK", "VIT", "STR"],
+          "description": "Falcon damage specialist",
+          "recommended_for": "Passive damage, multitasking",
+          "weapon_type": "Bow",
+          "playstyle": "falcon_hunter"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["DEX", "AGI"],
+          "secondary_stats": ["INT", "VIT"],
+          "stat_targets": {"str": 20, "agi": 60, "vit": 30, "int": 40, "dex": 99, "luk": 20},
+          "stat_priority": ["DEX", "AGI", "INT", "VIT", "STR", "LUK"],
+          "description": "Well-rounded archer build",
+          "recommended_for": "General use, versatile hunting",
+          "weapon_type": "Bow",
+          "playstyle": "balanced_archer"
+        }
+      }
+    },
+    
+    "archer_bard_minstrel": {
+      "path_name": "Bard Path (Support/Buffer)",
+      "progression": ["Novice", "Archer", "Bard", "Minstrel", "Troubadour"],
+      "gender": "male",
+      "builds": {
+        "support_focus": {
+          "name": "Support Focus",
+          "primary_stats": ["INT", "DEX"],
+          "secondary_stats": ["VIT"],
+          "stat_targets": {"str": 1, "agi": 30, "vit": 40, "int": 80, "dex": 90, "luk": 1},
+          "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+          "description": "Maximum song effectiveness",
+          "recommended_for": "Party support, ensemble skills",
+          "weapon_type": "Bow",
+          "playstyle": "pure_support"
+        },
+        "hybrid": {
+          "name": "Hybrid",
+          "primary_stats": ["DEX", "AGI"],
+          "secondary_stats": ["INT"],
+          "stat_targets": {"str": 30, "agi": 70, "vit": 30, "int": 50, "dex": 99, "luk": 1},
+          "stat_priority": ["DEX", "AGI", "INT", "VIT", "STR", "LUK"],
+          "description": "Arrow damage plus support capabilities",
+          "recommended_for": "Solo + party versatility",
+          "weapon_type": "Bow",
+          "playstyle": "hybrid_support_dps"
+        },
+        "full_support": {
+          "name": "Full Support",
+          "primary_stats": ["VIT", "INT"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 1, "agi": 20, "vit": 80, "int": 90, "dex": 60, "luk": 1},
+          "stat_priority": ["VIT", "INT", "DEX", "AGI", "STR", "LUK"],
+          "description": "Pure support with maximum survivability",
+          "recommended_for": "Dedicated party support, WoE",
+          "weapon_type": "Bow",
+          "playstyle": "tank_support"
+        },
+        "dps_support": {
+          "name": "DPS Support",
+          "primary_stats": ["DEX", "INT"],
+          "secondary_stats": ["AGI"],
+          "stat_targets": {"str": 20, "agi": 50, "vit": 30, "int": 70, "dex": 99, "luk": 1},
+          "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+          "description": "Balanced damage and buffs",
+          "recommended_for": "Small parties, duo play",
+          "weapon_type": "Bow",
+          "playstyle": "dps_support"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["DEX", "INT"],
+          "secondary_stats": ["AGI", "VIT"],
+          "stat_targets": {"str": 20, "agi": 50, "vit": 40, "int": 70, "dex": 90, "luk": 1},
+          "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+          "description": "Well-rounded bard",
+          "recommended_for": "General use, flexible play",
+          "weapon_type": "Bow",
+          "playstyle": "balanced_support"
+        }
+      }
+    },
+    
+    "archer_dancer_wanderer": {
+      "path_name": "Dancer Path (Support/Buffer)",
+      "progression": ["Novice", "Archer", "Dancer", "Wanderer", "Trouvere"],
+      "gender": "female",
+      "builds": {
+        "support_focus": {
+          "name": "Support Focus",
+          "primary_stats": ["INT", "DEX"],
+          "secondary_stats": ["VIT"],
+          "stat_targets": {"str": 1, "agi": 30, "vit": 40, "int": 80, "dex": 90, "luk": 1},
+          "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+          "description": "Maximum dance effectiveness",
+          "recommended_for": "Party support, ensemble skills",
+          "weapon_type": "Bow",
+          "playstyle": "pure_support"
+        },
+        "hybrid": {
+          "name": "Hybrid",
+          "primary_stats": ["DEX", "AGI"],
+          "secondary_stats": ["INT"],
+          "stat_targets": {"str": 30, "agi": 70, "vit": 30, "int": 50, "dex": 99, "luk": 1},
+          "stat_priority": ["DEX", "AGI", "INT", "VIT", "STR", "LUK"],
+          "description": "Arrow damage plus support capabilities",
+          "recommended_for": "Solo + party versatility",
+          "weapon_type": "Bow",
+          "playstyle": "hybrid_support_dps"
+        },
+        "full_support": {
+          "name": "Full Support",
+          "primary_stats": ["VIT", "INT"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 1, "agi": 20, "vit": 80, "int": 90, "dex": 60, "luk": 1},
+          "stat_priority": ["VIT", "INT", "DEX", "AGI", "STR", "LUK"],
+          "description": "Pure support with maximum survivability",
+          "recommended_for": "Dedicated party support, WoE",
+          "weapon_type": "Bow",
+          "playstyle": "tank_support"
+        },
+        "dps_support": {
+          "name": "DPS Support",
+          "primary_stats": ["DEX", "INT"],
+          "secondary_stats": ["AGI"],
+          "stat_targets": {"str": 20, "agi": 50, "vit": 30, "int": 70, "dex": 99, "luk": 1},
+          "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+          "description": "Balanced damage and buffs",
+          "recommended_for": "Small parties, duo play",
+          "weapon_type": "Bow",
+          "playstyle": "dps_support"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["DEX", "INT"],
+          "secondary_stats": ["AGI", "VIT"],
+          "stat_targets": {"str": 20, "agi": 50, "vit": 40, "int": 70, "dex": 90, "luk": 1},
+          "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+          "description": "Well-rounded dancer",
+          "recommended_for": "General use, flexible play",
+          "weapon_type": "Bow",
+          "playstyle": "balanced_support"
+        }
+      }
+    },
+    
+    "acolyte_priest_archbishop": {
+      "path_name": "Priest Path (Pure Healer/Support)",
+      "progression": ["Novice", "Acolyte", "Priest", "Arch_Bishop", "Cardinal"],
+      "builds": {
+        "full_support": {
+          "name": "Full Support",
+          "primary_stats": ["INT", "VIT"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 1, "agi": 20, "vit": 70, "int": 99, "dex": 60, "luk": 1},
+          "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+          "description": "Maximum healing and buff effectiveness",
+          "recommended_for": "Dedicated party healer, WoE support",
+          "weapon_type": "Mace/Rod",
+          "playstyle": "pure_healer"
+        },
+        "battle_priest": {
+          "name": "Battle Priest",
+          "primary_stats": ["STR", "INT"],
+          "secondary_stats": ["DEX", "VIT"],
+          "stat_targets": {"str": 70, "agi": 20, "vit": 40, "int": 80, "dex": 40, "luk": 1},
+          "stat_priority": ["STR", "INT", "DEX", "VIT", "AGI", "LUK"],
+          "description": "Melee combat with healing backup",
+          "recommended_for": "Solo farming, hybrid gameplay",
+          "weapon_type": "Mace",
+          "playstyle": "battle_priest"
+        },
+        "me_priest": {
+          "name": "ME Priest",
+          "primary_stats": ["INT", "DEX"],
+          "secondary_stats": ["VIT"],
+          "stat_targets": {"str": 1, "agi": 20, "vit": 40, "int": 99, "dex": 80, "luk": 1},
+          "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+          "description": "Magnus Exorcismus specialist",
+          "recommended_for": "Undead farming, specific maps",
+          "weapon_type": "Rod",
+          "playstyle": "me_priest"
+        },
+        "tank_priest": {
+          "name": "Tank Priest",
+          "primary_stats": ["VIT", "INT"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 1, "agi": 20, "vit": 90, "int": 80, "dex": 50, "luk": 1},
+          "stat_priority": ["VIT", "INT", "DEX", "AGI", "STR", "LUK"],
+          "description": "High survivability healer",
+          "recommended_for": "Dangerous content, MVP support",
+          "weapon_type": "Mace",
+          "playstyle": "tank_healer"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["INT", "VIT", "DEX"],
+          "secondary_stats": [],
+          "stat_targets": {"str": 1, "agi": 20, "vit": 60, "int": 90, "dex": 60, "luk": 1},
+          "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+          "description": "Well-rounded priest build",
+          "recommended_for": "General use, all content",
+          "weapon_type": "Mace/Rod",
+          "playstyle": "balanced_healer"
+        }
+      }
+    },
+    
+    "acolyte_monk_sura": {
+      "path_name": "Monk Path (Battle Priest/Melee)",
+      "progression": ["Novice", "Acolyte", "Monk", "Sura", "Inquisitor"],
+      "builds": {
+        "combo_monk": {
+          "name": "Combo Monk",
+          "primary_stats": ["STR", "AGI"],
+          "secondary_stats": ["VIT", "DEX"],
+          "stat_targets": {"str": 80, "agi": 80, "vit": 50, "int": 1, "dex": 40, "luk": 1},
+          "stat_priority": ["STR", "AGI", "VIT", "DEX", "INT", "LUK"],
+          "description": "Combo attack specialist with high ASPD",
+          "recommended_for": "Fast farming, combo chains",
+          "weapon_type": "Knuckles/Barehand",
+          "playstyle": "combo_melee"
+        },
+        "asura_strike": {
+          "name": "Asura Strike",
+          "primary_stats": ["STR", "INT"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 99, "agi": 20, "vit": 30, "int": 99, "dex": 30, "luk": 1},
+          "stat_priority": ["STR", "INT", "DEX", "VIT", "AGI", "LUK"],
+          "description": "Maximum Asura Strike damage (one-shot)",
+          "recommended_for": "MVP hunting, PvP",
+          "weapon_type": "Knuckles/Barehand",
+          "playstyle": "burst_damage"
+        },
+        "tank_monk": {
+          "name": "Tank Monk",
+          "primary_stats": ["VIT", "STR"],
+          "secondary_stats": ["AGI", "DEX"],
+          "stat_targets": {"str": 70, "agi": 50, "vit": 99, "int": 1, "dex": 30, "luk": 1},
+          "stat_priority": ["VIT", "STR", "AGI", "DEX", "INT", "LUK"],
+          "description": "High HP melee fighter with combos",
+          "recommended_for": "Tanking, sustained fights",
+          "weapon_type": "Knuckles",
+          "playstyle": "tank_melee"
+        },
+        "crit_monk": {
+          "name": "Crit Monk",
+          "primary_stats": ["STR", "LUK"],
+          "secondary_stats": ["AGI", "VIT"],
+          "stat_targets": {"str": 80, "agi": 60, "vit": 40, "int": 1, "dex": 30, "luk": 80},
+          "stat_priority": ["STR", "LUK", "AGI", "VIT", "DEX", "INT"],
+          "description": "Critical strike melee build",
+          "recommended_for": "Consistent DPS, farming",
+          "weapon_type": "Knuckles",
+          "playstyle": "critical_melee"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["STR", "AGI", "VIT"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 80, "agi": 70, "vit": 60, "int": 1, "dex": 40, "luk": 1},
+          "stat_priority": ["STR", "AGI", "VIT", "DEX", "INT", "LUK"],
+          "description": "Well-rounded monk build",
+          "recommended_for": "General use, flexible gameplay",
+          "weapon_type": "Knuckles",
+          "playstyle": "balanced_melee"
+        }
+      }
+    },
+    
+    "merchant_blacksmith_mechanic": {
+      "path_name": "Blacksmith Path (Crafting/Melee)",
+      "progression": ["Novice", "Merchant", "Blacksmith", "Mechanic", "Meister"],
+      "builds": {
+        "battle_smith": {
+          "name": "Battle Smith",
+          "primary_stats": ["STR", "VIT"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 99, "agi": 30, "vit": 80, "int": 1, "dex": 50, "luk": 1},
+          "stat_priority": ["STR", "VIT", "DEX", "AGI", "INT", "LUK"],
+          "description": "Melee combat tank with axe mastery",
+          "recommended_for": "Solo farming, grinding",
+          "weapon_type": "Axe",
+          "playstyle": "melee_tank"
+        },
+        "forger": {
+          "name": "Forger",
+          "primary_stats": ["DEX", "LUK"],
+          "secondary_stats": ["STR", "VIT"],
+          "stat_targets": {"str": 70, "agi": 20, "vit": 40, "int": 30, "dex": 99, "luk": 80},
+          "stat_priority": ["DEX", "LUK", "STR", "VIT", "INT", "AGI"],
+          "description": "Maximize crafting success rates",
+          "recommended_for": "Weapon forging, money making",
+          "weapon_type": "Any",
+          "playstyle": "crafter"
+        },
+        "cart_build": {
+          "name": "Cart Build",
+          "primary_stats": ["STR", "AGI"],
+          "secondary_stats": ["VIT"],
+          "stat_targets": {"str": 90, "agi": 70, "vit": 50, "int": 1, "dex": 40, "luk": 1},
+          "stat_priority": ["STR", "AGI", "VIT", "DEX", "INT", "LUK"],
+          "description": "Cart Revolution specialist with high speed",
+          "recommended_for": "AoE farming, cart skills",
+          "weapon_type": "Axe",
+          "playstyle": "aoe_melee"
+        },
+        "hybrid": {
+          "name": "Hybrid",
+          "primary_stats": ["STR", "VIT", "DEX"],
+          "secondary_stats": [],
+          "stat_targets": {"str": 80, "agi": 30, "vit": 60, "int": 20, "dex": 70, "luk": 40},
+          "stat_priority": ["STR", "VIT", "DEX", "AGI", "LUK", "INT"],
+          "description": "Combat and crafting combined",
+          "recommended_for": "Versatile play, self-sufficiency",
+          "weapon_type": "Axe",
+          "playstyle": "hybrid_crafter"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["STR", "DEX", "VIT"],
+          "secondary_stats": [],
+          "stat_targets": {"str": 80, "agi": 30, "vit": 60, "int": 20, "dex": 60, "luk": 30},
+          "stat_priority": ["STR", "DEX", "VIT", "AGI", "LUK", "INT"],
+          "description": "Well-rounded blacksmith",
+          "recommended_for": "General use, all activities",
+          "weapon_type": "Axe",
+          "playstyle": "balanced_melee"
+        }
+      }
+    },
+    
+    "merchant_alchemist_genetic": {
+      "path_name": "Alchemist Path (Potion/Homunculus)",
+      "progression": ["Novice", "Merchant", "Alchemist", "Genetic", "Biolo"],
+      "builds": {
+        "battle_alchemist": {
+          "name": "Battle Alchemist",
+          "primary_stats": ["STR", "VIT"],
+          "secondary_stats": ["INT", "DEX"],
+          "stat_targets": {"str": 80, "agi": 30, "vit": 80, "int": 50, "dex": 50, "luk": 1},
+          "stat_priority": ["STR", "VIT", "INT", "DEX", "AGI", "LUK"],
+          "description": "Homunculus combat specialist",
+          "recommended_for": "Homunculus leveling, duo farming",
+          "weapon_type": "Axe/Sword",
+          "playstyle": "homunculus_battle"
+        },
+        "potion_master": {
+          "name": "Potion Master",
+          "primary_stats": ["INT", "DEX"],
+          "secondary_stats": ["VIT", "LUK"],
+          "stat_targets": {"str": 1, "agi": 20, "vit": 40, "int": 90, "dex": 99, "luk": 50},
+          "stat_priority": ["INT", "DEX", "LUK", "VIT", "AGI", "STR"],
+          "description": "Maximum potion brewing success",
+          "recommended_for": "Crafting, money making",
+          "weapon_type": "Any",
+          "playstyle": "crafter"
+        },
+        "bomb_specialist": {
+          "name": "Bomb Specialist",
+          "primary_stats": ["INT", "DEX"],
+          "secondary_stats": ["VIT"],
+          "stat_targets": {"str": 1, "agi": 30, "vit": 50, "int": 99, "dex": 90, "luk": 1},
+          "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+          "description": "Acid Bomb/Fire Bottle damage dealer",
+          "recommended_for": "Bombing strategies, PvP",
+          "weapon_type": "Any",
+          "playstyle": "magic_bomber"
+        },
+        "homun_support": {
+          "name": "Homun Support",
+          "primary_stats": ["VIT", "INT"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 1, "agi": 20, "vit": 99, "int": 80, "dex": 60, "luk": 1},
+          "stat_priority": ["VIT", "INT", "DEX", "AGI", "STR", "LUK"],
+          "description": "Support homunculus while staying alive",
+          "recommended_for": "Safe homunculus training",
+          "weapon_type": "Any",
+          "playstyle": "tank_support"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["INT", "DEX", "VIT"],
+          "secondary_stats": [],
+          "stat_targets": {"str": 1, "agi": 30, "vit": 60, "int": 80, "dex": 80, "luk": 30},
+          "stat_priority": ["INT", "DEX", "VIT", "AGI", "LUK", "STR"],
+          "description": "Well-rounded alchemist",
+          "recommended_for": "General use, versatile play",
+          "weapon_type": "Any",
+          "playstyle": "balanced_alchemist"
+        }
+      }
+    },
+    
+    "thief_assassin_guillotine_cross": {
+      "path_name": "Assassin Path (Critical/Poison)",
+      "progression": ["Novice", "Thief", "Assassin", "Guillotine_Cross", "Shadow_Cross"],
+      "builds": {
+        "katar_crit": {
+          "name": "Katar Crit",
+          "primary_stats": ["STR", "LUK"],
+          "secondary_stats": ["AGI"],
+          "stat_targets": {"str": 80, "agi": 60, "vit": 30, "int": 1, "dex": 40, "luk": 99},
+          "stat_priority": ["STR", "LUK", "AGI", "DEX", "VIT", "INT"],
+          "description": "Critical assassin with katar mastery",
+          "recommended_for": "High DPS farming, boss hunting",
+          "weapon_type": "Katar",
+          "playstyle": "critical_assassin"
+        },
+        "sb_sin": {
+          "name": "SB Sin",
+          "primary_stats": ["STR", "AGI"],
+          "secondary_stats": ["DEX", "VIT"],
+          "stat_targets": {"str": 90, "agi": 90, "vit": 30, "int": 1, "dex": 50, "luk": 1},
+          "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+          "description": "Sonic Blow specialist with high ASPD",
+          "recommended_for": "Single target burst damage",
+          "weapon_type": "Katar",
+          "playstyle": "burst_melee"
+        },
+        "poison": {
+          "name": "Poison",
+          "primary_stats": ["DEX", "INT"],
+          "secondary_stats": ["AGI", "VIT"],
+          "stat_targets": {"str": 40, "agi": 50, "vit": 40, "int": 80, "dex": 99, "luk": 1},
+          "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+          "description": "Poison specialist with status effects",
+          "recommended_for": "PvP, status infliction",
+          "weapon_type": "Katar/Dagger",
+          "playstyle": "poison_assassin"
+        },
+        "agi_crit": {
+          "name": "Agi Crit",
+          "primary_stats": ["AGI", "LUK"],
+          "secondary_stats": ["STR", "DEX"],
+          "stat_targets": {"str": 60, "agi": 99, "vit": 30, "int": 1, "dex": 50, "luk": 80},
+          "stat_priority": ["AGI", "LUK", "STR", "DEX", "VIT", "INT"],
+          "description": "ASPD and crit combined",
+          "recommended_for": "Fast farming, consistent DPS",
+          "weapon_type": "Katar",
+          "playstyle": "aspd_critical"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["AGI", "STR"],
+          "secondary_stats": ["DEX", "LUK"],
+          "stat_targets": {"str": 80, "agi": 80, "vit": 30, "int": 1, "dex": 50, "luk": 50},
+          "stat_priority": ["AGI", "STR", "DEX", "LUK", "VIT", "INT"],
+          "description": "Well-rounded assassin",
+          "recommended_for": "General use, versatile",
+          "weapon_type": "Katar",
+          "playstyle": "balanced_assassin"
+        }
+      }
+    },
+    
+    "thief_rogue_shadow_chaser": {
+      "path_name": "Rogue Path (Utility/Strip/Steal)",
+      "progression": ["Novice", "Thief", "Rogue", "Shadow_Chaser", "Abyss_Chaser"],
+      "builds": {
+        "strip_rogue": {
+          "name": "Strip Rogue",
+          "primary_stats": ["DEX", "AGI"],
+          "secondary_stats": ["STR", "VIT"],
+          "stat_targets": {"str": 50, "agi": 80, "vit": 40, "int": 1, "dex": 99, "luk": 1},
+          "stat_priority": ["DEX", "AGI", "STR", "VIT", "INT", "LUK"],
+          "description": "Strip armor specialist",
+          "recommended_for": "PvP, WoE, utility",
+          "weapon_type": "Dagger/Bow",
+          "playstyle": "strip_specialist"
+        },
+        "bow_rogue": {
+          "name": "Bow Rogue",
+          "primary_stats": ["DEX", "AGI"],
+          "secondary_stats": ["STR", "INT"],
+          "stat_targets": {"str": 40, "agi": 70, "vit": 30, "int": 30, "dex": 99, "luk": 1},
+          "stat_priority": ["DEX", "AGI", "STR", "INT", "VIT", "LUK"],
+          "description": "Ranged damage dealer with utility",
+          "recommended_for": "Safe farming, ranged DPS",
+          "weapon_type": "Bow",
+          "playstyle": "ranged_rogue"
+        },
+        "copycat": {
+          "name": "Copycat",
+          "primary_stats": ["AGI", "LUK"],
+          "secondary_stats": ["DEX", "INT"],
+          "stat_targets": {"str": 40, "agi": 90, "vit": 30, "int": 40, "dex": 70, "luk": 60},
+          "stat_priority": ["AGI", "LUK", "DEX", "INT", "VIT", "STR"],
+          "description": "Plagiarism build for skill copying",
+          "recommended_for": "Utility, skill variety",
+          "weapon_type": "Dagger",
+          "playstyle": "copycat_rogue"
+        },
+        "backstab": {
+          "name": "Back Stab",
+          "primary_stats": ["STR", "AGI"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 90, "agi": 90, "vit": 30, "int": 1, "dex": 60, "luk": 1},
+          "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+          "description": "Melee burst damage specialist",
+          "recommended_for": "Single target DPS",
+          "weapon_type": "Dagger",
+          "playstyle": "burst_melee"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["AGI", "DEX", "STR"],
+          "secondary_stats": [],
+          "stat_targets": {"str": 60, "agi": 80, "vit": 30, "int": 20, "dex": 80, "luk": 20},
+          "stat_priority": ["AGI", "DEX", "STR", "VIT", "LUK", "INT"],
+          "description": "Well-rounded rogue build",
+          "recommended_for": "General use, versatile",
+          "weapon_type": "Dagger/Bow",
+          "playstyle": "balanced_rogue"
+        }
+      }
+    },
+    
+    "gunslinger_rebellion": {
+      "path_name": "Gunslinger → Rebellion",
+      "progression": ["Gunslinger", "Rebellion", "Night_Watch"],
+      "extended_class": true,
+      "builds": {
+        "desperado": {
+          "name": "Desperado",
+          "primary_stats": ["STR", "AGI"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 80, "agi": 90, "vit": 30, "int": 1, "dex": 70, "luk": 1},
+          "stat_priority": ["AGI", "STR", "DEX", "VIT", "INT", "LUK"],
+          "description": "Close range Desperado specialist",
+          "recommended_for": "AoE farming, grouped monsters",
+          "weapon_type": "Pistol/Rifle",
+          "playstyle": "aoe_gunner"
+        },
+        "sniper": {
+          "name": "Sniper",
+          "primary_stats": ["DEX", "AGI"],
+          "secondary_stats": ["INT", "LUK"],
+          "stat_targets": {"str": 30, "agi": 70, "vit": 30, "int": 30, "dex": 99, "luk": 50},
+          "stat_priority": ["DEX", "AGI", "LUK", "INT", "VIT", "STR"],
+          "description": "Long range precision shooter",
+          "recommended_for": "Safe farming, ranged DPS",
+          "weapon_type": "Rifle",
+          "playstyle": "precision_gunner"
+        },
+        "tracking": {
+          "name": "Tracking",
+          "primary_stats": ["DEX", "INT"],
+          "secondary_stats": ["AGI"],
+          "stat_targets": {"str": 1, "agi": 50, "vit": 30, "int": 80, "dex": 99, "luk": 1},
+          "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+          "description": "Tracking skill specialist",
+          "recommended_for": "Specific farming strategies",
+          "weapon_type": "Rifle",
+          "playstyle": "tactical_gunner"
+        },
+        "grenade": {
+          "name": "Grenade",
+          "primary_stats": ["INT", "DEX"],
+          "secondary_stats": ["VIT"],
+          "stat_targets": {"str": 1, "agi": 30, "vit": 50, "int": 90, "dex": 90, "luk": 1},
+          "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+          "description": "Grenade Launcher specialist",
+          "recommended_for": "AoE magic damage",
+          "weapon_type": "Grenade Launcher",
+          "playstyle": "magic_gunner"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["DEX", "AGI", "STR"],
+          "secondary_stats": [],
+          "stat_targets": {"str": 50, "agi": 70, "vit": 30, "int": 30, "dex": 90, "luk": 40},
+          "stat_priority": ["DEX", "AGI", "STR", "VIT", "LUK", "INT"],
+          "description": "Well-rounded gunslinger",
+          "recommended_for": "General use, all guns",
+          "weapon_type": "Any Gun",
+          "playstyle": "balanced_gunner"
+        }
+      }
+    },
+    
+    "ninja_kagerou": {
+      "path_name": "Ninja → Kagerou (Male)",
+      "progression": ["Ninja", "Kagerou", "Shinkiro"],
+      "extended_class": true,
+      "gender": "male",
+      "builds": {
+        "magic_ninja": {
+          "name": "Magic Ninja",
+          "primary_stats": ["INT", "DEX"],
+          "secondary_stats": ["AGI"],
+          "stat_targets": {"str": 1, "agi": 50, "vit": 30, "int": 99, "dex": 90, "luk": 1},
+          "stat_priority": ["INT", "DEX", "AGI", "VIT", "STR", "LUK"],
+          "description": "Ninjutsu spell specialist",
+          "recommended_for": "Magic damage, spell rotation",
+          "weapon_type": "Huuma Shuriken",
+          "playstyle": "magic_ninja"
+        },
+        "physical": {
+          "name": "Physical",
+          "primary_stats": ["STR", "AGI"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 90, "agi": 90, "vit": 30, "int": 1, "dex": 60, "luk": 1},
+          "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+          "description": "Melee ninja with physical skills",
+          "recommended_for": "Close combat, ASPD",
+          "weapon_type": "Dagger",
+          "playstyle": "physical_ninja"
+        },
+        "throw_build": {
+          "name": "Throw Build",
+          "primary_stats": ["DEX", "AGI"],
+          "secondary_stats": ["STR"],
+          "stat_targets": {"str": 50, "agi": 80, "vit": 30, "int": 30, "dex": 99, "luk": 1},
+          "stat_priority": ["DEX", "AGI", "STR", "VIT", "INT", "LUK"],
+          "description": "Throwing weapon specialist",
+          "recommended_for": "Ranged physical damage",
+          "weapon_type": "Huuma Shuriken",
+          "playstyle": "throw_ninja"
+        },
+        "hybrid": {
+          "name": "Hybrid",
+          "primary_stats": ["STR", "INT"],
+          "secondary_stats": ["DEX", "AGI"],
+          "stat_targets": {"str": 70, "agi": 50, "vit": 30, "int": 80, "dex": 70, "luk": 1},
+          "stat_priority": ["STR", "INT", "DEX", "AGI", "VIT", "LUK"],
+          "description": "Magic and physical combined",
+          "recommended_for": "Versatile ninja gameplay",
+          "weapon_type": "Any",
+          "playstyle": "hybrid_ninja"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["AGI", "INT", "DEX"],
+          "secondary_stats": [],
+          "stat_targets": {"str": 40, "agi": 70, "vit": 30, "int": 70, "dex": 80, "luk": 1},
+          "stat_priority": ["AGI", "INT", "DEX", "VIT", "STR", "LUK"],
+          "description": "Well-rounded ninja",
+          "recommended_for": "General use, flexible",
+          "weapon_type": "Any",
+          "playstyle": "balanced_ninja"
+        }
+      }
+    },
+    
+    "ninja_oboro": {
+      "path_name": "Ninja → Oboro (Female)",
+      "progression": ["Ninja", "Oboro", "Shiranui"],
+      "extended_class": true,
+      "gender": "female",
+      "builds": {
+        "magic_ninja": {
+          "name": "Magic Ninja",
+          "primary_stats": ["INT", "DEX"],
+          "secondary_stats": ["AGI"],
+          "stat_targets": {"str": 1, "agi": 50, "vit": 30, "int": 99, "dex": 90, "luk": 1},
+          "stat_priority": ["INT", "DEX", "AGI", "VIT", "STR", "LUK"],
+          "description": "Ninjutsu spell specialist",
+          "recommended_for": "Magic damage, spell rotation",
+          "weapon_type": "Huuma Shuriken",
+          "playstyle": "magic_ninja"
+        },
+        "physical": {
+          "name": "Physical",
+          "primary_stats": ["STR", "AGI"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 90, "agi": 90, "vit": 30, "int": 1, "dex": 60, "luk": 1},
+          "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+          "description": "Melee ninja with physical skills",
+          "recommended_for": "Close combat, ASPD",
+          "weapon_type": "Dagger",
+          "playstyle": "physical_ninja"
+        },
+        "throw_build": {
+          "name": "Throw Build",
+          "primary_stats": ["DEX", "AGI"],
+          "secondary_stats": ["STR"],
+          "stat_targets": {"str": 50, "agi": 80, "vit": 30, "int": 30, "dex": 99, "luk": 1},
+          "stat_priority": ["DEX", "AGI", "STR", "VIT", "INT", "LUK"],
+          "description": "Throwing weapon specialist",
+          "recommended_for": "Ranged physical damage",
+          "weapon_type": "Huuma Shuriken",
+          "playstyle": "throw_ninja"
+        },
+        "hybrid": {
+          "name": "Hybrid",
+          "primary_stats": ["STR", "INT"],
+          "secondary_stats": ["DEX", "AGI"],
+          "stat_targets": {"str": 70, "agi": 50, "vit": 30, "int": 80, "dex": 70, "luk": 1},
+          "stat_priority": ["STR", "INT", "DEX", "AGI", "VIT", "LUK"],
+          "description": "Magic and physical combined",
+          "recommended_for": "Versatile ninja gameplay",
+          "weapon_type": "Any",
+          "playstyle": "hybrid_ninja"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["AGI", "INT", "DEX"],
+          "secondary_stats": [],
+          "stat_targets": {"str": 40, "agi": 70, "vit": 30, "int": 70, "dex": 80, "luk": 1},
+          "stat_priority": ["AGI", "INT", "DEX", "VIT", "STR", "LUK"],
+          "description": "Well-rounded ninja",
+          "recommended_for": "General use, flexible",
+          "weapon_type": "Any",
+          "playstyle": "balanced_ninja"
+        }
+      }
+    },
+    
+    "taekwon_star_gladiator": {
+      "path_name": "Star Gladiator → Star Emperor",
+      "progression": ["Taekwon", "Star_Gladiator", "Star_Emperor", "Sky_Emperor"],
+      "extended_class": true,
+      "builds": {
+        "solar_build": {
+          "name": "Solar Build",
+          "primary_stats": ["STR", "AGI"],
+          "secondary_stats": ["DEX", "VIT"],
+          "stat_targets": {"str": 99, "agi": 90, "vit": 30, "int": 1, "dex": 60, "luk": 1},
+          "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+          "description": "Physical kick damage specialist (Solar)",
+          "recommended_for": "High DPS farming, Solar alignment",
+          "weapon_type": "Barehand/Books",
+          "playstyle": "solar_gladiator"
+        },
+        "lunar_build": {
+          "name": "Lunar Build",
+          "primary_stats": ["AGI", "LUK"],
+          "secondary_stats": ["STR", "DEX"],
+          "stat_targets": {"str": 70, "agi": 99, "vit": 30, "int": 1, "dex": 60, "luk": 80},
+          "stat_priority": ["AGI", "LUK", "STR", "DEX", "VIT", "INT"],
+          "description": "Critical kick build (Lunar)",
+          "recommended_for": "Critical DPS, Lunar alignment",
+          "weapon_type": "Barehand/Books",
+          "playstyle": "lunar_gladiator"
+        },
+        "stellar": {
+          "name": "Stellar",
+          "primary_stats": ["STR", "VIT"],
+          "secondary_stats": ["AGI", "DEX"],
+          "stat_targets": {"str": 90, "agi": 60, "vit": 90, "int": 1, "dex": 50, "luk": 1},
+          "stat_priority": ["STR", "VIT", "AGI", "DEX", "INT", "LUK"],
+          "description": "Tank build with stellar skills",
+          "recommended_for": "Survivability, tanking",
+          "weapon_type": "Barehand/Books",
+          "playstyle": "stellar_tank"
+        },
+        "union": {
+          "name": "Union",
+          "primary_stats": ["STR", "INT"],
+          "secondary_stats": ["AGI", "DEX"],
+          "stat_targets": {"str": 80, "agi": 50, "vit": 40, "int": 70, "dex": 60, "luk": 1},
+          "stat_priority": ["STR", "INT", "AGI", "DEX", "VIT", "LUK"],
+          "description": "Hybrid physical/magical",
+          "recommended_for": "Union stance, versatility",
+          "weapon_type": "Barehand/Books",
+          "playstyle": "union_gladiator"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["STR", "AGI"],
+          "secondary_stats": ["DEX", "VIT"],
+          "stat_targets": {"str": 80, "agi": 80, "vit": 40, "int": 1, "dex": 60, "luk": 20},
+          "stat_priority": ["STR", "AGI", "DEX", "VIT", "LUK", "INT"],
+          "description": "Well-rounded Star Gladiator",
+          "recommended_for": "General use",
+          "weapon_type": "Barehand/Books",
+          "playstyle": "balanced_gladiator"
+        }
+      }
+    },
+    
+    "taekwon_soul_linker": {
+      "path_name": "Soul Linker → Soul Reaper",
+      "progression": ["Taekwon", "Soul_Linker", "Soul_Reaper", "Soul_Ascetic"],
+      "extended_class": true,
+      "builds": {
+        "full_support": {
+          "name": "Full Support",
+          "primary_stats": ["INT", "VIT"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 1, "agi": 20, "vit": 90, "int": 99, "dex": 60, "luk": 1},
+          "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+          "description": "Maximum Ka skill effectiveness",
+          "recommended_for": "Party support, buffs",
+          "weapon_type": "Rod/Book",
+          "playstyle": "ka_support"
+        },
+        "hybrid": {
+          "name": "Hybrid",
+          "primary_stats": ["INT", "DEX"],
+          "secondary_stats": ["VIT", "AGI"],
+          "stat_targets": {"str": 1, "agi": 40, "vit": 50, "int": 99, "dex": 90, "luk": 1},
+          "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+          "description": "Support with offensive capabilities",
+          "recommended_for": "Solo + party versatility",
+          "weapon_type": "Rod/Book",
+          "playstyle": "hybrid_linker"
+        },
+        "tank_support": {
+          "name": "Tank Support",
+          "primary_stats": ["VIT", "INT"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 1, "agi": 20, "vit": 99, "int": 90, "dex": 60, "luk": 1},
+          "stat_priority": ["VIT", "INT", "DEX", "AGI", "STR", "LUK"],
+          "description": "High survivability support",
+          "recommended_for": "Dangerous content, staying alive",
+          "weapon_type": "Book",
+          "playstyle": "tank_support"
+        },
+        "fast_cast": {
+          "name": "Fast Cast",
+          "primary_stats": ["INT", "DEX"],
+          "secondary_stats": ["AGI"],
+          "stat_targets": {"str": 1, "agi": 50, "vit": 30, "int": 99, "dex": 99, "luk": 1},
+          "stat_priority": ["INT", "DEX", "AGI", "VIT", "STR", "LUK"],
+          "description": "Instant cast support",
+          "recommended_for": "Fast-paced support, PvP",
+          "weapon_type": "Rod",
+          "playstyle": "fast_support"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["INT", "VIT", "DEX"],
+          "secondary_stats": [],
+          "stat_targets": {"str": 1, "agi": 30, "vit": 70, "int": 90, "dex": 80, "luk": 1},
+          "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+          "description": "Well-rounded Soul Linker",
+          "recommended_for": "General use",
+          "weapon_type": "Rod/Book",
+          "playstyle": "balanced_linker"
+        }
+      }
+    },
+    
+    "super_novice": {
+      "path_name": "Super Novice (Special)",
+      "progression": ["Super_Novice", "Super_Novice_E", "Hyper_Novice"],
+      "special_class": true,
+      "builds": {
+        "str_build": {
+          "name": "STR Build",
+          "primary_stats": ["STR", "VIT"],
+          "secondary_stats": ["DEX", "AGI"],
+          "stat_targets": {"str": 99, "agi": 50, "vit": 70, "int": 1, "dex": 60, "luk": 1},
+          "stat_priority": ["STR", "VIT", "DEX", "AGI", "INT", "LUK"],
+          "description": "Melee focused Super Novice",
+          "recommended_for": "Physical damage, bash skills",
+          "weapon_type": "Sword/Axe",
+          "playstyle": "melee_novice"
+        },
+        "agi_build": {
+          "name": "AGI Build",
+          "primary_stats": ["AGI", "DEX"],
+          "secondary_stats": ["STR", "VIT"],
+          "stat_targets": {"str": 60, "agi": 99, "vit": 50, "int": 1, "dex": 80, "luk": 1},
+          "stat_priority": ["AGI", "DEX", "STR", "VIT", "INT", "LUK"],
+          "description": "ASPD focused build",
+          "recommended_for": "Fast attacks, evasion",
+          "weapon_type": "Dagger/Sword",
+          "playstyle": "aspd_novice"
+        },
+        "hybrid": {
+          "name": "Hybrid",
+          "primary_stats": ["STR", "INT"],
+          "secondary_stats": ["DEX", "VIT"],
+          "stat_targets": {"str": 70, "agi": 30, "vit": 50, "int": 80, "dex": 60, "luk": 1},
+          "stat_priority": ["STR", "INT", "DEX", "VIT", "AGI", "LUK"],
+          "description": "Use all available skills",
+          "recommended_for": "Maximum versatility",
+          "weapon_type": "Any",
+          "playstyle": "hybrid_novice"
+        },
+        "tank": {
+          "name": "Tank",
+          "primary_stats": ["VIT", "STR"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 70, "agi": 30, "vit": 99, "int": 1, "dex": 60, "luk": 1},
+          "stat_priority": ["VIT", "STR", "DEX", "AGI", "INT", "LUK"],
+          "description": "Maximum survivability",
+          "recommended_for": "Tanking, solo dangerous areas",
+          "weapon_type": "Sword/Mace",
+          "playstyle": "tank_novice"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["ALL"],
+          "secondary_stats": [],
+          "stat_targets": {"str": 60, "agi": 60, "vit": 60, "int": 60, "dex": 60, "luk": 40},
+          "stat_priority": ["STR", "AGI", "VIT", "INT", "DEX", "LUK"],
+          "description": "True jack-of-all-trades",
+          "recommended_for": "Maximum flexibility, general use",
+          "weapon_type": "Any",
+          "playstyle": "all_rounder"
+        }
+      }
+    },
+    
+    "summoner": {
+      "path_name": "Summoner/Doram (Separate Race)",
+      "progression": ["Summoner", "Spirit_Handler"],
+      "special_race": "doram",
+      "builds": {
+        "physical": {
+          "name": "Physical",
+          "primary_stats": ["STR", "AGI"],
+          "secondary_stats": ["DEX", "VIT"],
+          "stat_targets": {"str": 80, "agi": 80, "vit": 40, "int": 30, "dex": 70, "luk": 1},
+          "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+          "description": "Physical summon specialist",
+          "recommended_for": "Melee summons, Picky Peck",
+          "weapon_type": "Claw",
+          "playstyle": "physical_summoner"
+        },
+        "magic": {
+          "name": "Magic",
+          "primary_stats": ["INT", "DEX"],
+          "secondary_stats": ["VIT", "AGI"],
+          "stat_targets": {"str": 1, "agi": 50, "vit": 40, "int": 99, "dex": 90, "luk": 1},
+          "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+          "description": "Magic summon specialist",
+          "recommended_for": "Catnip Meteor, magic skills",
+          "weapon_type": "Foxtail",
+          "playstyle": "magic_summoner"
+        },
+        "healer": {
+          "name": "Healer",
+          "primary_stats": ["INT", "VIT"],
+          "secondary_stats": ["DEX"],
+          "stat_targets": {"str": 1, "agi": 30, "vit": 80, "int": 99, "dex": 70, "luk": 1},
+          "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+          "description": "Support and healing build",
+          "recommended_for": "Party support, healing",
+          "weapon_type": "Foxtail",
+          "playstyle": "healer_summoner"
+        },
+        "hybrid": {
+          "name": "Hybrid",
+          "primary_stats": ["STR", "INT"],
+          "secondary_stats": ["DEX", "AGI"],
+          "stat_targets": {"str": 60, "agi": 60, "vit": 40, "int": 80, "dex": 70, "luk": 1},
+          "stat_priority": ["STR", "INT", "DEX", "AGI", "VIT", "LUK"],
+          "description": "Use all summon types",
+          "recommended_for": "Maximum versatility",
+          "weapon_type": "Any",
+          "playstyle": "hybrid_summoner"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "primary_stats": ["INT", "DEX"],
+          "secondary_stats": ["AGI", "VIT", "STR"],
+          "stat_targets": {"str": 40, "agi": 60, "vit": 50, "int": 90, "dex": 80, "luk": 20},
+          "stat_priority": ["INT", "DEX", "AGI", "VIT", "STR", "LUK"],
+          "description": "Well-rounded Summoner",
+          "recommended_for": "General use, all content",
+          "weapon_type": "Any",
+          "playstyle": "balanced_summoner"
+        }
+      }
+    }
+  },
+  
+  "playstyle_definitions": {
+    "fast_melee_dps": {"focus": "High ASPD melee damage", "role": "DPS"},
+    "tank": {"focus": "Maximum survivability and defense", "role": "Tank"},
+    "aoe_melee": {"focus": "Area damage with melee skills", "role": "AoE DPS"},
+    "critical_melee": {"focus": "Critical strike damage", "role": "DPS"},
+    "balanced_melee": {"focus": "Versatile melee fighter", "role": "Balanced"},
+    "holy_magic_tank": {"focus": "Holy magic with tanking", "role": "Tank/Magic"},
+    "pure_tank": {"focus": "Pure defensive tanking", "role": "Tank"},
+    "hp_tank": {"focus": "High HP sacrifice mechanics", "role": "Tank"},
+    "tank_support": {"focus": "Tank with support abilities", "role": "Tank/Support"},
+    "balanced_tank": {"focus": "Balanced holy tank", "role": "Tank"},
+    "glass_cannon_mage": {"focus": "Maximum magic damage", "role": "Magic DPS"},
+    "fast_caster": {"focus": "Reduced cast delay", "role": "Magic DPS"},
+    "aoe_mage": {"focus": "Area magic damage", "role": "AoE Magic"},
+    "single_target_mage": {"focus": "Single target nuking", "role": "Magic DPS"},
+    "balanced_mage": {"focus": "Versatile magic user", "role": "Balanced Magic"},
+    "elemental_mage": {"focus": "Elemental advantage", "role": "Magic DPS"},
+    "support_mage": {"focus": "Debuffs and support magic", "role": "Support"},
+    "tanky_mage": {"focus": "Survivable caster", "role": "Tank/Magic"},
+    "instant_cast_mage": {"focus": "Instant cast spells", "role": "Magic DPS"},
+    "critical_archer": {"focus": "Critical archer damage", "role": "DPS"},
+    "fast_archer": {"focus": "ASPD archer", "role": "DPS"},
+    "trap_specialist": {"focus": "Trap control", "role": "Control"},
+    "falcon_hunter": {"focus": "Falcon damage", "role": "DPS"},
+    "balanced_archer": {"focus": "Versatile archer", "role": "Balanced"},
+    "pure_support": {"focus": "Pure party support", "role": "Support"},
+    "hybrid_support_dps": {"focus": "Support with DPS", "role": "Hybrid"},
+    "dps_support": {"focus": "DPS with support", "role": "Hybrid"},
+    "balanced_support": {"focus": "Balanced support", "role": "Support"},
+    "pure_healer": {"focus": "Maximum healing", "role": "Healer"},
+    "battle_priest": {"focus": "Melee with healing", "role": "Hybrid"},
+    "me_priest": {"focus": "Magnus Exorcismus", "role": "Magic DPS"},
+    "tank_healer": {"focus": "Tanky healer", "role": "Tank/Healer"},
+    "balanced_healer": {"focus": "Balanced healer", "role": "Healer"},
+    "combo_melee": {"focus": "Combo attack chains", "role": "DPS"},
+    "burst_damage": {"focus": "One-shot burst damage", "role": "Burst DPS"},
+    "tank_melee": {"focus": "Tanky melee fighter", "role": "Tank"},
+    "melee_tank": {"focus": "Melee tank", "role": "Tank"},
+    "crafter": {"focus": "Crafting optimization", "role": "Crafter"},
+    "hybrid_crafter": {"focus": "Crafting and combat", "role": "Hybrid"},
+    "balanced_alchemist": {"focus": "Balanced alchemist", "role": "Balanced"},
+    "homunculus_battle": {"focus": "Homunculus combat", "role": "Duo DPS"},
+    "magic_bomber": {"focus": "Magic bomb damage", "role": "Magic DPS"},
+    "critical_assassin": {"focus": "Critical assassin", "role": "DPS"},
+    "burst_melee": {"focus": "Burst melee damage", "role": "Burst DPS"},
+    "poison_assassin": {"focus": "Poison infliction", "role": "Debuff DPS"},
+    "aspd_critical": {"focus": "ASPD and critical", "role": "DPS"},
+    "balanced_assassin": {"focus": "Balanced assassin", "role": "Balanced"},
+    "strip_specialist": {"focus": "Strip armor utility", "role": "Utility"},
+    "ranged_rogue": {"focus": "Ranged rogue DPS", "role": "Ranged DPS"},
+    "copycat_rogue": {"focus": "Skill copying", "role": "Utility"},
+    "balanced_rogue": {"focus": "Balanced rogue", "role": "Balanced"},
+    "aoe_gunner": {"focus": "AoE gun damage", "role": "AoE DPS"},
+    "precision_gunner": {"focus": "Precision shooting", "role": "DPS"},
+    "tactical_gunner": {"focus": "Tactical shooting", "role": "DPS"},
+    "magic_gunner": {"focus": "Magic gun damage", "role": "Magic DPS"},
+    "balanced_gunner": {"focus": "Balanced gunner", "role": "Balanced"},
+    "magic_ninja": {"focus": "Magic ninjutsu", "role": "Magic DPS"},
+    "physical_ninja": {"focus": "Physical ninja", "role": "DPS"},
+    "throw_ninja": {"focus": "Throwing weapons", "role": "Ranged DPS"},
+    "hybrid_ninja": {"focus": "Hybrid ninja", "role": "Hybrid"},
+    "balanced_ninja": {"focus": "Balanced ninja", "role": "Balanced"},
+    "solar_gladiator": {"focus": "Solar stance kicks", "role": "DPS"},
+    "lunar_gladiator": {"focus": "Lunar critical kicks", "role": "Critical DPS"},
+    "stellar_tank": {"focus": "Stellar tank", "role": "Tank"},
+    "union_gladiator": {"focus": "Union stance hybrid", "role": "Hybrid"},
+    "balanced_gladiator": {"focus": "Balanced gladiator", "role": "Balanced"},
+    "ka_support": {"focus": "Ka skill support", "role": "Support"},
+    "hybrid_linker": {"focus": "Hybrid soul linker", "role": "Hybrid"},
+    "fast_support": {"focus": "Fast cast support", "role": "Support"},
+    "balanced_linker": {"focus": "Balanced linker", "role": "Balanced"},
+    "melee_novice": {"focus": "Melee Super Novice", "role": "DPS"},
+    "aspd_novice": {"focus": "ASPD Super Novice", "role": "DPS"},
+    "hybrid_novice": {"focus": "Hybrid Super Novice", "role": "Hybrid"},
+    "tank_novice": {"focus": "Tank Super Novice", "role": "Tank"},
+    "all_rounder": {"focus": "Jack-of-all-trades", "role": "Versatile"},
+    "physical_summoner": {"focus": "Physical summons", "role": "DPS"},
+    "magic_summoner": {"focus": "Magic summons", "role": "Magic DPS"},
+    "healer_summoner": {"focus": "Healer summons", "role": "Healer"},
+    "hybrid_summoner": {"focus": "All summon types", "role": "Hybrid"},
+    "balanced_summoner": {"focus": "Balanced summoner", "role": "Balanced"}
+  },
+  
+  "integration_notes": {
+    "stat_allocator": "This file integrates with stat_allocator.py - it looks up build_type from job_build_variants[job_path]['builds'][build_type]['stat_targets']",
+    "skill_learner": "Skill rotations are defined separately in skill_rotations.json and extended_skill_rotations.json",
+    "job_detector": "Job advancement detector uses progression arrays to track advancement readiness",
+    "usage": "Load this file in addition to existing job_change_locations.json for comprehensive build support"
+  }
+}

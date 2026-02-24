@@ -1,0 +1,140 @@
+{
+  "tool_dealer": [
+    {
+      "name": "Tool Dealer",
+      "map": "prontera",
+      "x": 134,
+      "y": 88,
+      "priority": 1,
+      "description": "Primary Tool Dealer in Prontera"
+    },
+    {
+      "name": "Tool Dealer",
+      "map": "alberta",
+      "x": 98,
+      "y": 154,
+      "priority": 2,
+      "description": "Tool Dealer in Alberta Port"
+    },
+    {
+      "name": "Tool Dealer",
+      "map": "izlude",
+      "x": 164,
+      "y": 138,
+      "priority": 3,
+      "description": "Tool Dealer in Izlude"
+    },
+    {
+      "name": "Tool Dealer",
+      "map": "payon",
+      "x": 159,
+      "y": 96,
+      "priority": 4,
+      "description": "Tool Dealer in Payon"
+    },
+    {
+      "name": "Tool Dealer",
+      "map": "geffen",
+      "x": 193,
+      "y": 152,
+      "priority": 5,
+      "description": "Tool Dealer in Geffen"
+    }
+  ],
+  "potion_seller": [
+    {
+      "name": "Potion Seller",
+      "map": "prontera",
+      "x": 131,
+      "y": 214,
+      "priority": 1,
+      "description": "Potion Seller in Prontera"
+    },
+    {
+      "name": "Potion Seller",
+      "map": "alberta",
+      "x": 117,
+      "y": 135,
+      "priority": 2,
+      "description": "Potion Seller in Alberta"
+    },
+    {
+      "name": "Potion Seller",
+      "map": "morocc",
+      "x": 167,
+      "y": 97,
+      "priority": 3,
+      "description": "Potion Seller in Morocc"
+    }
+  ],
+  "weapon_dealer": [
+    {
+      "name": "Weapon Dealer",
+      "map": "prontera",
+      "x": 175,
+      "y": 108,
+      "priority": 1,
+      "description": "Weapon Dealer in Prontera"
+    },
+    {
+      "name": "Weapon Dealer",
+      "map": "geffen",
+      "x": 99,
+      "y": 140,
+      "priority": 2,
+      "description": "Weapon Dealer in Geffen"
+    }
+  ],
+  "armor_dealer": [
+    {
+      "name": "Armor Dealer",
+      "map": "prontera",
+      "x": 163,
+      "y": 132,
+      "priority": 1,
+      "description": "Armor Dealer in Prontera"
+    },
+    {
+      "name": "Armor Dealer",
+      "map": "geffen",
+      "x": 124,
+      "y": 169,
+      "priority": 2,
+      "description": "Armor Dealer in Geffen"
+    }
+  ],
+  "kafra": [
+    {
+      "name": "Kafra Employee",
+      "map": "prontera",
+      "x": 146,
+      "y": 89,
+      "priority": 1,
+      "description": "Kafra in Prontera Center"
+    },
+    {
+      "name": "Kafra Employee",
+      "map": "prontera",
+      "x": 29,
+      "y": 207,
+      "priority": 2,
+      "description": "Kafra in Prontera West"
+    },
+    {
+      "name": "Kafra Employee",
+      "map": "alberta",
+      "x": 28,
+      "y": 229,
+      "priority": 3,
+      "description": "Kafra in Alberta"
+    },
+    {
+      "name": "Kafra Employee",
+      "map": "geffen",
+      "x": 120,
+      "y": 62,
+      "priority": 4,
+      "description": "Kafra in Geffen"
+    }
+  ]
+}

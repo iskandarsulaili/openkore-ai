@@ -1,0 +1,45 @@
+{
+  "risk_tolerance": {
+    "safe_threshold": 30,
+    "moderate_threshold": 60,
+    "sacrifice_allowed": true,
+    "max_acceptable_risk": 100
+  },
+  "sacrifice_rules": {
+    "min_priority_for_sacrifice": 10,
+    "min_value_multiplier": 5.0,
+    "mvp_card_always_worth": true,
+    "max_deaths_per_hour": 3,
+    "respawn_cost_base": 1000,
+    "consider_exp_loss": true
+  },
+  "tactical_preferences": {
+    "prefer_kiting": true,
+    "prefer_hit_and_run": true,
+    "use_terrain": true,
+    "use_pet_tanking": false,
+    "aggro_manipulation_enabled": true,
+    "emergency_grab_enabled": true
+  },
+  "learning_settings": {
+    "track_success_rates": true,
+    "adapt_after_failures": 3,
+    "min_confidence_threshold": 0.6,
+    "cache_duration_minutes": 5,
+    "statistics_retention_days": 30
+  },
+  "collection_rules": {
+    "max_priority_threshold": 70,
+    "min_value_threshold": 1000,
+    "collect_unknown_items": false,
+    "auto_collect_cards": true,
+    "auto_collect_mvp_drops": true
+  },
+  "performance": {
+    "max_items_per_attempt": 10,
+    "loot_timeout_seconds": 30,
+    "pathfinding_timeout_seconds": 5,
+    "enable_verbose_logging": false
+  },
+  "custom_items": []
+}

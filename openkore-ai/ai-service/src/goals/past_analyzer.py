@@ -199,23 +199,122 @@ class PastAnalyzer:
         - Party status (solo/party)
         """
         
-        # For now, return mock data structure
-        # In production, this would query the actual database
-        # TODO: Implement actual database query
-        
         # Extract context for similarity matching
         char_level = present_state.get('character_level', 50)
         map_name = present_state.get('map_name', 'unknown')
         hour = present_state.get('hour', 12)
         party_size = present_state.get('party_size', 0)
         
-        # Mock query result (replace with actual DB query)
-        mock_results = []
-        
         logger.debug(f"Querying similar goals: type={goal_type}, level≈{char_level}, "
                     f"map={map_name}, lookback={lookback_days}d")
         
-        return mock_results
+        try:
+            # Calculate time window for lookback
+            from datetime import datetime, timedelta
+            lookback_timestamp = int((datetime.now() - timedelta(days=lookback_days)).timestamp())
+            
+            # Build query with similarity criteria
+            # We'll use lifecycle_states table which tracks goal progression
+            query = """
+                SELECT
+                    ls.state_id,
+                    ls.session_id,
+                    ls.character_name,
+                    ls.level,
+                    ls.job_class,
+                    ls.lifecycle_stage,
+                    ls.current_goal,
+                    ls.goal_progress,
+                    ls.timestamp,
+                    s.total_exp_gained,
+                    s.total_zeny_gained,
+                    s.total_deaths,
+                    s.status as session_status
+                FROM lifecycle_states ls
+                JOIN sessions s ON ls.session_id = s.session_id
+                WHERE ls.timestamp >= ?
+                    AND json_extract(ls.current_goal, '$.goal_type') = ?
+                    AND ls.level BETWEEN ? AND ?
+            """
+            
+            params = [
+                lookback_timestamp,
+                goal_type,
+                max(1, char_level - 10),  # Level range: ±10 levels
+                char_level + 10
+            ]
+            
+            # Add status filter if specified
+            if status_filter:
+                query += " AND json_extract(ls.current_goal, '$.status') = ?"
+                params.append(status_filter.value)
+            
+            # Add ordering and limit
+            query += " ORDER BY ls.timestamp DESC LIMIT ?"
+            params.append(limit)
+            
+            # Execute query
+            cursor = self.db.execute(query, tuple(params))
+            rows = cursor.fetchall()
+            
+            # Transform results into goal-like dictionaries
+            results = []
+            for row in rows:
+                import json
+                
+                # Parse the current_goal JSON
+                try:
+                    current_goal = json.loads(row[6]) if row[6] else {}
+                except (json.JSONDecodeError, TypeError):
+                    current_goal = {}
+                
+                # Calculate duration if available
+                duration_seconds = None
+                if 'started_at' in current_goal and 'completed_at' in current_goal:
+                    try:
+                        started = datetime.fromisoformat(current_goal['started_at'])
+                        completed = datetime.fromisoformat(current_goal['completed_at'])
+                        duration_seconds = int((completed - started).total_seconds())
+                    except (ValueError, TypeError):
+                        pass
+                
+                # Extract present state from goal
+                present_state_data = current_goal.get('present_state', {})
+                
+                # Build result dictionary
+                result = {
+                    'state_id': row[0],
+                    'session_id': row[1],
+                    'character_name': row[2],
+                    'character_level': row[3],
+                    'job_class': row[4],
+                    'lifecycle_stage': row[5],
+                    'goal_type': goal_type,
+                    'goal_progress': row[7],
+                    'timestamp': row[8],
+                    'created_at': datetime.fromtimestamp(row[8]),
+                    'exp_gained': row[9] or 0,
+                    'zeny_gained': row[10] or 0,
+                    'deaths': row[11] or 0,
+                    'session_status': row[12],
+                    'status': GoalStatus(current_goal.get('status', 'unknown')) if current_goal.get('status') in [s.value for s in GoalStatus] else GoalStatus.PENDING,
+                    'duration_seconds': duration_seconds,
+                    'present_state': present_state_data,
+                    'primary_plan': current_goal.get('primary_plan', {}),
+                    'active_plan': current_goal.get('active_plan', 'primary'),
+                    'failure_reason': current_goal.get('metadata', {}).get('failure_reason', 'unknown')
+                }
+                
+                results.append(result)
+            
+            logger.info(f"Found {len(results)} similar historical goals")
+            return results
+            
+        except Exception as e:
+            logger.error(f"Database query failed: {e}")
+            logger.exception(e)
+            # Return empty list on error - allows system to continue with defaults
+            return []
     
     def _calc_success_rate(self, goals: List[Dict[str, Any]]) -> float:
         """Calculate success rate from goal list"""

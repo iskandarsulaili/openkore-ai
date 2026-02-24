@@ -223,21 +223,41 @@ class IssueDetector:
             with open(config_path, 'r', encoding='utf-8', errors='ignore') as f:
                 content = f.read()
             
-            # CRITICAL: Check for empty lockMap (most common cause of idle bot)
+            # CRITICAL: Check for empty/missing lockMap (most common cause of idle bot)
             lockmap_match = re.search(r'^lockMap\s*$', content, re.MULTILINE)
+            lockmap_with_value = re.search(r'^lockMap\s+(\S+)', content, re.MULTILINE)
             lockmap_x = re.search(r'^lockMap_x\s*$', content, re.MULTILINE)
             lockmap_y = re.search(r'^lockMap_y\s*$', content, re.MULTILINE)
+            lockmap_x_with_value = re.search(r'^lockMap_x\s+\d+\s+\d+', content, re.MULTILINE)
+            lockmap_y_with_value = re.search(r'^lockMap_y\s+\d+\s+\d+', content, re.MULTILINE)
             
-            # If lockMap lines exist but have no values, this is CRITICAL
-            if lockmap_match or (lockmap_x and lockmap_y):
+            # Check multiple failure scenarios:
+            # 1. lockMap line exists but is empty
+            # 2. lockMap_x or lockMap_y exist but are empty
+            # 3. lockMap has value but coordinates are missing
+            has_lockmap_issues = False
+            lockmap_issue_reason = ""
+            
+            if lockmap_match:
+                has_lockmap_issues = True
+                lockmap_issue_reason = "lockMap is empty"
+            elif lockmap_x and lockmap_y:
+                has_lockmap_issues = True
+                lockmap_issue_reason = "lockMap coordinates (lockMap_x, lockMap_y) are empty"
+            elif lockmap_with_value and (not lockmap_x_with_value or not lockmap_y_with_value):
+                has_lockmap_issues = True
+                lockmap_issue_reason = f"lockMap is set to '{lockmap_with_value.group(1)}' but coordinates are missing"
+            
+            if has_lockmap_issues:
                 config_issues.append({
                     'type': 'lockMap_empty',
                     'severity': 'CRITICAL',
-                    'description': 'lockMap is not configured - bot has no farming area and will remain idle',
+                    'description': f'lockMap is not fully configured - {lockmap_issue_reason} - bot has no farming area and will remain idle',
                     'confidence': 0.99,
-                    'fix_required': 'Set lockMap to appropriate map for character level'
+                    'fix_required': 'Set lockMap to appropriate map for character level',
+                    'recommended_fix': 'lockMap prt_fild08'
                 })
-                self.logger.critical("CRITICAL: lockMap is EMPTY - bot cannot farm!")
+                self.logger.critical(f"CRITICAL: lockMap configuration incomplete - {lockmap_issue_reason} - bot cannot farm!")
             
             # Issue 3: Inappropriate sitAuto threshold
             sitauto_match = re.search(r'sitAuto_hp_lower\s+(\d+)', content)
@@ -274,6 +294,42 @@ class IssueDetector:
                         'confidence': 0.80
                     })
                     self.logger.warning(f"Inefficient lockMap size: {total_area} sq units")
+            
+            # PHASE 11 ENHANCEMENT: Check attackAuto disabled (bot won't farm)
+            attackauto_match = re.search(r'attackAuto\s+(\d+)', content)
+            if attackauto_match:
+                attack_value = int(attackauto_match.group(1))
+                if attack_value == 0:
+                    config_issues.append({
+                        'type': 'attackAuto_disabled',
+                        'severity': 'CRITICAL',
+                        'description': 'Combat is disabled (attackAuto: 0) - bot will NOT attack monsters or farm',
+                        'current_value': 0,
+                        'recommended_value': 2,
+                        'confidence': 0.99,
+                        'fix_required': 'Set attackAuto 2 for aggressive auto-attack',
+                        'recommended_fix': 'attackAuto 2',
+                        'impact': 'Bot cannot attack monsters - 0 farming capability'
+                    })
+                    self.logger.critical("[SELF-HEAL] CRITICAL: Combat disabled (attackAuto: 0) - Recommending fix: attackAuto 2")
+            
+            # PHASE 11 ENHANCEMENT: Check route_randomWalk disabled (bot won't seek monsters)
+            randomwalk_match = re.search(r'route_randomWalk\s+(\d+)', content)
+            if randomwalk_match:
+                walk_value = int(randomwalk_match.group(1))
+                if walk_value == 0:
+                    config_issues.append({
+                        'type': 'route_randomWalk_disabled',
+                        'severity': 'HIGH',
+                        'description': 'Random walk disabled (route_randomWalk: 0) - bot will NOT actively seek monsters',
+                        'current_value': 0,
+                        'recommended_value': 1,
+                        'confidence': 0.95,
+                        'fix_required': 'Set route_randomWalk 1 to enable active monster seeking',
+                        'recommended_fix': 'route_randomWalk 1',
+                        'impact': 'Bot won\'t explore map to find monsters'
+                    })
+                    self.logger.warning("[SELF-HEAL] HIGH: Exploration disabled (route_randomWalk: 0) - Recommending fix: route_randomWalk 1")
             
             # Issue 5: statsAddAuto disabled
             statsadd_match = re.search(r'statsAddAuto\s+(\d+)', content)

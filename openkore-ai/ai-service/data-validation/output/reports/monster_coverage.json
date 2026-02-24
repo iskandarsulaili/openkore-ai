@@ -1,0 +1,530 @@
+{
+  "timestamp": "2026-02-10T02:16:21.873536",
+  "category": "monsters",
+  "priority": "CRITICAL",
+  "reference_data": {
+    "total_entries": 2675,
+    "source": "rathena-AI-world"
+  },
+  "ai_service_data": {
+    "total_entries": 0,
+    "exists": false
+  },
+  "coverage": {
+    "percentage": 0.0,
+    "matched_entries": 0,
+    "missing_entries": 2675,
+    "extra_entries": 0
+  },
+  "details": {
+    "missing_entries_sample": [
+      {
+        "id": 1001,
+        "name": "Scorpion",
+        "aegis_name": "SCORPION"
+      },
+      {
+        "id": 1002,
+        "name": "Poring",
+        "aegis_name": "PORING"
+      },
+      {
+        "id": 1004,
+        "name": "Hornet",
+        "aegis_name": "HORNET"
+      },
+      {
+        "id": 1005,
+        "name": "Familiar",
+        "aegis_name": "FARMILIAR"
+      },
+      {
+        "id": 1007,
+        "name": "Fabre",
+        "aegis_name": "FABRE"
+      },
+      {
+        "id": 1008,
+        "name": "Pupa",
+        "aegis_name": "PUPA"
+      },
+      {
+        "id": 1009,
+        "name": "Condor",
+        "aegis_name": "CONDOR"
+      },
+      {
+        "id": 1010,
+        "name": "Willow",
+        "aegis_name": "WILOW"
+      },
+      {
+        "id": 1011,
+        "name": "Chonchon",
+        "aegis_name": "CHONCHON"
+      },
+      {
+        "id": 1012,
+        "name": "Roda Frog",
+        "aegis_name": "RODA_FROG"
+      },
+      {
+        "id": 1013,
+        "name": "Wolf",
+        "aegis_name": "WOLF"
+      },
+      {
+        "id": 1014,
+        "name": "Spore",
+        "aegis_name": "SPORE"
+      },
+      {
+        "id": 1015,
+        "name": "Zombie",
+        "aegis_name": "ZOMBIE"
+      },
+      {
+        "id": 1016,
+        "name": "Archer Skeleton",
+        "aegis_name": "ARCHER_SKELETON"
+      },
+      {
+        "id": 1018,
+        "name": "Creamy",
+        "aegis_name": "CREAMY"
+      },
+      {
+        "id": 1019,
+        "name": "Peco Peco",
+        "aegis_name": "PECOPECO"
+      },
+      {
+        "id": 1020,
+        "name": "Mandragora",
+        "aegis_name": "MANDRAGORA"
+      },
+      {
+        "id": 1023,
+        "name": "Orc Warrior",
+        "aegis_name": "ORK_WARRIOR"
+      },
+      {
+        "id": 1024,
+        "name": "Wormtail",
+        "aegis_name": "WORM_TAIL"
+      },
+      {
+        "id": 1025,
+        "name": "Boa",
+        "aegis_name": "SNAKE"
+      },
+      {
+        "id": 1026,
+        "name": "Munak",
+        "aegis_name": "MUNAK"
+      },
+      {
+        "id": 1028,
+        "name": "Soldier Skeleton",
+        "aegis_name": "SOLDIER_SKELETON"
+      },
+      {
+        "id": 1029,
+        "name": "Isis",
+        "aegis_name": "ISIS"
+      },
+      {
+        "id": 1030,
+        "name": "Anacondaq",
+        "aegis_name": "ANACONDAQ"
+      },
+      {
+        "id": 1031,
+        "name": "Poporing",
+        "aegis_name": "POPORING"
+      },
+      {
+        "id": 1032,
+        "name": "Verit",
+        "aegis_name": "VERIT"
+      },
+      {
+        "id": 1033,
+        "name": "Elder Willow",
+        "aegis_name": "ELDER_WILOW"
+      },
+      {
+        "id": 1034,
+        "name": "Thara Frog",
+        "aegis_name": "THARA_FROG"
+      },
+      {
+        "id": 1035,
+        "name": "Hunter Fly",
+        "aegis_name": "HUNTER_FLY"
+      },
+      {
+        "id": 1036,
+        "name": "Ghoul",
+        "aegis_name": "GHOUL"
+      },
+      {
+        "id": 1037,
+        "name": "Side Winder",
+        "aegis_name": "SIDE_WINDER"
+      },
+      {
+        "id": 1038,
+        "name": "Osiris",
+        "aegis_name": "OSIRIS"
+      },
+      {
+        "id": 1039,
+        "name": "Baphomet",
+        "aegis_name": "BAPHOMET"
+      },
+      {
+        "id": 1040,
+        "name": "Golem",
+        "aegis_name": "GOLEM"
+      },
+      {
+        "id": 1041,
+        "name": "Mummy",
+        "aegis_name": "MUMMY"
+      },
+      {
+        "id": 1042,
+        "name": "Steel Chonchon",
+        "aegis_name": "STEEL_CHONCHON"
+      },
+      {
+        "id": 1044,
+        "name": "Obeaune",
+        "aegis_name": "OBEAUNE"
+      },
+      {
+        "id": 1045,
+        "name": "Marc",
+        "aegis_name": "MARC"
+      },
+      {
+        "id": 1046,
+        "name": "Doppelganger",
+        "aegis_name": "DOPPELGANGER"
+      },
+      {
+        "id": 1047,
+        "name": "Peco Peco Egg",
+        "aegis_name": "PECOPECO_EGG"
+      },
+      {
+        "id": 1048,
+        "name": "Thief Bug Egg",
+        "aegis_name": "THIEF_BUG_EGG"
+      },
+      {
+        "id": 1049,
+        "name": "Picky",
+        "aegis_name": "PICKY"
+      },
+      {
+        "id": 1050,
+        "name": "Picky",
+        "aegis_name": "PICKY_"
+      },
+      {
+        "id": 1051,
+        "name": "Thief Bug",
+        "aegis_name": "THIEF_BUG"
+      },
+      {
+        "id": 1052,
+        "name": "Rocker",
+        "aegis_name": "ROCKER"
+      },
+      {
+        "id": 1053,
+        "name": "Thief Bug Female",
+        "aegis_name": "THIEF_BUG_"
+      },
+      {
+        "id": 1054,
+        "name": "Thief Bug Male",
+        "aegis_name": "THIEF_BUG__"
+      },
+      {
+        "id": 1055,
+        "name": "Muka",
+        "aegis_name": "MUKA"
+      },
+      {
+        "id": 1056,
+        "name": "Smokie",
+        "aegis_name": "SMOKIE"
+      },
+      {
+        "id": 1057,
+        "name": "Yoyo",
+        "aegis_name": "YOYO"
+      },
+      {
+        "id": 1058,
+        "name": "Metaller",
+        "aegis_name": "METALLER"
+      },
+      {
+        "id": 1059,
+        "name": "Mistress",
+        "aegis_name": "MISTRESS"
+      },
+      {
+        "id": 1060,
+        "name": "Bigfoot",
+        "aegis_name": "BIGFOOT"
+      },
+      {
+        "id": 1061,
+        "name": "Nightmare",
+        "aegis_name": "NIGHTMARE"
+      },
+      {
+        "id": 1062,
+        "name": "Santa Poring",
+        "aegis_name": "PORING_"
+      },
+      {
+        "id": 1063,
+        "name": "Lunatic",
+        "aegis_name": "LUNATIC"
+      },
+      {
+        "id": 1064,
+        "name": "Megalodon",
+        "aegis_name": "MEGALODON"
+      },
+      {
+        "id": 1065,
+        "name": "Strouf",
+        "aegis_name": "STROUF"
+      },
+      {
+        "id": 1066,
+        "name": "Vadon",
+        "aegis_name": "VADON"
+      },
+      {
+        "id": 1067,
+        "name": "Cornutus",
+        "aegis_name": "CORNUTUS"
+      },
+      {
+        "id": 1068,
+        "name": "Hydra",
+        "aegis_name": "HYDRA"
+      },
+      {
+        "id": 1069,
+        "name": "Swordfish",
+        "aegis_name": "SWORD_FISH"
+      },
+      {
+        "id": 1070,
+        "name": "Kukre",
+        "aegis_name": "KUKRE"
+      },
+      {
+        "id": 1071,
+        "name": "Pirate Skeleton",
+        "aegis_name": "PIRATE_SKEL"
+      },
+      {
+        "id": 1072,
+        "name": "Kaho",
+        "aegis_name": "KAHO"
+      },
+      {
+        "id": 1073,
+        "name": "Crab",
+        "aegis_name": "CRAB"
+      },
+      {
+        "id": 1074,
+        "name": "Shellfish",
+        "aegis_name": "SHELLFISH"
+      },
+      {
+        "id": 1076,
+        "name": "Skeleton",
+        "aegis_name": "SKELETON"
+      },
+      {
+        "id": 1077,
+        "name": "Poison Spore",
+        "aegis_name": "POISON_SPORE"
+      },
+      {
+        "id": 1078,
+        "name": "Red Plant",
+        "aegis_name": "RED_PLANT"
+      },
+      {
+        "id": 1079,
+        "name": "Blue Plant",
+        "aegis_name": "BLUE_PLANT"
+      },
+      {
+        "id": 1080,
+        "name": "Green Plant",
+        "aegis_name": "GREEN_PLANT"
+      },
+      {
+        "id": 1081,
+        "name": "Yellow Plant",
+        "aegis_name": "YELLOW_PLANT"
+      },
+      {
+        "id": 1082,
+        "name": "White Plant",
+        "aegis_name": "WHITE_PLANT"
+      },
+      {
+        "id": 1083,
+        "name": "Shining Plant",
+        "aegis_name": "SHINING_PLANT"
+      },
+      {
+        "id": 1084,
+        "name": "Black Mushroom",
+        "aegis_name": "BLACK_MUSHROOM"
+      },
+      {
+        "id": 1085,
+        "name": "Red Mushroom",
+        "aegis_name": "RED_MUSHROOM"
+      },
+      {
+        "id": 1086,
+        "name": "Golden Thief Bug",
+        "aegis_name": "GOLDEN_BUG"
+      },
+      {
+        "id": 1087,
+        "name": "Orc Hero",
+        "aegis_name": "ORK_HERO"
+      },
+      {
+        "id": 1088,
+        "name": "Vocal",
+        "aegis_name": "VOCAL"
+      },
+      {
+        "id": 1089,
+        "name": "Toad",
+        "aegis_name": "TOAD"
+      },
+      {
+        "id": 1090,
+        "name": "Mastering",
+        "aegis_name": "MASTERING"
+      },
+      {
+        "id": 1091,
+        "name": "Dragon Fly",
+        "aegis_name": "DRAGON_FLY"
+      },
+      {
+        "id": 1092,
+        "name": "Vagabond Wolf",
+        "aegis_name": "VAGABOND_WOLF"
+      },
+      {
+        "id": 1093,
+        "name": "Eclipse",
+        "aegis_name": "ECLIPSE"
+      },
+      {
+        "id": 1094,
+        "name": "Ambernite",
+        "aegis_name": "AMBERNITE"
+      },
+      {
+        "id": 1095,
+        "name": "Andre",
+        "aegis_name": "ANDRE"
+      },
+      {
+        "id": 1096,
+        "name": "Angeling",
+        "aegis_name": "ANGELING"
+      },
+      {
+        "id": 1097,
+        "name": "Ant Egg",
+        "aegis_name": "ANT_EGG"
+      },
+      {
+        "id": 1098,
+        "name": "Anubis",
+        "aegis_name": "ANUBIS"
+      },
+      {
+        "id": 1099,
+        "name": "Argiope",
+        "aegis_name": "ARGIOPE"
+      },
+      {
+        "id": 1100,
+        "name": "Argos",
+        "aegis_name": "ARGOS"
+      },
+      {
+        "id": 1101,
+        "name": "Baphomet Jr.",
+        "aegis_name": "BAPHOMET_"
+      },
+      {
+        "id": 1102,
+        "name": "Bathory",
+        "aegis_name": "BATHORY"
+      },
+      {
+        "id": 1103,
+        "name": "Caramel",
+        "aegis_name": "CARAMEL"
+      },
+      {
+        "id": 1104,
+        "name": "Coco",
+        "aegis_name": "COCO"
+      },
+      {
+        "id": 1105,
+        "name": "Deniro",
+        "aegis_name": "DENIRO"
+      },
+      {
+        "id": 1106,
+        "name": "Desert Wolf",
+        "aegis_name": "DESERT_WOLF"
+      },
+      {
+        "id": 1107,
+        "name": "Baby Desert Wolf",
+        "aegis_name": "DESERT_WOLF_B"
+      },
+      {
+        "id": 1108,
+        "name": "Deviace",
+        "aegis_name": "DEVIACE"
+      }
+    ],
+    "missing_entries_truncated": true,
+    "extra_entries_sample": [],
+    "extra_entries_truncated": false
+  },
+  "recommendations": [
+    "IMMEDIATE ACTION: monsters data is completely missing (0% coverage). Import all 2675 entries from reference database.",
+    "This is a CRITICAL data category. Prioritize completing monsters database immediately."
+  ]
+}

@@ -222,6 +222,66 @@ class AdaptiveSolutionGeneratorTool(BaseTool):
                 })
                 self.logger.info(f"Generated solution to enable statsAddAuto with priorities: {stat_priority}")
             
+            # PHASE 11 FIX: Add solution handlers for critical farming config issues
+            
+            # Issue 6: attackAuto disabled (bot won't attack monsters)
+            elif issue_type == 'attackAuto_disabled':
+                current_value = issue.get('current_value', 0)
+                recommended_value = issue.get('recommended_value', 2)
+                self.logger.critical(f"Enabling attackAuto from {current_value} to {recommended_value} - bot cannot farm without this!")
+                
+                solutions.append({
+                    'action': 'enable_attackAuto',
+                    'file': 'openkore-ai/control/config.txt',
+                    'changes': [
+                        {
+                            'type': 'replace',
+                            'pattern': r'attackAuto\s+0',
+                            'replacement': f'attackAuto {recommended_value}',
+                            'reason': f'Enabling auto-attack (attackAuto {recommended_value}) to allow farming - bot cannot attack monsters without this'
+                        },
+                        {
+                            'type': 'comment',
+                            'pattern': f'attackAuto {recommended_value}',
+                            'comment': f'# FIXED by autonomous healing - enabled attackAuto for farming (was: {current_value})',
+                            'reason': 'Adding comment for clarity'
+                        }
+                    ],
+                    'confidence': 0.99,
+                    'requires_approval': False,
+                    'priority': 'CRITICAL'
+                })
+                self.logger.info(f"Generated solution to enable attackAuto to {recommended_value}")
+            
+            # Issue 7: route_randomWalk disabled (bot won't explore for monsters)
+            elif issue_type == 'route_randomWalk_disabled':
+                current_value = issue.get('current_value', 0)
+                recommended_value = issue.get('recommended_value', 1)
+                self.logger.warning(f"Enabling route_randomWalk from {current_value} to {recommended_value} - bot won't seek monsters without this!")
+                
+                solutions.append({
+                    'action': 'enable_route_randomWalk',
+                    'file': 'openkore-ai/control/config.txt',
+                    'changes': [
+                        {
+                            'type': 'replace',
+                            'pattern': r'route_randomWalk\s+0',
+                            'replacement': f'route_randomWalk {recommended_value}',
+                            'reason': f'Enabling random walk (route_randomWalk {recommended_value}) to allow monster exploration - bot will stand idle without this'
+                        },
+                        {
+                            'type': 'comment',
+                            'pattern': f'route_randomWalk {recommended_value}',
+                            'comment': f'# FIXED by autonomous healing - enabled route_randomWalk for exploration (was: {current_value})',
+                            'reason': 'Adding comment for clarity'
+                        }
+                    ],
+                    'confidence': 0.95,
+                    'requires_approval': False,
+                    'priority': 'HIGH'
+                })
+                self.logger.info(f"Generated solution to enable route_randomWalk to {recommended_value}")
+            
             # EXISTING ISSUE HANDLERS
             
             elif issue_type == 'npc_not_found' or issue_type == 'npc_interaction_failure':

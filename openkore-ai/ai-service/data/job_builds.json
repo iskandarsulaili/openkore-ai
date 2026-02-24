@@ -47,6 +47,22 @@
         "weapon_type": "any",
         "armor_type": "light"
       }
+    },
+    "agi_hunter": {
+      "name": "AGI Hunter (Novice Phase)",
+      "description": "AGI-focused Novice preparing for Archer → Hunter (ASPD) path",
+      "stat_priority": ["AGI", "DEX", "STR", "VIT", "INT", "LUK"],
+      "stat_ratios": {"agi": 4, "dex": 3, "str": 2, "vit": 2, "int": 0, "luk": 0},
+      "stat_targets": {
+        "str": 9, "agi": 20, "vit": 10, "dex": 15, "int": 1, "luk": 1
+      },
+      "skills_priority": [
+        {"name": "NV_BASIC", "level": 9, "priority": 1, "description": "Basic Skill"}
+      ],
+      "equipment_preference": {
+        "weapon_type": "any",
+        "armor_type": "light"
+      }
     }
   },
   "swordsman": {
@@ -139,18 +155,18 @@
       "description": "High ASPD knight",
       "stat_priority": ["AGI", "STR", "VIT", "DEX", "INT", "LUK"],
       "stat_ratios": {"agi": 4, "str": 3, "vit": 2, "dex": 1, "int": 0, "luk": 0},
-      "stat_targets": {"str": 70, "agi": 99, "vit": 50, "dex": 30, "int": 1, "luk": 1},
+      "stat_targets": {"str": 80, "agi": 80, "vit": 40, "dex": 30, "int": 1, "luk": 1},
       "skills_priority": [],
-      "equipment_preference": {"weapon_type": "one_handed_sword", "armor_type": "light"}
+      "equipment_preference": {"weapon_type": "two_handed_sword", "armor_type": "light"}
     },
     "vit_knight": {
       "name": "VIT Knight",
-      "description": "Tank knight",
+      "description": "Spear tank with maximum survivability",
       "stat_priority": ["VIT", "STR", "DEX", "AGI", "INT", "LUK"],
       "stat_ratios": {"vit": 4, "str": 3, "dex": 2, "agi": 1, "int": 0, "luk": 0},
-      "stat_targets": {"str": 70, "agi": 30, "vit": 99, "dex": 40, "int": 1, "luk": 1},
+      "stat_targets": {"str": 70, "agi": 20, "vit": 90, "dex": 30, "int": 1, "luk": 1},
       "skills_priority": [],
-      "equipment_preference": {"weapon_type": "one_handed_sword", "armor_type": "heavy"}
+      "equipment_preference": {"weapon_type": "spear", "armor_type": "heavy"}
     },
     "str_knight": {
       "name": "STR Knight",
@@ -161,34 +177,271 @@
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "two_handed_sword", "armor_type": "medium"}
     },
+    "bowling_bash": {
+      "name": "Bowling Bash",
+      "description": "AoE bash specialist for multi-target damage",
+      "stat_priority": ["STR", "VIT", "DEX", "AGI", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "vit": 3, "dex": 2, "agi": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 90, "agi": 30, "vit": 70, "dex": 20, "int": 1, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "two_handed_sword", "armor_type": "medium"}
+    },
+    "crit_knight": {
+      "name": "Crit Knight",
+      "description": "Critical strike build for consistent damage",
+      "stat_priority": ["STR", "LUK", "AGI", "VIT", "DEX", "INT"],
+      "stat_ratios": {"str": 3, "luk": 3, "agi": 2, "vit": 2, "dex": 0, "int": 0},
+      "stat_targets": {"str": 80, "agi": 40, "vit": 40, "dex": 20, "int": 1, "luk": 70},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "two_handed_sword", "armor_type": "medium"}
+    },
     "balanced": {
       "name": "Balanced Knight",
-      "description": "Balanced approach",
-      "stat_priority": ["STR", "VIT", "DEX", "AGI", "INT", "LUK"],
-      "stat_ratios": {"str": 3, "vit": 3, "dex": 2, "agi": 2, "int": 0, "luk": 0},
-      "stat_targets": {"str": 70, "agi": 40, "vit": 60, "dex": 40, "int": 1, "luk": 1},
+      "description": "Well-rounded stats for versatile gameplay",
+      "stat_priority": ["STR", "VIT", "AGI", "DEX", "LUK", "INT"],
+      "stat_ratios": {"str": 3, "vit": 3, "agi": 2, "dex": 2, "int": 0, "luk": 0},
+      "stat_targets": {"str": 70, "agi": 50, "vit": 60, "dex": 30, "int": 1, "luk": 20},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "one_handed_sword", "armor_type": "medium"}
     }
   },
-  "crusader": {
-    "holy_tank": {
-      "name": "Holy Crusader",
-      "description": "Faith-based tank",
-      "stat_priority": ["VIT", "DEX", "INT", "STR", "AGI", "LUK"],
-      "stat_ratios": {"vit": 4, "dex": 3, "int": 2, "str": 1, "agi": 0, "luk": 0},
-      "stat_targets": {"str": 50, "agi": 20, "vit": 99, "dex": 60, "int": 40, "luk": 1},
+  "lord_knight": {
+    "agi_knight": {
+      "name": "AGI Lord Knight",
+      "description": "Two-hand sword specialist with high ASPD and evasion",
+      "stat_priority": ["AGI", "STR", "VIT", "DEX", "INT", "LUK"],
+      "stat_ratios": {"agi": 4, "str": 3, "vit": 2, "dex": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 80, "vit": 40, "dex": 30, "int": 1, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "two_handed_sword", "armor_type": "light"}
+    },
+    "vit_knight": {
+      "name": "VIT Lord Knight",
+      "description": "Spear tank with maximum survivability",
+      "stat_priority": ["VIT", "STR", "DEX", "AGI", "INT", "LUK"],
+      "stat_ratios": {"vit": 4, "str": 3, "dex": 2, "agi": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 70, "agi": 20, "vit": 90, "dex": 30, "int": 1, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "spear", "armor_type": "heavy"}
+    },
+    "bowling_bash": {
+      "name": "Bowling Bash Lord Knight",
+      "description": "AoE bash specialist for multi-target damage",
+      "stat_priority": ["STR", "VIT", "DEX", "AGI", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "vit": 3, "dex": 2, "agi": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 90, "agi": 30, "vit": 70, "dex": 20, "int": 1, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "two_handed_sword", "armor_type": "medium"}
+    },
+    "balanced": {
+      "name": "Balanced Lord Knight",
+      "description": "Well-rounded stats for versatile gameplay",
+      "stat_priority": ["STR", "VIT", "AGI", "DEX", "LUK", "INT"],
+      "stat_ratios": {"str": 3, "vit": 3, "agi": 2, "dex": 2, "luk": 1, "int": 0},
+      "stat_targets": {"str": 70, "agi": 50, "vit": 60, "dex": 30, "int": 1, "luk": 20},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "one_handed_sword", "armor_type": "medium"}
+    }
+  },
+  "rune_knight": {
+    "agi_knight": {
+      "name": "AGI Rune Knight",
+      "description": "Two-hand sword specialist with high ASPD and evasion",
+      "stat_priority": ["AGI", "STR", "VIT", "DEX", "INT", "LUK"],
+      "stat_ratios": {"agi": 4, "str": 3, "vit": 2, "dex": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 80, "vit": 40, "dex": 30, "int": 1, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "two_handed_sword", "armor_type": "light"}
+    },
+    "vit_knight": {
+      "name": "VIT Rune Knight",
+      "description": "Spear tank with maximum survivability",
+      "stat_priority": ["VIT", "STR", "DEX", "AGI", "INT", "LUK"],
+      "stat_ratios": {"vit": 4, "str": 3, "dex": 2, "agi": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 70, "agi": 20, "vit": 90, "dex": 30, "int": 1, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "spear", "armor_type": "heavy"}
     },
     "balanced": {
-      "name": "Balanced Crusader",
-      "description": "Balanced holy knight",
-      "stat_priority": ["VIT", "STR", "DEX", "INT", "AGI", "LUK"],
-      "stat_ratios": {"vit": 3, "str": 3, "dex": 2, "int": 2, "agi": 0, "luk": 0},
-      "stat_targets": {"str": 60, "agi": 20, "vit": 80, "dex": 50, "int": 30, "luk": 1},
+      "name": "Balanced Rune Knight",
+      "description": "Well-rounded stats for versatile gameplay",
+      "stat_priority": ["STR", "VIT", "AGI", "DEX", "LUK", "INT"],
+      "stat_ratios": {"str": 3, "vit": 3, "agi": 2, "dex": 2, "luk": 1, "int": 0},
+      "stat_targets": {"str": 70, "agi": 50, "vit": 60, "dex": 30, "int": 1, "luk": 20},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "medium"}
+    }
+  },
+  "dragon_knight": {
+    "agi_knight": {
+      "name": "AGI Dragon Knight",
+      "description": "Two-hand sword specialist with high ASPD and evasion",
+      "stat_priority": ["AGI", "STR", "VIT", "DEX", "INT", "LUK"],
+      "stat_ratios": {"agi": 4, "str": 3, "vit": 2, "dex": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 80, "vit": 40, "dex": 30, "int": 1, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "two_handed_sword", "armor_type": "light"}
+    },
+    "vit_knight": {
+      "name": "VIT Dragon Knight",
+      "description": "Spear tank with maximum survivability",
+      "stat_priority": ["VIT", "STR", "DEX", "AGI", "INT", "LUK"],
+      "stat_ratios": {"vit": 4, "str": 3, "dex": 2, "agi": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 70, "agi": 20, "vit": 90, "dex": 30, "int": 1, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "spear", "armor_type": "heavy"}
+    },
+    "balanced": {
+      "name": "Balanced Dragon Knight",
+      "description": "Well-rounded stats for versatile gameplay",
+      "stat_priority": ["STR", "VIT", "AGI", "DEX", "LUK", "INT"],
+      "stat_ratios": {"str": 3, "vit": 3, "agi": 2, "dex": 2, "luk": 1, "int": 0},
+      "stat_targets": {"str": 70, "agi": 50, "vit": 60, "dex": 30, "int": 1, "luk": 20},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "medium"}
+    }
+  },
+  "crusader": {
+    "holy_cross": {
+      "name": "Holy Cross Crusader",
+      "description": "Grand Cross specialist with holy magic damage",
+      "stat_priority": ["STR", "INT", "VIT", "DEX", "AGI", "LUK"],
+      "stat_ratios": {"str": 3, "int": 3, "vit": 2, "dex": 2, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 20, "vit": 50, "int": 60, "dex": 30, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "sword", "armor_type": "heavy"}
+    },
+    "shield_tank": {
+      "name": "Shield Tank Crusader",
+      "description": "Maximum defense tank with shield skills",
+      "stat_priority": ["VIT", "DEX", "STR", "INT", "AGI", "LUK"],
+      "stat_ratios": {"vit": 5, "dex": 3, "str": 2, "int": 1, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 50, "agi": 20, "vit": 99, "int": 30, "dex": 50, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "heavy"}
+    },
+    "sacrifice": {
+      "name": "Sacrifice Crusader",
+      "description": "Sacrifice skill specialist with high HP",
+      "stat_priority": ["VIT", "STR", "INT", "DEX", "AGI", "LUK"],
+      "stat_ratios": {"vit": 4, "str": 3, "int": 2, "dex": 1, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 70, "agi": 20, "vit": 90, "int": 40, "dex": 30, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "spear", "armor_type": "heavy"}
+    },
+    "support": {
+      "name": "Support Crusader",
+      "description": "Hybrid tank/healer with buffs and healing",
+      "stat_priority": ["INT", "VIT", "DEX", "STR", "AGI", "LUK"],
+      "stat_ratios": {"int": 4, "vit": 3, "dex": 2, "str": 1, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 40, "agi": 20, "vit": 70, "int": 80, "dex": 40, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "mace", "armor_type": "heavy"}
+    },
+    "balanced": {
+      "name": "Balanced Crusader",
+      "description": "Well-rounded holy tank",
+      "stat_priority": ["VIT", "STR", "INT", "DEX", "AGI", "LUK"],
+      "stat_ratios": {"vit": 3, "str": 3, "int": 2, "dex": 2, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 60, "agi": 20, "vit": 70, "int": 50, "dex": 40, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "heavy"}
+    }
+  },
+  "paladin": {
+    "holy_cross": {
+      "name": "Holy Cross Paladin",
+      "description": "Grand Cross specialist with holy magic damage",
+      "stat_priority": ["STR", "INT", "VIT", "DEX", "AGI", "LUK"],
+      "stat_ratios": {"str": 3, "int": 3, "vit": 2, "dex": 2, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 20, "vit": 50, "int": 60, "dex": 30, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "sword", "armor_type": "heavy"}
+    },
+    "shield_tank": {
+      "name": "Shield Tank Paladin",
+      "description": "Maximum defense tank with shield skills",
+      "stat_priority": ["VIT", "DEX", "STR", "INT", "AGI", "LUK"],
+      "stat_ratios": {"vit": 5, "dex": 3, "str": 2, "int": 1, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 50, "agi": 20, "vit": 99, "int": 30, "dex": 50, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "heavy"}
+    },
+    "sacrifice": {
+      "name": "Sacrifice Paladin",
+      "description": "Sacrifice skill specialist with high HP",
+      "stat_priority": ["VIT", "STR", "INT", "DEX", "AGI", "LUK"],
+      "stat_ratios": {"vit": 4, "str": 3, "int": 2, "dex": 1, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 70, "agi": 20, "vit": 90, "int": 40, "dex": 30, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "spear", "armor_type": "heavy"}
+    },
+    "balanced": {
+      "name": "Balanced Paladin",
+      "description": "Well-rounded holy tank",
+      "stat_priority": ["VIT", "STR", "INT", "DEX", "AGI", "LUK"],
+      "stat_ratios": {"vit": 3, "str": 3, "int": 2, "dex": 2, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 60, "agi": 20, "vit": 70, "int": 50, "dex": 40, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "heavy"}
+    }
+  },
+  "royal_guard": {
+    "holy_cross": {
+      "name": "Holy Cross Royal Guard",
+      "description": "Grand Cross specialist with holy magic damage",
+      "stat_priority": ["STR", "INT", "VIT", "DEX", "AGI", "LUK"],
+      "stat_ratios": {"str": 3, "int": 3, "vit": 2, "dex": 2, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 20, "vit": 50, "int": 60, "dex": 30, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "sword", "armor_type": "heavy"}
+    },
+    "shield_tank": {
+      "name": "Shield Tank Royal Guard",
+      "description": "Maximum defense tank with shield skills",
+      "stat_priority": ["VIT", "DEX", "STR", "INT", "AGI", "LUK"],
+      "stat_ratios": {"vit": 5, "dex": 3, "str": 2, "int": 1, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 50, "agi": 20, "vit": 99, "int": 30, "dex": 50, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "heavy"}
+    },
+    "balanced": {
+      "name": "Balanced Royal Guard",
+      "description": "Well-rounded holy tank",
+      "stat_priority": ["VIT", "STR", "INT", "DEX", "AGI", "LUK"],
+      "stat_ratios": {"vit": 3, "str": 3, "int": 2, "dex": 2, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 60, "agi": 20, "vit": 70, "int": 50, "dex": 40, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "heavy"}
+    }
+  },
+  "imperial_guard": {
+    "holy_cross": {
+      "name": "Holy Cross Imperial Guard",
+      "description": "Grand Cross specialist with holy magic damage",
+      "stat_priority": ["STR", "INT", "VIT", "DEX", "AGI", "LUK"],
+      "stat_ratios": {"str": 3, "int": 3, "vit": 2, "dex": 2, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 20, "vit": 50, "int": 60, "dex": 30, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "sword", "armor_type": "heavy"}
+    },
+    "shield_tank": {
+      "name": "Shield Tank Imperial Guard",
+      "description": "Maximum defense tank with shield skills",
+      "stat_priority": ["VIT", "DEX", "STR", "INT", "AGI", "LUK"],
+      "stat_ratios": {"vit": 5, "dex": 3, "str": 2, "int": 1, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 50, "agi": 20, "vit": 99, "int": 30, "dex": 50, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "heavy"}
+    },
+    "balanced": {
+      "name": "Balanced Imperial Guard",
+      "description": "Well-rounded holy tank",
+      "stat_priority": ["VIT", "STR", "INT", "DEX", "AGI", "LUK"],
+      "stat_ratios": {"vit": 3, "str": 3, "int": 2, "dex": 2, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 60, "agi": 20, "vit": 70, "int": 50, "dex": 40, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "heavy"}
     }
   },
   "mage": {
@@ -233,41 +486,240 @@
     }
   },
   "wizard": {
-    "magic_dps": {
-      "name": "Wizard DPS",
-      "description": "Pure magic damage wizard",
+    "pure_int": {
+      "name": "Pure INT Wizard",
+      "description": "Maximum magic damage output",
       "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
-      "stat_ratios": {"int": 5, "dex": 3, "vit": 2, "agi": 1, "str": 0, "luk": 0},
-      "stat_targets": {"str": 1, "agi": 20, "vit": 30, "dex": 70, "int": 99, "luk": 1},
+      "stat_ratios": {"int": 5, "dex": 3, "vit": 1, "agi": 0, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 1, "vit": 20, "int": 99, "dex": 70, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "staff", "armor_type": "cloth"}
+    },
+    "fast_cast": {
+      "name": "Fast Cast Wizard",
+      "description": "Reduced cast time for faster spell rotation",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 4, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 40, "int": 90, "dex": 80, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "staff", "armor_type": "cloth"}
+    },
+    "storm_gust": {
+      "name": "Storm Gust Wizard",
+      "description": "AoE specialist with freeze control",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "vit": 3, "dex": 2, "agi": 0, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 1, "vit": 60, "int": 99, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "staff", "armor_type": "cloth"}
+    },
+    "fire_bolt": {
+      "name": "Fire Bolt Wizard",
+      "description": "Single target nuker with fire magic",
+      "stat_priority": ["INT", "DEX", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "dex": 3, "agi": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 20, "int": 99, "dex": 70, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "staff", "armor_type": "cloth"}
     },
     "balanced": {
       "name": "Balanced Wizard",
-      "description": "Balanced wizard",
+      "description": "Versatile magic DPS with survivability",
       "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
       "stat_ratios": {"int": 4, "dex": 3, "vit": 2, "agi": 1, "str": 0, "luk": 0},
-      "stat_targets": {"str": 1, "agi": 20, "vit": 40, "dex": 70, "int": 99, "luk": 1},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 40, "int": 90, "dex": 70, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "staff", "armor_type": "cloth"}
+    }
+  },
+  "high_wizard": {
+    "pure_int": {
+      "name": "Pure INT High Wizard",
+      "description": "Maximum magic damage output",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "dex": 3, "vit": 1, "agi": 0, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 1, "vit": 20, "int": 99, "dex": 70, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "staff", "armor_type": "cloth"}
+    },
+    "fast_cast": {
+      "name": "Fast Cast High Wizard",
+      "description": "Reduced cast time for faster spell rotation",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 4, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 40, "int": 90, "dex": 80, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "staff", "armor_type": "cloth"}
+    },
+    "balanced": {
+      "name": "Balanced High Wizard",
+      "description": "Versatile magic DPS with survivability",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 3, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 40, "int": 90, "dex": 70, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "staff", "armor_type": "cloth"}
+    }
+  },
+  "warlock": {
+    "pure_int": {
+      "name": "Pure INT Warlock",
+      "description": "Maximum magic damage output",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "dex": 3, "vit": 1, "agi": 0, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 1, "vit": 20, "int": 99, "dex": 70, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "staff", "armor_type": "cloth"}
+    },
+    "fast_cast": {
+      "name": "Fast Cast Warlock",
+      "description": "Reduced cast time for faster spell rotation",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 4, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 40, "int": 90, "dex": 80, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "staff", "armor_type": "cloth"}
+    },
+    "balanced": {
+      "name": "Balanced Warlock",
+      "description": "Versatile magic DPS with survivability",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 3, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 40, "int": 90, "dex": 70, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "staff", "armor_type": "cloth"}
+    }
+  },
+  "arch_mage": {
+    "pure_int": {
+      "name": "Pure INT Arch Mage",
+      "description": "Maximum magic damage output",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "dex": 3, "vit": 1, "agi": 0, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 1, "vit": 20, "int": 99, "dex": 70, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "staff", "armor_type": "cloth"}
+    },
+    "fast_cast": {
+      "name": "Fast Cast Arch Mage",
+      "description": "Reduced cast time for faster spell rotation",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 4, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 40, "int": 90, "dex": 80, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "staff", "armor_type": "cloth"}
+    },
+    "balanced": {
+      "name": "Balanced Arch Mage",
+      "description": "Versatile magic DPS with survivability",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 3, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 40, "int": 90, "dex": 70, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "staff", "armor_type": "cloth"}
     }
   },
   "sage": {
+    "elemental": {
+      "name": "Elemental Sage",
+      "description": "Elemental bolt specialist with field magic",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "dex": 4, "vit": 1, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 30, "int": 99, "dex": 80, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "book", "armor_type": "cloth"}
+    },
     "support": {
       "name": "Support Sage",
-      "description": "Support sage",
-      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
-      "stat_ratios": {"int": 4, "dex": 3, "vit": 2, "agi": 1, "str": 0, "luk": 0},
-      "stat_targets": {"str": 1, "agi": 20, "vit": 50, "dex": 60, "int": 99, "luk": 1},
+      "description": "Dispel and debuff specialist",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "vit": 3, "dex": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 70, "int": 80, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "book", "armor_type": "cloth"}
+    },
+    "magic_tank": {
+      "name": "Magic Tank Sage",
+      "description": "Survivable caster with high defense",
+      "stat_priority": ["VIT", "INT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"vit": 4, "int": 3, "dex": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 90, "int": 70, "dex": 50, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "book", "armor_type": "cloth"}
+    },
+    "autospell": {
+      "name": "Auto-spell Sage",
+      "description": "Minimal cast delay for fast spellcasting",
+      "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 5, "int": 4, "agi": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 40, "vit": 20, "int": 90, "dex": 99, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "book", "armor_type": "cloth"}
     },
     "balanced": {
       "name": "Balanced Sage",
-      "description": "Balanced sage",
+      "description": "Well-rounded sage build",
       "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
       "stat_ratios": {"int": 4, "dex": 3, "vit": 2, "agi": 1, "str": 0, "luk": 0},
-      "stat_targets": {"str": 1, "agi": 20, "vit": 40, "dex": 60, "int": 99, "luk": 1},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 50, "int": 90, "dex": 70, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "book", "armor_type": "cloth"}
+    }
+  },
+  "sorcerer": {
+    "elemental": {
+      "name": "Elemental Sorcerer",
+      "description": "Elemental bolt specialist with field magic",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "dex": 4, "vit": 1, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 30, "int": 99, "dex": 80, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "book", "armor_type": "cloth"}
+    },
+    "support": {
+      "name": "Support Sorcerer",
+      "description": "Dispel and debuff specialist",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "vit": 3, "dex": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 70, "int": 80, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "book", "armor_type": "cloth"}
+    },
+    "balanced": {
+      "name": "Balanced Sorcerer",
+      "description": "Well-rounded sorcerer build",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 3, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 50, "int": 90, "dex": 70, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "book", "armor_type": "cloth"}
+    }
+  },
+  "elemental_master": {
+    "elemental": {
+      "name": "Elemental Master",
+      "description": "Elemental bolt specialist with field magic",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "dex": 4, "vit": 1, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 30, "int": 99, "dex": 80, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "book", "armor_type": "cloth"}
+    },
+    "support": {
+      "name": "Support Elemental Master",
+      "description": "Dispel and debuff specialist",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "vit": 3, "dex": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 70, "int": 80, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "book", "armor_type": "cloth"}
+    },
+    "balanced": {
+      "name": "Balanced Elemental Master",
+      "description": "Well-rounded build",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 3, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 50, "int": 90, "dex": 70, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "book", "armor_type": "cloth"}
     }
@@ -304,54 +756,387 @@
     }
   },
   "hunter": {
-    "dex_hunter": {
-      "name": "DEX Hunter",
-      "description": "High DEX hunter",
-      "stat_priority": ["DEX", "AGI", "STR", "VIT", "INT", "LUK"],
-      "stat_ratios": {"dex": 5, "agi": 3, "str": 2, "vit": 1, "int": 0, "luk": 0},
-      "stat_targets": {"str": 40, "agi": 50, "vit": 30, "dex": 99, "int": 1, "luk": 1},
+    "crit_hunter": {
+      "name": "Crit Hunter",
+      "description": "Critical strike archer with high crit rate",
+      "stat_priority": ["DEX", "LUK", "AGI", "VIT", "STR", "INT"],
+      "stat_ratios": {"dex": 4, "luk": 3, "agi": 2, "vit": 1, "str": 0, "int": 0},
+      "stat_targets": {"str": 20, "agi": 50, "vit": 20, "int": 1, "dex": 90, "luk": 70},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
     },
-    "trapper": {
+    "ds_hunter": {
+      "name": "DS Hunter",
+      "description": "Double Strafe specialist with ASPD",
+      "stat_priority": ["DEX", "AGI", "INT", "STR", "VIT", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "int": 1, "str": 1, "vit": 0, "luk": 0},
+      "stat_targets": {"str": 30, "agi": 70, "vit": 20, "int": 30, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "trap_hunter": {
       "name": "Trap Hunter",
-      "description": "Trap-focused hunter",
-      "stat_priority": ["DEX", "INT", "VIT", "AGI", "STR", "LUK"],
-      "stat_ratios": {"dex": 4, "int": 3, "vit": 2, "agi": 1, "str": 0, "luk": 0},
-      "stat_targets": {"str": 20, "agi": 30, "vit": 40, "dex": 99, "int": 50, "luk": 1},
+      "description": "Trap and AoE specialist",
+      "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 5, "int": 3, "agi": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 40, "vit": 30, "int": 70, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "blitz_beat": {
+      "name": "Blitz Beat Hunter",
+      "description": "Falcon damage specialist",
+      "stat_priority": ["DEX", "INT", "AGI", "LUK", "VIT", "STR"],
+      "stat_ratios": {"dex": 4, "int": 3, "agi": 2, "luk": 1, "vit": 0, "str": 0},
+      "stat_targets": {"str": 1, "agi": 40, "vit": 20, "int": 80, "dex": 90, "luk": 30},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
     },
     "balanced": {
       "name": "Balanced Hunter",
-      "description": "Balanced hunter",
-      "stat_priority": ["DEX", "AGI", "VIT", "STR", "INT", "LUK"],
-      "stat_ratios": {"dex": 4, "agi": 3, "vit": 2, "str": 1, "int": 0, "luk": 0},
-      "stat_targets": {"str": 35, "agi": 50, "vit": 35, "dex": 99, "int": 1, "luk": 1},
+      "description": "Well-rounded archer build",
+      "stat_priority": ["DEX", "AGI", "INT", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "int": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 20, "agi": 60, "vit": 30, "int": 40, "dex": 99, "luk": 20},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    }
+  },
+  "sniper": {
+    "crit_hunter": {
+      "name": "Crit Sniper",
+      "description": "Critical strike archer with high crit rate",
+      "stat_priority": ["DEX", "LUK", "AGI", "VIT", "STR", "INT"],
+      "stat_ratios": {"dex": 4, "luk": 3, "agi": 2, "vit": 1, "str": 0, "int": 0},
+      "stat_targets": {"str": 20, "agi": 50, "vit": 20, "int": 1, "dex": 90, "luk": 70},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "ds_hunter": {
+      "name": "DS Sniper",
+      "description": "Double Strafe specialist with ASPD",
+      "stat_priority": ["DEX", "AGI", "INT", "STR", "VIT", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "int": 1, "str": 1, "vit": 0, "luk": 0},
+      "stat_targets": {"str": 30, "agi": 70, "vit": 20, "int": 30, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Sniper",
+      "description": "Well-rounded archer build",
+      "stat_priority": ["DEX", "AGI", "INT", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "int": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 20, "agi": 60, "vit": 30, "int": 40, "dex": 99, "luk": 20},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    }
+  },
+  "ranger": {
+    "crit_hunter": {
+      "name": "Crit Ranger",
+      "description": "Critical strike archer with high crit rate",
+      "stat_priority": ["DEX", "LUK", "AGI", "VIT", "STR", "INT"],
+      "stat_ratios": {"dex": 4, "luk": 3, "agi": 2, "vit": 1, "str": 0, "int": 0},
+      "stat_targets": {"str": 20, "agi": 50, "vit": 20, "int": 1, "dex": 90, "luk": 70},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "ds_hunter": {
+      "name": "DS Ranger",
+      "description": "Double Strafe specialist with ASPD",
+      "stat_priority": ["DEX", "AGI", "INT", "STR", "VIT", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "int": 1, "str": 1, "vit": 0, "luk": 0},
+      "stat_targets": {"str": 30, "agi": 70, "vit": 20, "int": 30, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Ranger",
+      "description": "Well-rounded archer build",
+      "stat_priority": ["DEX", "AGI", "INT", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "int": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 20, "agi": 60, "vit": 30, "int": 40, "dex": 99, "luk": 20},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    }
+  },
+  "windhawk": {
+    "crit_hunter": {
+      "name": "Crit Windhawk",
+      "description": "Critical strike archer with high crit rate",
+      "stat_priority": ["DEX", "LUK", "AGI", "VIT", "STR", "INT"],
+      "stat_ratios": {"dex": 4, "luk": 3, "agi": 2, "vit": 1, "str": 0, "int": 0},
+      "stat_targets": {"str": 20, "agi": 50, "vit": 20, "int": 1, "dex": 90, "luk": 70},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "ds_hunter": {
+      "name": "DS Windhawk",
+      "description": "Double Strafe specialist with ASPD",
+      "stat_priority": ["DEX", "AGI", "INT", "STR", "VIT", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "int": 1, "str": 1, "vit": 0, "luk": 0},
+      "stat_targets": {"str": 30, "agi": 70, "vit": 20, "int": 30, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Windhawk",
+      "description": "Well-rounded archer build",
+      "stat_priority": ["DEX", "AGI", "INT", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "int": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 20, "agi": 60, "vit": 30, "int": 40, "dex": 99, "luk": 20},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
     }
   },
   "bard": {
-    "support": {
-      "name": "Support Bard",
-      "description": "Support bard",
-      "stat_priority": ["DEX", "INT", "VIT", "AGI", "STR", "LUK"],
-      "stat_ratios": {"dex": 4, "int": 3, "vit": 2, "agi": 1, "str": 0, "luk": 0},
-      "stat_targets": {"str": 1, "agi": 30, "vit": 40, "dex": 90, "int": 50, "luk": 1},
+    "support_focus": {
+      "name": "Support Focus Bard",
+      "description": "Maximum song effectiveness",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 4, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 40, "int": 80, "dex": 90, "luk": 1},
       "skills_priority": [],
-      "equipment_preference": {"weapon_type": "instrument", "armor_type": "light"}
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "hybrid": {
+      "name": "Hybrid Bard",
+      "description": "Arrow damage plus support capabilities",
+      "stat_priority": ["DEX", "AGI", "INT", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "int": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 30, "agi": 70, "vit": 30, "int": 50, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "full_support": {
+      "name": "Full Support Bard",
+      "description": "Pure support with maximum survivability",
+      "stat_priority": ["VIT", "INT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"vit": 4, "int": 4, "dex": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 80, "int": 90, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Bard",
+      "description": "Well-rounded bard",
+      "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 4, "int": 3, "agi": 2, "vit": 2, "str": 0, "luk": 0},
+      "stat_targets": {"str": 20, "agi": 50, "vit": 40, "int": 70, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    }
+  },
+  "clown": {
+    "support_focus": {
+      "name": "Support Focus Clown",
+      "description": "Maximum song effectiveness",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 4, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 40, "int": 80, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "hybrid": {
+      "name": "Hybrid Clown",
+      "description": "Arrow damage plus support capabilities",
+      "stat_priority": ["DEX", "AGI", "INT", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "int": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 30, "agi": 70, "vit": 30, "int": 50, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Clown",
+      "description": "Well-rounded bard",
+      "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 4, "int": 3, "agi": 2, "vit": 2, "str": 0, "luk": 0},
+      "stat_targets": {"str": 20, "agi": 50, "vit": 40, "int": 70, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    }
+  },
+  "minstrel": {
+    "support_focus": {
+      "name": "Support Focus Minstrel",
+      "description": "Maximum song effectiveness",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 4, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 40, "int": 80, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "hybrid": {
+      "name": "Hybrid Minstrel",
+      "description": "Arrow damage plus support capabilities",
+      "stat_priority": ["DEX", "AGI", "INT", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "int": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 30, "agi": 70, "vit": 30, "int": 50, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Minstrel",
+      "description": "Well-rounded bard",
+      "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 4, "int": 3, "agi": 2, "vit": 2, "str": 0, "luk": 0},
+      "stat_targets": {"str": 20, "agi": 50, "vit": 40, "int": 70, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    }
+  },
+  "troubadour": {
+    "support_focus": {
+      "name": "Support Focus Troubadour",
+      "description": "Maximum song effectiveness",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 4, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 40, "int": 80, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "hybrid": {
+      "name": "Hybrid Troubadour",
+      "description": "Arrow damage plus support capabilities",
+      "stat_priority": ["DEX", "AGI", "INT", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "int": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 30, "agi": 70, "vit": 30, "int": 50, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Troubadour",
+      "description": "Well-rounded bard",
+      "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 4, "int": 3, "agi": 2, "vit": 2, "str": 0, "luk": 0},
+      "stat_targets": {"str": 20, "agi": 50, "vit": 40, "int": 70, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
     }
   },
   "dancer": {
-    "support": {
-      "name": "Support Dancer",
-      "description": "Support dancer",
-      "stat_priority": ["DEX", "INT", "VIT", "AGI", "STR", "LUK"],
-      "stat_ratios": {"dex": 4, "int": 3, "vit": 2, "agi": 1, "str": 0, "luk": 0},
-      "stat_targets": {"str": 1, "agi": 30, "vit": 40, "dex": 90, "int": 50, "luk": 1},
+    "support_focus": {
+      "name": "Support Focus Dancer",
+      "description": "Maximum dance effectiveness",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 4, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 40, "int": 80, "dex": 90, "luk": 1},
       "skills_priority": [],
-      "equipment_preference": {"weapon_type": "whip", "armor_type": "light"}
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "hybrid": {
+      "name": "Hybrid Dancer",
+      "description": "Arrow damage plus support capabilities",
+      "stat_priority": ["DEX", "AGI", "INT", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "int": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 30, "agi": 70, "vit": 30, "int": 50, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "full_support": {
+      "name": "Full Support Dancer",
+      "description": "Pure support with maximum survivability",
+      "stat_priority": ["VIT", "INT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"vit": 4, "int": 4, "dex": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 80, "int": 90, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Dancer",
+      "description": "Well-rounded dancer",
+      "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 4, "int": 3, "agi": 2, "vit": 2, "str": 0, "luk": 0},
+      "stat_targets": {"str": 20, "agi": 50, "vit": 40, "int": 70, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    }
+  },
+  "gypsy": {
+    "support_focus": {
+      "name": "Support Focus Gypsy",
+      "description": "Maximum dance effectiveness",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 4, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 40, "int": 80, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "hybrid": {
+      "name": "Hybrid Gypsy",
+      "description": "Arrow damage plus support capabilities",
+      "stat_priority": ["DEX", "AGI", "INT", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "int": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 30, "agi": 70, "vit": 30, "int": 50, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Gypsy",
+      "description": "Well-rounded dancer",
+      "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 4, "int": 3, "agi": 2, "vit": 2, "str": 0, "luk": 0},
+      "stat_targets": {"str": 20, "agi": 50, "vit": 40, "int": 70, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    }
+  },
+  "wanderer": {
+    "support_focus": {
+      "name": "Support Focus Wanderer",
+      "description": "Maximum dance effectiveness",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 4, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 40, "int": 80, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "hybrid": {
+      "name": "Hybrid Wanderer",
+      "description": "Arrow damage plus support capabilities",
+      "stat_priority": ["DEX", "AGI", "INT", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "int": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 30, "agi": 70, "vit": 30, "int": 50, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Wanderer",
+      "description": "Well-rounded dancer",
+      "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 4, "int": 3, "agi": 2, "vit": 2, "str": 0, "luk": 0},
+      "stat_targets": {"str": 20, "agi": 50, "vit": 40, "int": 70, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    }
+  },
+  "trouvere": {
+    "support_focus": {
+      "name": "Support Focus Trouvere",
+      "description": "Maximum dance effectiveness",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 4, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 40, "int": 80, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "hybrid": {
+      "name": "Hybrid Trouvere",
+      "description": "Arrow damage plus support capabilities",
+      "stat_priority": ["DEX", "AGI", "INT", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "int": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 30, "agi": 70, "vit": 30, "int": 50, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Trouvere",
+      "description": "Well-rounded dancer",
+      "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 4, "int": 3, "agi": 2, "vit": 2, "str": 0, "luk": 0},
+      "stat_targets": {"str": 20, "agi": 50, "vit": 40, "int": 70, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
     }
   },
   "acolyte": {
@@ -396,30 +1181,135 @@
     }
   },
   "priest": {
-    "support": {
-      "name": "Support Priest",
-      "description": "Full support priest",
+    "full_support": {
+      "name": "Full Support Priest",
+      "description": "Maximum healing and buff effectiveness",
       "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
-      "stat_ratios": {"int": 4, "vit": 3, "dex": 2, "agi": 1, "str": 0, "luk": 0},
-      "stat_targets": {"str": 1, "agi": 20, "vit": 70, "dex": 60, "int": 99, "luk": 1},
+      "stat_ratios": {"int": 5, "vit": 3, "dex": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 70, "int": 99, "dex": 60, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "mace", "armor_type": "medium"}
     },
-    "battle": {
+    "battle_priest": {
       "name": "Battle Priest",
-      "description": "Combat priest",
-      "stat_priority": ["INT", "DEX", "STR", "VIT", "AGI", "LUK"],
-      "stat_ratios": {"int": 4, "dex": 3, "str": 2, "vit": 1, "agi": 0, "luk": 0},
-      "stat_targets": {"str": 50, "agi": 20, "vit": 50, "dex": 70, "int": 99, "luk": 1},
+      "description": "Melee combat with healing backup",
+      "stat_priority": ["STR", "INT", "DEX", "VIT", "AGI", "LUK"],
+      "stat_ratios": {"str": 3, "int": 4, "dex": 2, "vit": 2, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 70, "agi": 20, "vit": 40, "int": 80, "dex": 40, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "mace", "armor_type": "medium"}
+    },
+    "me_priest": {
+      "name": "ME Priest",
+      "description": "Magnus Exorcismus specialist",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "dex": 4, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 40, "int": 99, "dex": 80, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "rod", "armor_type": "cloth"}
+    },
+    "tank_priest": {
+      "name": "Tank Priest",
+      "description": "High survivability healer",
+      "stat_priority": ["VIT", "INT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"vit": 4, "int": 4, "dex": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 90, "int": 80, "dex": 50, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "mace", "armor_type": "heavy"}
+    },
+    "balanced": {
+      "name": "Balanced Priest",
+      "description": "Well-rounded priest build",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "vit": 3, "dex": 3, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 60, "int": 90, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "mace", "armor_type": "medium"}
+    }
+  },
+  "high_priest": {
+    "full_support": {
+      "name": "Full Support High Priest",
+      "description": "Maximum healing and buff effectiveness",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "vit": 3, "dex": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 70, "int": 99, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "mace", "armor_type": "medium"}
+    },
+    "battle_priest": {
+      "name": "Battle High Priest",
+      "description": "Melee combat with healing backup",
+      "stat_priority": ["STR", "INT", "DEX", "VIT", "AGI", "LUK"],
+      "stat_ratios": {"str": 3, "int": 4, "dex": 2, "vit": 2, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 70, "agi": 20, "vit": 40, "int": 80, "dex": 40, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "mace", "armor_type": "medium"}
     },
     "balanced": {
-      "name": "Balanced Priest",
-      "description": "Balanced priest",
-      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
-      "stat_ratios": {"int": 4, "dex": 3, "vit": 2, "agi": 1, "str": 0, "luk": 0},
-      "stat_targets": {"str": 1, "agi": 20, "vit": 60, "dex": 70, "int": 99, "luk": 1},
+      "name": "Balanced High Priest",
+      "description": "Well-rounded priest build",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "vit": 3, "dex": 3, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 60, "int": 90, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "mace", "armor_type": "medium"}
+    }
+  },
+  "arch_bishop": {
+    "full_support": {
+      "name": "Full Support Arch Bishop",
+      "description": "Maximum healing and buff effectiveness",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "vit": 3, "dex": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 70, "int": 99, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "mace", "armor_type": "medium"}
+    },
+    "battle_priest": {
+      "name": "Battle Arch Bishop",
+      "description": "Melee combat with healing backup",
+      "stat_priority": ["STR", "INT", "DEX", "VIT", "AGI", "LUK"],
+      "stat_ratios": {"str": 3, "int": 4, "dex": 2, "vit": 2, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 70, "agi": 20, "vit": 40, "int": 80, "dex": 40, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "mace", "armor_type": "medium"}
+    },
+    "balanced": {
+      "name": "Balanced Arch Bishop",
+      "description": "Well-rounded priest build",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "vit": 3, "dex": 3, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 60, "int": 90, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "mace", "armor_type": "medium"}
+    }
+  },
+  "cardinal": {
+    "full_support": {
+      "name": "Full Support Cardinal",
+      "description": "Maximum healing and buff effectiveness",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "vit": 3, "dex": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 70, "int": 99, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "mace", "armor_type": "medium"}
+    },
+    "battle_priest": {
+      "name": "Battle Cardinal",
+      "description": "Melee combat with healing backup",
+      "stat_priority": ["STR", "INT", "DEX", "VIT", "AGI", "LUK"],
+      "stat_ratios": {"str": 3, "int": 4, "dex": 2, "vit": 2, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 70, "agi": 20, "vit": 40, "int": 80, "dex": 40, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "mace", "armor_type": "medium"}
+    },
+    "balanced": {
+      "name": "Balanced Cardinal",
+      "description": "Well-rounded priest build",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "vit": 3, "dex": 3, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 60, "int": 90, "dex": 60, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "mace", "armor_type": "medium"}
     }
@@ -427,28 +1317,133 @@
   "monk": {
     "combo_monk": {
       "name": "Combo Monk",
-      "description": "Combo-focused monk",
+      "description": "Combo attack specialist with high ASPD",
       "stat_priority": ["STR", "AGI", "VIT", "DEX", "INT", "LUK"],
-      "stat_ratios": {"str": 4, "agi": 3, "vit": 2, "dex": 1, "int": 0, "luk": 0},
-      "stat_targets": {"str": 99, "agi": 80, "vit": 40, "dex": 30, "int": 1, "luk": 1},
+      "stat_ratios": {"str": 4, "agi": 4, "vit": 2, "dex": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 80, "vit": 50, "int": 1, "dex": 40, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "knuckle", "armor_type": "light"}
+    },
+    "asura_strike": {
+      "name": "Asura Strike Monk",
+      "description": "Maximum Asura Strike damage (one-shot)",
+      "stat_priority": ["STR", "INT", "DEX", "VIT", "AGI", "LUK"],
+      "stat_ratios": {"str": 5, "int": 5, "dex": 1, "vit": 1, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 99, "agi": 20, "vit": 30, "int": 99, "dex": 30, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "knuckle", "armor_type": "light"}
     },
     "tank_monk": {
       "name": "Tank Monk",
-      "description": "Tanky monk",
-      "stat_priority": ["VIT", "STR", "DEX", "AGI", "INT", "LUK"],
-      "stat_ratios": {"vit": 4, "str": 3, "dex": 2, "agi": 1, "int": 0, "luk": 0},
-      "stat_targets": {"str": 70, "agi": 40, "vit": 99, "dex": 40, "int": 1, "luk": 1},
+      "description": "High HP melee fighter with combos",
+      "stat_priority": ["VIT", "STR", "AGI", "DEX", "INT", "LUK"],
+      "stat_ratios": {"vit": 5, "str": 3, "agi": 2, "dex": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 70, "agi": 50, "vit": 99, "int": 1, "dex": 30, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "knuckle", "armor_type": "medium"}
     },
+    "crit_monk": {
+      "name": "Crit Monk",
+      "description": "Critical strike melee build",
+      "stat_priority": ["STR", "LUK", "AGI", "VIT", "DEX", "INT"],
+      "stat_ratios": {"str": 4, "luk": 4, "agi": 3, "vit": 2, "dex": 0, "int": 0},
+      "stat_targets": {"str": 80, "agi": 60, "vit": 40, "int": 1, "dex": 30, "luk": 80},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "knuckle", "armor_type": "light"}
+    },
     "balanced": {
       "name": "Balanced Monk",
-      "description": "Balanced monk",
-      "stat_priority": ["STR", "VIT", "AGI", "DEX", "INT", "LUK"],
-      "stat_ratios": {"str": 3, "vit": 3, "agi": 2, "dex": 2, "int": 0, "luk": 0},
-      "stat_targets": {"str": 80, "agi": 60, "vit": 60, "dex": 40, "int": 1, "luk": 1},
+      "description": "Well-rounded monk build",
+      "stat_priority": ["STR", "AGI", "VIT", "DEX", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 3, "vit": 3, "dex": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 70, "vit": 60, "int": 1, "dex": 40, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "knuckle", "armor_type": "medium"}
+    }
+  },
+  "champion": {
+    "combo_monk": {
+      "name": "Combo Champion",
+      "description": "Combo attack specialist with high ASPD",
+      "stat_priority": ["STR", "AGI", "VIT", "DEX", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 4, "vit": 2, "dex": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 80, "vit": 50, "int": 1, "dex": 40, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "knuckle", "armor_type": "light"}
+    },
+    "asura_strike": {
+      "name": "Asura Strike Champion",
+      "description": "Maximum Asura Strike damage (one-shot)",
+      "stat_priority": ["STR", "INT", "DEX", "VIT", "AGI", "LUK"],
+      "stat_ratios": {"str": 5, "int": 5, "dex": 1, "vit": 1, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 99, "agi": 20, "vit": 30, "int": 99, "dex": 30, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "knuckle", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Champion",
+      "description": "Well-rounded monk build",
+      "stat_priority": ["STR", "AGI", "VIT", "DEX", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 3, "vit": 3, "dex": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 70, "vit": 60, "int": 1, "dex": 40, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "knuckle", "armor_type": "medium"}
+    }
+  },
+  "sura": {
+    "combo_monk": {
+      "name": "Combo Sura",
+      "description": "Combo attack specialist with high ASPD",
+      "stat_priority": ["STR", "AGI", "VIT", "DEX", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 4, "vit": 2, "dex": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 80, "vit": 50, "int": 1, "dex": 40, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "knuckle", "armor_type": "light"}
+    },
+    "asura_strike": {
+      "name": "Asura Strike Sura",
+      "description": "Maximum Asura Strike damage (one-shot)",
+      "stat_priority": ["STR", "INT", "DEX", "VIT", "AGI", "LUK"],
+      "stat_ratios": {"str": 5, "int": 5, "dex": 1, "vit": 1, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 99, "agi": 20, "vit": 30, "int": 99, "dex": 30, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "knuckle", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Sura",
+      "description": "Well-rounded monk build",
+      "stat_priority": ["STR", "AGI", "VIT", "DEX", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 3, "vit": 3, "dex": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 70, "vit": 60, "int": 1, "dex": 40, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "knuckle", "armor_type": "medium"}
+    }
+  },
+  "inquisitor": {
+    "combo_monk": {
+      "name": "Combo Inquisitor",
+      "description": "Combo attack specialist with high ASPD",
+      "stat_priority": ["STR", "AGI", "VIT", "DEX", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 4, "vit": 2, "dex": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 80, "vit": 50, "int": 1, "dex": 40, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "knuckle", "armor_type": "light"}
+    },
+    "asura_strike": {
+      "name": "Asura Strike Inquisitor",
+      "description": "Maximum Asura Strike damage (one-shot)",
+      "stat_priority": ["STR", "INT", "DEX", "VIT", "AGI", "LUK"],
+      "stat_ratios": {"str": 5, "int": 5, "dex": 1, "vit": 1, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 99, "agi": 20, "vit": 30, "int": 99, "dex": 30, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "knuckle", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Inquisitor",
+      "description": "Well-rounded monk build",
+      "stat_priority": ["STR", "AGI", "VIT", "DEX", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 3, "vit": 3, "dex": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 70, "vit": 60, "int": 1, "dex": 40, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "knuckle", "armor_type": "medium"}
     }
@@ -495,50 +1490,269 @@
     }
   },
   "assassin": {
-    "crit_burst": {
-      "name": "Crit Assassin",
-      "description": "Critical burst assassin",
-      "stat_priority": ["LUK", "AGI", "STR", "DEX", "VIT", "INT"],
-      "stat_ratios": {"luk": 4, "agi": 3, "str": 2, "dex": 1, "vit": 0, "int": 0},
-      "stat_targets": {"str": 50, "agi": 80, "vit": 20, "dex": 30, "int": 1, "luk": 99},
+    "katar_crit": {
+      "name": "Katar Crit Assassin",
+      "description": "Critical assassin with katar mastery",
+      "stat_priority": ["STR", "LUK", "AGI", "DEX", "VIT", "INT"],
+      "stat_ratios": {"str": 4, "luk": 5, "agi": 3, "dex": 1, "vit": 0, "int": 0},
+      "stat_targets": {"str": 80, "agi": 60, "vit": 30, "int": 1, "dex": 40, "luk": 99},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "katar", "armor_type": "light"}
     },
-    "katar_mastery": {
-      "name": "Katar Assassin",
-      "description": "Katar mastery build",
-      "stat_priority": ["STR", "AGI", "VIT", "DEX", "INT", "LUK"],
-      "stat_ratios": {"str": 4, "agi": 3, "vit": 2, "dex": 1, "int": 0, "luk": 0},
-      "stat_targets": {"str": 99, "agi": 80, "vit": 30, "dex": 30, "int": 1, "luk": 1},
+    "sb_sin": {
+      "name": "SB Assassin",
+      "description": "Sonic Blow specialist with high ASPD",
+      "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 4, "dex": 2, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 90, "agi": 90, "vit": 30, "int": 1, "dex": 50, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "katar", "armor_type": "light"}
+    },
+    "poison": {
+      "name": "Poison Assassin",
+      "description": "Poison specialist with status effects",
+      "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 5, "int": 4, "agi": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 40, "agi": 50, "vit": 40, "int": 80, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "katar", "armor_type": "light"}
+    },
+    "agi_crit": {
+      "name": "Agi Crit Assassin",
+      "description": "ASPD and crit combined",
+      "stat_priority": ["AGI", "LUK", "STR", "DEX", "VIT", "INT"],
+      "stat_ratios": {"agi": 5, "luk": 4, "str": 2, "dex": 1, "vit": 0, "int": 0},
+      "stat_targets": {"str": 60, "agi": 99, "vit": 30, "int": 1, "dex": 50, "luk": 80},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "katar", "armor_type": "light"}
     },
     "balanced": {
       "name": "Balanced Assassin",
-      "description": "Balanced assassin",
-      "stat_priority": ["AGI", "STR", "DEX", "VIT", "LUK", "INT"],
-      "stat_ratios": {"agi": 3, "str": 3, "dex": 2, "vit": 1, "luk": 1, "int": 0},
-      "stat_targets": {"str": 60, "agi": 99, "vit": 30, "dex": 40, "int": 1, "luk": 30},
+      "description": "Well-rounded assassin",
+      "stat_priority": ["AGI", "STR", "DEX", "LUK", "VIT", "INT"],
+      "stat_ratios": {"agi": 4, "str": 4, "dex": 2, "luk": 2, "vit": 0, "int": 0},
+      "stat_targets": {"str": 80, "agi": 80, "vit": 30, "int": 1, "dex": 50, "luk": 50},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "katar", "armor_type": "light"}
+    }
+  },
+  "assassin_cross": {
+    "katar_crit": {
+      "name": "Katar Crit Assassin Cross",
+      "description": "Critical assassin with katar mastery",
+      "stat_priority": ["STR", "LUK", "AGI", "DEX", "VIT", "INT"],
+      "stat_ratios": {"str": 4, "luk": 5, "agi": 3, "dex": 1, "vit": 0, "int": 0},
+      "stat_targets": {"str": 80, "agi": 60, "vit": 30, "int": 1, "dex": 40, "luk": 99},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "katar", "armor_type": "light"}
+    },
+    "sb_sin": {
+      "name": "SB Assassin Cross",
+      "description": "Sonic Blow specialist with high ASPD",
+      "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 4, "dex": 2, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 90, "agi": 90, "vit": 30, "int": 1, "dex": 50, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "katar", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Assassin Cross",
+      "description": "Well-rounded assassin",
+      "stat_priority": ["AGI", "STR", "DEX", "LUK", "VIT", "INT"],
+      "stat_ratios": {"agi": 4, "str": 4, "dex": 2, "luk": 2, "vit": 0, "int": 0},
+      "stat_targets": {"str": 80, "agi": 80, "vit": 30, "int": 1, "dex": 50, "luk": 50},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "katar", "armor_type": "light"}
+    }
+  },
+  "guillotine_cross": {
+    "katar_crit": {
+      "name": "Katar Crit Guillotine Cross",
+      "description": "Critical assassin with katar mastery",
+      "stat_priority": ["STR", "LUK", "AGI", "DEX", "VIT", "INT"],
+      "stat_ratios": {"str": 4, "luk": 5, "agi": 3, "dex": 1, "vit": 0, "int": 0},
+      "stat_targets": {"str": 80, "agi": 60, "vit": 30, "int": 1, "dex": 40, "luk": 99},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "katar", "armor_type": "light"}
+    },
+    "sb_sin": {
+      "name": "SB Guillotine Cross",
+      "description": "Sonic Blow specialist with high ASPD",
+      "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 4, "dex": 2, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 90, "agi": 90, "vit": 30, "int": 1, "dex": 50, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "katar", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Guillotine Cross",
+      "description": "Well-rounded assassin",
+      "stat_priority": ["AGI", "STR", "DEX", "LUK", "VIT", "INT"],
+      "stat_ratios": {"agi": 4, "str": 4, "dex": 2, "luk": 2, "vit": 0, "int": 0},
+      "stat_targets": {"str": 80, "agi": 80, "vit": 30, "int": 1, "dex": 50, "luk": 50},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "katar", "armor_type": "light"}
+    }
+  },
+  "shadow_cross": {
+    "katar_crit": {
+      "name": "Katar Crit Shadow Cross",
+      "description": "Critical assassin with katar mastery",
+      "stat_priority": ["STR", "LUK", "AGI", "DEX", "VIT", "INT"],
+      "stat_ratios": {"str": 4, "luk": 5, "agi": 3, "dex": 1, "vit": 0, "int": 0},
+      "stat_targets": {"str": 80, "agi": 60, "vit": 30, "int": 1, "dex": 40, "luk": 99},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "katar", "armor_type": "light"}
+    },
+    "sb_sin": {
+      "name": "SB Shadow Cross",
+      "description": "Sonic Blow specialist with high ASPD",
+      "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 4, "dex": 2, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 90, "agi": 90, "vit": 30, "int": 1, "dex": 50, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "katar", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Shadow Cross",
+      "description": "Well-rounded assassin",
+      "stat_priority": ["AGI", "STR", "DEX", "LUK", "VIT", "INT"],
+      "stat_ratios": {"agi": 4, "str": 4, "dex": 2, "luk": 2, "vit": 0, "int": 0},
+      "stat_targets": {"str": 80, "agi": 80, "vit": 30, "int": 1, "dex": 50, "luk": 50},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "katar", "armor_type": "light"}
     }
   },
   "rogue": {
-    "strip_build": {
+    "strip_rogue": {
       "name": "Strip Rogue",
-      "description": "Strip specialist",
+      "description": "Strip armor specialist",
       "stat_priority": ["DEX", "AGI", "STR", "VIT", "INT", "LUK"],
-      "stat_ratios": {"dex": 4, "agi": 3, "str": 2, "vit": 1, "int": 0, "luk": 0},
-      "stat_targets": {"str": 50, "agi": 70, "vit": 30, "dex": 99, "int": 1, "luk": 1},
+      "stat_ratios": {"dex": 5, "agi": 4, "str": 2, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 50, "agi": 80, "vit": 40, "int": 1, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "dagger", "armor_type": "light"}
+    },
+    "bow_rogue": {
+      "name": "Bow Rogue",
+      "description": "Ranged damage dealer with utility",
+      "stat_priority": ["DEX", "AGI", "STR", "INT", "VIT", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "str": 1, "int": 1, "vit": 0, "luk": 0},
+      "stat_targets": {"str": 40, "agi": 70, "vit": 30, "int": 30, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "copycat": {
+      "name": "Copycat Rogue",
+      "description": "Plagiarism build for skill copying",
+      "stat_priority": ["AGI", "LUK", "DEX", "INT", "VIT", "STR"],
+      "stat_ratios": {"agi": 4, "luk": 3, "dex": 3, "int": 2, "vit": 0, "str": 0},
+      "stat_targets": {"str": 40, "agi": 90, "vit": 30, "int": 40, "dex": 70, "luk": 60},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "dagger", "armor_type": "light"}
+    },
+    "backstab": {
+      "name": "Back Stab Rogue",
+      "description": "Melee burst damage specialist",
+      "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 4, "dex": 2, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 90, "agi": 90, "vit": 30, "int": 1, "dex": 60, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "dagger", "armor_type": "light"}
     },
     "balanced": {
       "name": "Balanced Rogue",
-      "description": "Balanced rogue",
-      "stat_priority": ["AGI", "DEX", "STR", "VIT", "INT", "LUK"],
-      "stat_ratios": {"agi": 3, "dex": 3, "str": 2, "vit": 1, "int": 0, "luk": 1},
-      "stat_targets": {"str": 50, "agi": 90, "vit": 30, "dex": 70, "int": 1, "luk": 20},
+      "description": "Well-rounded rogue build",
+      "stat_priority": ["AGI", "DEX", "STR", "VIT", "LUK", "INT"],
+      "stat_ratios": {"agi": 4, "dex": 4, "str": 3, "vit": 1, "luk": 1, "int": 0},
+      "stat_targets": {"str": 60, "agi": 80, "vit": 30, "int": 20, "dex": 80, "luk": 20},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "dagger", "armor_type": "light"}
+    }
+  },
+  "stalker": {
+    "strip_rogue": {
+      "name": "Strip Stalker",
+      "description": "Strip armor specialist",
+      "stat_priority": ["DEX", "AGI", "STR", "VIT", "INT", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 4, "str": 2, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 50, "agi": 80, "vit": 40, "int": 1, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "dagger", "armor_type": "light"}
+    },
+    "bow_rogue": {
+      "name": "Bow Stalker",
+      "description": "Ranged damage dealer with utility",
+      "stat_priority": ["DEX", "AGI", "STR", "INT", "VIT", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "str": 1, "int": 1, "vit": 0, "luk": 0},
+      "stat_targets": {"str": 40, "agi": 70, "vit": 30, "int": 30, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Stalker",
+      "description": "Well-rounded rogue build",
+      "stat_priority": ["AGI", "DEX", "STR", "VIT", "LUK", "INT"],
+      "stat_ratios": {"agi": 4, "dex": 4, "str": 3, "vit": 1, "luk": 1, "int": 0},
+      "stat_targets": {"str": 60, "agi": 80, "vit": 30, "int": 20, "dex": 80, "luk": 20},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "dagger", "armor_type": "light"}
+    }
+  },
+  "shadow_chaser": {
+    "strip_rogue": {
+      "name": "Strip Shadow Chaser",
+      "description": "Strip armor specialist",
+      "stat_priority": ["DEX", "AGI", "STR", "VIT", "INT", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 4, "str": 2, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 50, "agi": 80, "vit": 40, "int": 1, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "dagger", "armor_type": "light"}
+    },
+    "bow_rogue": {
+      "name": "Bow Shadow Chaser",
+      "description": "Ranged damage dealer with utility",
+      "stat_priority": ["DEX", "AGI", "STR", "INT", "VIT", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "str": 1, "int": 1, "vit": 0, "luk": 0},
+      "stat_targets": {"str": 40, "agi": 70, "vit": 30, "int": 30, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Shadow Chaser",
+      "description": "Well-rounded rogue build",
+      "stat_priority": ["AGI", "DEX", "STR", "VIT", "LUK", "INT"],
+      "stat_ratios": {"agi": 4, "dex": 4, "str": 3, "vit": 1, "luk": 1, "int": 0},
+      "stat_targets": {"str": 60, "agi": 80, "vit": 30, "int": 20, "dex": 80, "luk": 20},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "dagger", "armor_type": "light"}
+    }
+  },
+  "abyss_chaser": {
+    "strip_rogue": {
+      "name": "Strip Abyss Chaser",
+      "description": "Strip armor specialist",
+      "stat_priority": ["DEX", "AGI", "STR", "VIT", "INT", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 4, "str": 2, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 50, "agi": 80, "vit": 40, "int": 1, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "dagger", "armor_type": "light"}
+    },
+    "bow_rogue": {
+      "name": "Bow Abyss Chaser",
+      "description": "Ranged damage dealer with utility",
+      "stat_priority": ["DEX", "AGI", "STR", "INT", "VIT", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 3, "str": 1, "int": 1, "vit": 0, "luk": 0},
+      "stat_targets": {"str": 40, "agi": 70, "vit": 30, "int": 30, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "bow", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Abyss Chaser",
+      "description": "Well-rounded rogue build",
+      "stat_priority": ["AGI", "DEX", "STR", "VIT", "LUK", "INT"],
+      "stat_ratios": {"agi": 4, "dex": 4, "str": 3, "vit": 1, "luk": 1, "int": 0},
+      "stat_targets": {"str": 60, "agi": 80, "vit": 30, "int": 20, "dex": 80, "luk": 20},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "dagger", "armor_type": "light"}
     }
@@ -584,79 +1798,365 @@
     }
   },
   "blacksmith": {
+    "battle_smith": {
+      "name": "Battle Blacksmith",
+      "description": "Melee combat tank with axe mastery",
+      "stat_priority": ["STR", "VIT", "DEX", "AGI", "INT", "LUK"],
+      "stat_ratios": {"str": 5, "vit": 4, "dex": 2, "agi": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 99, "agi": 30, "vit": 80, "int": 1, "dex": 50, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "axe", "armor_type": "medium"}
+    },
     "forger": {
       "name": "Forger Blacksmith",
-      "description": "Crafting-focused",
-      "stat_priority": ["VIT", "STR", "DEX", "AGI", "INT", "LUK"],
-      "stat_ratios": {"vit": 4, "str": 3, "dex": 2, "agi": 1, "int": 0, "luk": 0},
-      "stat_targets": {"str": 70, "agi": 30, "vit": 99, "dex": 50, "int": 1, "luk": 1},
+      "description": "Maximize crafting success rates",
+      "stat_priority": ["DEX", "LUK", "STR", "VIT", "INT", "AGI"],
+      "stat_ratios": {"dex": 5, "luk": 4, "str": 3, "vit": 2, "int": 0, "agi": 0},
+      "stat_targets": {"str": 70, "agi": 20, "vit": 40, "int": 30, "dex": 99, "luk": 80},
       "skills_priority": [],
-      "equipment_preference": {"weapon_type": "axe", "armor_type": "heavy"}
+      "equipment_preference": {"weapon_type": "any", "armor_type": "medium"}
     },
-    "battle": {
-      "name": "Battle Blacksmith",
-      "description": "Combat blacksmith",
-      "stat_priority": ["STR", "DEX", "VIT", "AGI", "INT", "LUK"],
-      "stat_ratios": {"str": 5, "dex": 3, "vit": 2, "agi": 1, "int": 0, "luk": 0},
-      "stat_targets": {"str": 99, "agi": 40, "vit": 50, "dex": 50, "int": 1, "luk": 1},
+    "cart_build": {
+      "name": "Cart Blacksmith",
+      "description": "Cart Revolution specialist with high speed",
+      "stat_priority": ["STR", "AGI", "VIT", "DEX", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 3, "vit": 2, "dex": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 90, "agi": 70, "vit": 50, "int": 1, "dex": 40, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "axe", "armor_type": "medium"}
     },
     "balanced": {
       "name": "Balanced Blacksmith",
-      "description": "Balanced blacksmith",
+      "description": "Well-rounded blacksmith",
+      "stat_priority": ["STR", "DEX", "VIT", "AGI", "LUK", "INT"],
+      "stat_ratios": {"str": 4, "dex": 3, "vit": 3, "agi": 1, "luk": 1, "int": 0},
+      "stat_targets": {"str": 80, "agi": 30, "vit": 60, "int": 20, "dex": 60, "luk": 30},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "axe", "armor_type": "medium"}
+    }
+  },
+  "whitesmith": {
+    "battle_smith": {
+      "name": "Battle Whitesmith",
+      "description": "Melee combat tank with axe mastery",
       "stat_priority": ["STR", "VIT", "DEX", "AGI", "INT", "LUK"],
-      "stat_ratios": {"str": 3, "vit": 3, "dex": 2, "agi": 2, "int": 0, "luk": 0},
-      "stat_targets": {"str": 80, "agi": 40, "vit": 70, "dex": 50, "int": 1, "luk": 1},
+      "stat_ratios": {"str": 5, "vit": 4, "dex": 2, "agi": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 99, "agi": 30, "vit": 80, "int": 1, "dex": 50, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "axe", "armor_type": "medium"}
+    },
+    "forger": {
+      "name": "Forger Whitesmith",
+      "description": "Maximize crafting success rates",
+      "stat_priority": ["DEX", "LUK", "STR", "VIT", "INT", "AGI"],
+      "stat_ratios": {"dex": 5, "luk": 4, "str": 3, "vit": 2, "int": 0, "agi": 0},
+      "stat_targets": {"str": 70, "agi": 20, "vit": 40, "int": 30, "dex": 99, "luk": 80},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "medium"}
+    },
+    "balanced": {
+      "name": "Balanced Whitesmith",
+      "description": "Well-rounded blacksmith",
+      "stat_priority": ["STR", "DEX", "VIT", "AGI", "LUK", "INT"],
+      "stat_ratios": {"str": 4, "dex": 3, "vit": 3, "agi": 1, "luk": 1, "int": 0},
+      "stat_targets": {"str": 80, "agi": 30, "vit": 60, "int": 20, "dex": 60, "luk": 30},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "axe", "armor_type": "medium"}
+    }
+  },
+  "mechanic": {
+    "battle_smith": {
+      "name": "Battle Mechanic",
+      "description": "Melee combat tank with axe mastery",
+      "stat_priority": ["STR", "VIT", "DEX", "AGI", "INT", "LUK"],
+      "stat_ratios": {"str": 5, "vit": 4, "dex": 2, "agi": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 99, "agi": 30, "vit": 80, "int": 1, "dex": 50, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "axe", "armor_type": "medium"}
+    },
+    "forger": {
+      "name": "Forger Mechanic",
+      "description": "Maximize crafting success rates",
+      "stat_priority": ["DEX", "LUK", "STR", "VIT", "INT", "AGI"],
+      "stat_ratios": {"dex": 5, "luk": 4, "str": 3, "vit": 2, "int": 0, "agi": 0},
+      "stat_targets": {"str": 70, "agi": 20, "vit": 40, "int": 30, "dex": 99, "luk": 80},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "medium"}
+    },
+    "balanced": {
+      "name": "Balanced Mechanic",
+      "description": "Well-rounded blacksmith",
+      "stat_priority": ["STR", "DEX", "VIT", "AGI", "LUK", "INT"],
+      "stat_ratios": {"str": 4, "dex": 3, "vit": 3, "agi": 1, "luk": 1, "int": 0},
+      "stat_targets": {"str": 80, "agi": 30, "vit": 60, "int": 20, "dex": 60, "luk": 30},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "axe", "armor_type": "medium"}
+    }
+  },
+  "meister": {
+    "battle_smith": {
+      "name": "Battle Meister",
+      "description": "Melee combat tank with axe mastery",
+      "stat_priority": ["STR", "VIT", "DEX", "AGI", "INT", "LUK"],
+      "stat_ratios": {"str": 5, "vit": 4, "dex": 2, "agi": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 99, "agi": 30, "vit": 80, "int": 1, "dex": 50, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "axe", "armor_type": "medium"}
+    },
+    "forger": {
+      "name": "Forger Meister",
+      "description": "Maximize crafting success rates",
+      "stat_priority": ["DEX", "LUK", "STR", "VIT", "INT", "AGI"],
+      "stat_ratios": {"dex": 5, "luk": 4, "str": 3, "vit": 2, "int": 0, "agi": 0},
+      "stat_targets": {"str": 70, "agi": 20, "vit": 40, "int": 30, "dex": 99, "luk": 80},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "medium"}
+    },
+    "balanced": {
+      "name": "Balanced Meister",
+      "description": "Well-rounded blacksmith",
+      "stat_priority": ["STR", "DEX", "VIT", "AGI", "LUK", "INT"],
+      "stat_ratios": {"str": 4, "dex": 3, "vit": 3, "agi": 1, "luk": 1, "int": 0},
+      "stat_targets": {"str": 80, "agi": 30, "vit": 60, "int": 20, "dex": 60, "luk": 30},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "axe", "armor_type": "medium"}
     }
   },
   "alchemist": {
-    "brewer": {
-      "name": "Brewer Alchemist",
-      "description": "Potion specialist",
-      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
-      "stat_ratios": {"int": 4, "dex": 3, "vit": 2, "agi": 1, "str": 0, "luk": 0},
-      "stat_targets": {"str": 1, "agi": 20, "vit": 50, "dex": 60, "int": 99, "luk": 1},
+    "battle_alchemist": {
+      "name": "Battle Alchemist",
+      "description": "Homunculus combat specialist",
+      "stat_priority": ["STR", "VIT", "INT", "DEX", "AGI", "LUK"],
+      "stat_ratios": {"str": 4, "vit": 4, "int": 2, "dex": 2, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 30, "vit": 80, "int": 50, "dex": 50, "luk": 1},
       "skills_priority": [],
-      "equipment_preference": {"weapon_type": "axe", "armor_type": "cloth"}
+      "equipment_preference": {"weapon_type": "axe", "armor_type": "medium"}
     },
-    "homunculus": {
-      "name": "Homunculus Alchemist",
-      "description": "Homunculus specialist",
-      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
-      "stat_ratios": {"int": 4, "vit": 3, "dex": 2, "agi": 1, "str": 0, "luk": 0},
-      "stat_targets": {"str": 1, "agi": 20, "vit": 60, "dex": 50, "int": 99, "luk": 1},
+    "potion_master": {
+      "name": "Potion Master Alchemist",
+      "description": "Maximum potion brewing success",
+      "stat_priority": ["INT", "DEX", "LUK", "VIT", "AGI", "STR"],
+      "stat_ratios": {"int": 4, "dex": 5, "luk": 2, "vit": 2, "agi": 0, "str": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 40, "int": 90, "dex": 99, "luk": 50},
       "skills_priority": [],
-      "equipment_preference": {"weapon_type": "axe", "armor_type": "cloth"}
+      "equipment_preference": {"weapon_type": "any", "armor_type": "cloth"}
     },
-    "balanced": {
-      "name": "Balanced Alchemist",
-      "description": "Balanced alchemist",
+    "bomb_specialist": {
+      "name": "Bomb Specialist Alchemist",
+      "description": "Acid Bomb/Fire Bottle damage dealer",
       "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
-      "stat_ratios": {"int": 4, "dex": 3, "vit": 2, "agi": 1, "str": 0, "luk": 0},
-      "stat_targets": {"str": 1, "agi": 20, "vit": 50, "dex": 60, "int": 99, "luk": 1},
+      "stat_ratios": {"int": 5, "dex": 4, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 50, "int": 99, "dex": 90, "luk": 1},
       "skills_priority": [],
-      "equipment_preference": {"weapon_type": "axe", "armor_type": "cloth"}
-    }
-  },
-  "super_novice": {
-    "balanced": {
-      "name": "Balanced Super Novice",
-      "description": "Jack of all trades",
-      "stat_priority": ["STR", "AGI", "VIT", "DEX", "INT", "LUK"],
-      "stat_ratios": {"str": 2, "agi": 2, "vit": 2, "dex": 2, "int": 1, "luk": 1},
-      "stat_targets": {"str": 50, "agi": 50, "vit": 50, "dex": 50, "int": 40, "luk": 30},
+      "equipment_preference": {"weapon_type": "any", "armor_type": "cloth"}
+    },
+    "homun_support": {
+      "name": "Homun Support Alchemist",
+      "description": "Support homunculus while staying alive",
+      "stat_priority": ["VIT", "INT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"vit": 5, "int": 4, "dex": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 99, "int": 80, "dex": 60, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "any", "armor_type": "medium"}
     },
-    "all_rounder": {
-      "name": "All-Rounder Super Novice",
-      "description": "Versatile build",
-      "stat_priority": ["STR", "DEX", "VIT", "AGI", "INT", "LUK"],
-      "stat_ratios": {"str": 2, "dex": 2, "vit": 2, "agi": 2, "int": 1, "luk": 1},
-      "stat_targets": {"str": 60, "agi": 40, "vit": 50, "dex": 60, "int": 30, "luk": 30},
+    "balanced": {
+      "name": "Balanced Alchemist",
+      "description": "Well-rounded alchemist",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "LUK", "STR"],
+      "stat_ratios": {"int": 4, "dex": 4, "vit": 3, "agi": 1, "luk": 1, "str": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 60, "int": 80, "dex": 80, "luk": 30},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "cloth"}
+    }
+  },
+  "creator": {
+    "battle_alchemist": {
+      "name": "Battle Creator",
+      "description": "Homunculus combat specialist",
+      "stat_priority": ["STR", "VIT", "INT", "DEX", "AGI", "LUK"],
+      "stat_ratios": {"str": 4, "vit": 4, "int": 2, "dex": 2, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 30, "vit": 80, "int": 50, "dex": 50, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "axe", "armor_type": "medium"}
+    },
+    "potion_master": {
+      "name": "Potion Master Creator",
+      "description": "Maximum potion brewing success",
+      "stat_priority": ["INT", "DEX", "LUK", "VIT", "AGI", "STR"],
+      "stat_ratios": {"int": 4, "dex": 5, "luk": 2, "vit": 2, "agi": 0, "str": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 40, "int": 90, "dex": 99, "luk": 50},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "cloth"}
+    },
+    "balanced": {
+      "name": "Balanced Creator",
+      "description": "Well-rounded alchemist",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "LUK", "STR"],
+      "stat_ratios": {"int": 4, "dex": 4, "vit": 3, "agi": 1, "luk": 1, "str": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 60, "int": 80, "dex": 80, "luk": 30},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "cloth"}
+    }
+  },
+  "genetic": {
+    "battle_alchemist": {
+      "name": "Battle Genetic",
+      "description": "Homunculus combat specialist",
+      "stat_priority": ["STR", "VIT", "INT", "DEX", "AGI", "LUK"],
+      "stat_ratios": {"str": 4, "vit": 4, "int": 2, "dex": 2, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 30, "vit": 80, "int": 50, "dex": 50, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "axe", "armor_type": "medium"}
+    },
+    "potion_master": {
+      "name": "Potion Master Genetic",
+      "description": "Maximum potion brewing success",
+      "stat_priority": ["INT", "DEX", "LUK", "VIT", "AGI", "STR"],
+      "stat_ratios": {"int": 4, "dex": 5, "luk": 2, "vit": 2, "agi": 0, "str": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 40, "int": 90, "dex": 99, "luk": 50},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "cloth"}
+    },
+    "balanced": {
+      "name": "Balanced Genetic",
+      "description": "Well-rounded alchemist",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "LUK", "STR"],
+      "stat_ratios": {"int": 4, "dex": 4, "vit": 3, "agi": 1, "luk": 1, "str": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 60, "int": 80, "dex": 80, "luk": 30},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "cloth"}
+    }
+  },
+  "biolo": {
+    "battle_alchemist": {
+      "name": "Battle Biolo",
+      "description": "Homunculus combat specialist",
+      "stat_priority": ["STR", "VIT", "INT", "DEX", "AGI", "LUK"],
+      "stat_ratios": {"str": 4, "vit": 4, "int": 2, "dex": 2, "agi": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 30, "vit": 80, "int": 50, "dex": 50, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "axe", "armor_type": "medium"}
+    },
+    "potion_master": {
+      "name": "Potion Master Biolo",
+      "description": "Maximum potion brewing success",
+      "stat_priority": ["INT", "DEX", "LUK", "VIT", "AGI", "STR"],
+      "stat_ratios": {"int": 4, "dex": 5, "luk": 2, "vit": 2, "agi": 0, "str": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 40, "int": 90, "dex": 99, "luk": 50},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "cloth"}
+    },
+    "balanced": {
+      "name": "Balanced Biolo",
+      "description": "Well-rounded alchemist",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "LUK", "STR"],
+      "stat_ratios": {"int": 4, "dex": 4, "vit": 3, "agi": 1, "luk": 1, "str": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 60, "int": 80, "dex": 80, "luk": 30},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "cloth"}
+    }
+  },
+  "super_novice": {
+    "str_build": {
+      "name": "STR Super Novice",
+      "description": "Melee focused Super Novice",
+      "stat_priority": ["STR", "VIT", "DEX", "AGI", "INT", "LUK"],
+      "stat_ratios": {"str": 5, "vit": 3, "dex": 2, "agi": 2, "int": 0, "luk": 0},
+      "stat_targets": {"str": 99, "agi": 50, "vit": 70, "int": 1, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "sword", "armor_type": "medium"}
+    },
+    "agi_build": {
+      "name": "AGI Super Novice",
+      "description": "ASPD focused build",
+      "stat_priority": ["AGI", "DEX", "STR", "VIT", "INT", "LUK"],
+      "stat_ratios": {"agi": 5, "dex": 4, "str": 3, "vit": 2, "int": 0, "luk": 0},
+      "stat_targets": {"str": 60, "agi": 99, "vit": 50, "int": 1, "dex": 80, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "dagger", "armor_type": "light"}
+    },
+    "hybrid": {
+      "name": "Hybrid Super Novice",
+      "description": "Use all available skills",
+      "stat_priority": ["STR", "INT", "DEX", "VIT", "AGI", "LUK"],
+      "stat_ratios": {"str": 3, "int": 3, "dex": 2, "vit": 2, "agi": 1, "luk": 0},
+      "stat_targets": {"str": 70, "agi": 30, "vit": 50, "int": 80, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "medium"}
+    },
+    "tank": {
+      "name": "Tank Super Novice",
+      "description": "Maximum survivability",
+      "stat_priority": ["VIT", "STR", "DEX", "AGI", "INT", "LUK"],
+      "stat_ratios": {"vit": 5, "str": 3, "dex": 2, "agi": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 70, "agi": 30, "vit": 99, "int": 1, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "sword", "armor_type": "heavy"}
+    },
+    "balanced": {
+      "name": "Balanced Super Novice",
+      "description": "True jack-of-all-trades",
+      "stat_priority": ["STR", "AGI", "VIT", "INT", "DEX", "LUK"],
+      "stat_ratios": {"str": 2, "agi": 2, "vit": 2, "int": 2, "dex": 2, "luk": 1},
+      "stat_targets": {"str": 60, "agi": 60, "vit": 60, "int": 60, "dex": 60, "luk": 40},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "medium"}
+    }
+  },
+  "super_novice_e": {
+    "str_build": {
+      "name": "STR Super Novice E",
+      "description": "Melee focused Super Novice",
+      "stat_priority": ["STR", "VIT", "DEX", "AGI", "INT", "LUK"],
+      "stat_ratios": {"str": 5, "vit": 3, "dex": 2, "agi": 2, "int": 0, "luk": 0},
+      "stat_targets": {"str": 99, "agi": 50, "vit": 70, "int": 1, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "sword", "armor_type": "medium"}
+    },
+    "agi_build": {
+      "name": "AGI Super Novice E",
+      "description": "ASPD focused build",
+      "stat_priority": ["AGI", "DEX", "STR", "VIT", "INT", "LUK"],
+      "stat_ratios": {"agi": 5, "dex": 4, "str": 3, "vit": 2, "int": 0, "luk": 0},
+      "stat_targets": {"str": 60, "agi": 99, "vit": 50, "int": 1, "dex": 80, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "dagger", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Super Novice E",
+      "description": "True jack-of-all-trades",
+      "stat_priority": ["STR", "AGI", "VIT", "INT", "DEX", "LUK"],
+      "stat_ratios": {"str": 2, "agi": 2, "vit": 2, "int": 2, "dex": 2, "luk": 1},
+      "stat_targets": {"str": 60, "agi": 60, "vit": 60, "int": 60, "dex": 60, "luk": 40},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "medium"}
+    }
+  },
+  "hyper_novice": {
+    "str_build": {
+      "name": "STR Hyper Novice",
+      "description": "Melee focused Super Novice",
+      "stat_priority": ["STR", "VIT", "DEX", "AGI", "INT", "LUK"],
+      "stat_ratios": {"str": 5, "vit": 3, "dex": 2, "agi": 2, "int": 0, "luk": 0},
+      "stat_targets": {"str": 99, "agi": 50, "vit": 70, "int": 1, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "sword", "armor_type": "medium"}
+    },
+    "agi_build": {
+      "name": "AGI Hyper Novice",
+      "description": "ASPD focused build",
+      "stat_priority": ["AGI", "DEX", "STR", "VIT", "INT", "LUK"],
+      "stat_ratios": {"agi": 5, "dex": 4, "str": 3, "vit": 2, "int": 0, "luk": 0},
+      "stat_targets": {"str": 60, "agi": 99, "vit": 50, "int": 1, "dex": 80, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "dagger", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Hyper Novice",
+      "description": "True jack-of-all-trades",
+      "stat_priority": ["STR", "AGI", "VIT", "INT", "DEX", "LUK"],
+      "stat_ratios": {"str": 2, "agi": 2, "vit": 2, "int": 2, "dex": 2, "luk": 1},
+      "stat_targets": {"str": 60, "agi": 60, "vit": 60, "int": 60, "dex": 60, "luk": 40},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "any", "armor_type": "medium"}
     }
@@ -682,101 +2182,557 @@
     }
   },
   "star_gladiator": {
-    "solar": {
+    "solar_build": {
       "name": "Solar Star Gladiator",
-      "description": "Sun stance specialist",
+      "description": "Physical kick damage specialist (Solar)",
       "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
-      "stat_ratios": {"str": 4, "agi": 3, "dex": 2, "vit": 1, "int": 0, "luk": 0},
-      "stat_targets": {"str": 99, "agi": 80, "vit": 40, "dex": 40, "int": 1, "luk": 1},
+      "stat_ratios": {"str": 5, "agi": 4, "dex": 2, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 99, "agi": 90, "vit": 30, "int": 1, "dex": 60, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "book", "armor_type": "light"}
     },
-    "lunar": {
+    "lunar_build": {
       "name": "Lunar Star Gladiator",
-      "description": "Moon stance specialist",
-      "stat_priority": ["AGI", "STR", "DEX", "VIT", "INT", "LUK"],
-      "stat_ratios": {"agi": 4, "str": 3, "dex": 2, "vit": 1, "int": 0, "luk": 0},
-      "stat_targets": {"str": 70, "agi": 99, "vit": 40, "dex": 50, "int": 1, "luk": 1},
+      "description": "Critical kick build (Lunar)",
+      "stat_priority": ["AGI", "LUK", "STR", "DEX", "VIT", "INT"],
+      "stat_ratios": {"agi": 5, "luk": 4, "str": 3, "dex": 2, "vit": 0, "int": 0},
+      "stat_targets": {"str": 70, "agi": 99, "vit": 30, "int": 1, "dex": 60, "luk": 80},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "book", "armor_type": "light"}
     },
     "stellar": {
       "name": "Stellar Star Gladiator",
-      "description": "Star stance specialist",
-      "stat_priority": ["STR", "AGI", "VIT", "DEX", "INT", "LUK"],
-      "stat_ratios": {"str": 4, "agi": 3, "vit": 2, "dex": 1, "int": 0, "luk": 0},
-      "stat_targets": {"str": 90, "agi": 80, "vit": 50, "dex": 40, "int": 1, "luk": 1},
+      "description": "Tank build with stellar skills",
+      "stat_priority": ["STR", "VIT", "AGI", "DEX", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "vit": 4, "agi": 3, "dex": 2, "int": 0, "luk": 0},
+      "stat_targets": {"str": 90, "agi": 60, "vit": 90, "int": 1, "dex": 50, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "book", "armor_type": "medium"}
+    },
+    "union": {
+      "name": "Union Star Gladiator",
+      "description": "Hybrid physical/magical",
+      "stat_priority": ["STR", "INT", "AGI", "DEX", "VIT", "LUK"],
+      "stat_ratios": {"str": 4, "int": 3, "agi": 2, "dex": 2, "vit": 1, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 50, "vit": 40, "int": 70, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "book", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Star Gladiator",
+      "description": "Well-rounded Star Gladiator",
+      "stat_priority": ["STR", "AGI", "DEX", "VIT", "LUK", "INT"],
+      "stat_ratios": {"str": 4, "agi": 4, "dex": 2, "vit": 2, "luk": 1, "int": 0},
+      "stat_targets": {"str": 80, "agi": 80, "vit": 40, "int": 1, "dex": 60, "luk": 20},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "book", "armor_type": "light"}
+    }
+  },
+  "star_emperor": {
+    "solar_build": {
+      "name": "Solar Star Emperor",
+      "description": "Physical kick damage specialist (Solar)",
+      "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+      "stat_ratios": {"str": 5, "agi": 4, "dex": 2, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 99, "agi": 90, "vit": 30, "int": 1, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "book", "armor_type": "light"}
+    },
+    "lunar_build": {
+      "name": "Lunar Star Emperor",
+      "description": "Critical kick build (Lunar)",
+      "stat_priority": ["AGI", "LUK", "STR", "DEX", "VIT", "INT"],
+      "stat_ratios": {"agi": 5, "luk": 4, "str": 3, "dex": 2, "vit": 0, "int": 0},
+      "stat_targets": {"str": 70, "agi": 99, "vit": 30, "int": 1, "dex": 60, "luk": 80},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "book", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Star Emperor",
+      "description": "Well-rounded Star Emperor",
+      "stat_priority": ["STR", "AGI", "DEX", "VIT", "LUK", "INT"],
+      "stat_ratios": {"str": 4, "agi": 4, "dex": 2, "vit": 2, "luk": 1, "int": 0},
+      "stat_targets": {"str": 80, "agi": 80, "vit": 40, "int": 1, "dex": 60, "luk": 20},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "book", "armor_type": "light"}
+    }
+  },
+  "sky_emperor": {
+    "solar_build": {
+      "name": "Solar Sky Emperor",
+      "description": "Physical kick damage specialist (Solar)",
+      "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+      "stat_ratios": {"str": 5, "agi": 4, "dex": 2, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 99, "agi": 90, "vit": 30, "int": 1, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "book", "armor_type": "light"}
+    },
+    "lunar_build": {
+      "name": "Lunar Sky Emperor",
+      "description": "Critical kick build (Lunar)",
+      "stat_priority": ["AGI", "LUK", "STR", "DEX", "VIT", "INT"],
+      "stat_ratios": {"agi": 5, "luk": 4, "str": 3, "dex": 2, "vit": 0, "int": 0},
+      "stat_targets": {"str": 70, "agi": 99, "vit": 30, "int": 1, "dex": 60, "luk": 80},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "book", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Sky Emperor",
+      "description": "Well-rounded Sky Emperor",
+      "stat_priority": ["STR", "AGI", "DEX", "VIT", "LUK", "INT"],
+      "stat_ratios": {"str": 4, "agi": 4, "dex": 2, "vit": 2, "luk": 1, "int": 0},
+      "stat_targets": {"str": 80, "agi": 80, "vit": 40, "int": 1, "dex": 60, "luk": 20},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "book", "armor_type": "light"}
     }
   },
   "soul_linker": {
-    "support": {
-      "name": "Support Soul Linker",
-      "description": "Support specialist",
+    "full_support": {
+      "name": "Full Support Soul Linker",
+      "description": "Maximum Ka skill effectiveness",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "vit": 4, "dex": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 90, "int": 99, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "rod", "armor_type": "cloth"}
+    },
+    "hybrid": {
+      "name": "Hybrid Soul Linker",
+      "description": "Support with offensive capabilities",
       "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
-      "stat_ratios": {"int": 4, "dex": 3, "vit": 2, "agi": 1, "str": 0, "luk": 0},
-      "stat_targets": {"str": 1, "agi": 30, "vit": 50, "dex": 70, "int": 99, "luk": 1},
+      "stat_ratios": {"int": 5, "dex": 4, "vit": 2, "agi": 2, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 40, "vit": 50, "int": 99, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "rod", "armor_type": "cloth"}
+    },
+    "tank_support": {
+      "name": "Tank Support Soul Linker",
+      "description": "High survivability support",
+      "stat_priority": ["VIT", "INT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"vit": 5, "int": 4, "dex": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 99, "int": 90, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "book", "armor_type": "medium"}
+    },
+    "fast_cast": {
+      "name": "Fast Cast Soul Linker",
+      "description": "Instant cast support",
+      "stat_priority": ["INT", "DEX", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "dex": 5, "agi": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 50, "vit": 30, "int": 99, "dex": 99, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "rod", "armor_type": "cloth"}
     },
     "balanced": {
       "name": "Balanced Soul Linker",
-      "description": "Balanced soul linker",
+      "description": "Well-rounded Soul Linker",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "vit": 3, "dex": 3, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 70, "int": 90, "dex": 80, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "rod", "armor_type": "cloth"}
+    }
+  },
+  "soul_reaper": {
+    "full_support": {
+      "name": "Full Support Soul Reaper",
+      "description": "Maximum Ka skill effectiveness",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "vit": 4, "dex": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 90, "int": 99, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "rod", "armor_type": "cloth"}
+    },
+    "hybrid": {
+      "name": "Hybrid Soul Reaper",
+      "description": "Support with offensive capabilities",
       "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
-      "stat_ratios": {"int": 4, "dex": 3, "vit": 2, "agi": 1, "str": 0, "luk": 0},
-      "stat_targets": {"str": 1, "agi": 30, "vit": 50, "dex": 70, "int": 99, "luk": 1},
+      "stat_ratios": {"int": 5, "dex": 4, "vit": 2, "agi": 2, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 40, "vit": 50, "int": 99, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "rod", "armor_type": "cloth"}
+    },
+    "balanced": {
+      "name": "Balanced Soul Reaper",
+      "description": "Well-rounded Soul Reaper",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "vit": 3, "dex": 3, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 70, "int": 90, "dex": 80, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "rod", "armor_type": "cloth"}
+    }
+  },
+  "soul_ascetic": {
+    "full_support": {
+      "name": "Full Support Soul Ascetic",
+      "description": "Maximum Ka skill effectiveness",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "vit": 4, "dex": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 20, "vit": 90, "int": 99, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "rod", "armor_type": "cloth"}
+    },
+    "hybrid": {
+      "name": "Hybrid Soul Ascetic",
+      "description": "Support with offensive capabilities",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "dex": 4, "vit": 2, "agi": 2, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 40, "vit": 50, "int": 99, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "rod", "armor_type": "cloth"}
+    },
+    "balanced": {
+      "name": "Balanced Soul Ascetic",
+      "description": "Well-rounded Soul Ascetic",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "vit": 3, "dex": 3, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 70, "int": 90, "dex": 80, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "rod", "armor_type": "cloth"}
     }
   },
   "gunslinger": {
-    "dex_gunner": {
-      "name": "DEX Gunslinger",
-      "description": "High DEX gunner",
-      "stat_priority": ["DEX", "AGI", "STR", "VIT", "INT", "LUK"],
-      "stat_ratios": {"dex": 5, "agi": 3, "str": 2, "vit": 1, "int": 0, "luk": 0},
-      "stat_targets": {"str": 40, "agi": 60, "vit": 30, "dex": 99, "int": 1, "luk": 1},
+    "desperado": {
+      "name": "Desperado Gunslinger",
+      "description": "Close range Desperado specialist",
+      "stat_priority": ["AGI", "STR", "DEX", "VIT", "INT", "LUK"],
+      "stat_ratios": {"agi": 4, "str": 4, "dex": 3, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 90, "vit": 30, "int": 1, "dex": 70, "luk": 1},
       "skills_priority": [],
-      "equipment_preference": {"weapon_type": "gun", "armor_type": "light"}
+      "equipment_preference": {"weapon_type": "pistol", "armor_type": "light"}
+    },
+    "sniper": {
+      "name": "Sniper Gunslinger",
+      "description": "Long range precision shooter",
+      "stat_priority": ["DEX", "AGI", "LUK", "INT", "VIT", "STR"],
+      "stat_ratios": {"dex": 5, "agi": 3, "luk": 2, "int": 1, "vit": 0, "str": 0},
+      "stat_targets": {"str": 30, "agi": 70, "vit": 30, "int": 30, "dex": 99, "luk": 50},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "rifle", "armor_type": "light"}
+    },
+    "tracking": {
+      "name": "Tracking Gunslinger",
+      "description": "Tracking skill specialist",
+      "stat_priority": ["DEX", "INT", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"dex": 5, "int": 4, "agi": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 50, "vit": 30, "int": 80, "dex": 99, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "rifle", "armor_type": "light"}
+    },
+    "grenade": {
+      "name": "Grenade Gunslinger",
+      "description": "Grenade Launcher specialist",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 4, "vit": 2, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 50, "int": 90, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "grenade_launcher", "armor_type": "medium"}
     },
     "balanced": {
       "name": "Balanced Gunslinger",
-      "description": "Balanced gunner",
-      "stat_priority": ["DEX", "AGI", "VIT", "STR", "INT", "LUK"],
-      "stat_ratios": {"dex": 4, "agi": 3, "vit": 2, "str": 1, "int": 0, "luk": 0},
-      "stat_targets": {"str": 30, "agi": 60, "vit": 40, "dex": 99, "int": 1, "luk": 1},
+      "description": "Well-rounded gunslinger",
+      "stat_priority": ["DEX", "AGI", "STR", "VIT", "LUK", "INT"],
+      "stat_ratios": {"dex": 4, "agi": 3, "str": 2, "vit": 1, "luk": 1, "int": 0},
+      "stat_targets": {"str": 50, "agi": 70, "vit": 30, "int": 30, "dex": 90, "luk": 40},
       "skills_priority": [],
-      "equipment_preference": {"weapon_type": "gun", "armor_type": "light"}
+      "equipment_preference": {"weapon_type": "any_gun", "armor_type": "light"}
+    }
+  },
+  "rebellion": {
+    "desperado": {
+      "name": "Desperado Rebellion",
+      "description": "Close range Desperado specialist",
+      "stat_priority": ["AGI", "STR", "DEX", "VIT", "INT", "LUK"],
+      "stat_ratios": {"agi": 4, "str": 4, "dex": 3, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 90, "vit": 30, "int": 1, "dex": 70, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "pistol", "armor_type": "light"}
+    },
+    "sniper": {
+      "name": "Sniper Rebellion",
+      "description": "Long range precision shooter",
+      "stat_priority": ["DEX", "AGI", "LUK", "INT", "VIT", "STR"],
+      "stat_ratios": {"dex": 5, "agi": 3, "luk": 2, "int": 1, "vit": 0, "str": 0},
+      "stat_targets": {"str": 30, "agi": 70, "vit": 30, "int": 30, "dex": 99, "luk": 50},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "rifle", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Rebellion",
+      "description": "Well-rounded gunslinger",
+      "stat_priority": ["DEX", "AGI", "STR", "VIT", "LUK", "INT"],
+      "stat_ratios": {"dex": 4, "agi": 3, "str": 2, "vit": 1, "luk": 1, "int": 0},
+      "stat_targets": {"str": 50, "agi": 70, "vit": 30, "int": 30, "dex": 90, "luk": 40},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any_gun", "armor_type": "light"}
+    }
+  },
+  "night_watch": {
+    "desperado": {
+      "name": "Desperado Night Watch",
+      "description": "Close range Desperado specialist",
+      "stat_priority": ["AGI", "STR", "DEX", "VIT", "INT", "LUK"],
+      "stat_ratios": {"agi": 4, "str": 4, "dex": 3, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 90, "vit": 30, "int": 1, "dex": 70, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "pistol", "armor_type": "light"}
+    },
+    "sniper": {
+      "name": "Sniper Night Watch",
+      "description": "Long range precision shooter",
+      "stat_priority": ["DEX", "AGI", "LUK", "INT", "VIT", "STR"],
+      "stat_ratios": {"dex": 5, "agi": 3, "luk": 2, "int": 1, "vit": 0, "str": 0},
+      "stat_targets": {"str": 30, "agi": 70, "vit": 30, "int": 30, "dex": 99, "luk": 50},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "rifle", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Night Watch",
+      "description": "Well-rounded gunslinger",
+      "stat_priority": ["DEX", "AGI", "STR", "VIT", "LUK", "INT"],
+      "stat_ratios": {"dex": 4, "agi": 3, "str": 2, "vit": 1, "luk": 1, "int": 0},
+      "stat_targets": {"str": 50, "agi": 70, "vit": 30, "int": 30, "dex": 90, "luk": 40},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any_gun", "armor_type": "light"}
     }
   },
   "ninja": {
     "magic_ninja": {
       "name": "Magic Ninja",
-      "description": "Ninjutsu specialist",
+      "description": "Ninjutsu spell specialist",
       "stat_priority": ["INT", "DEX", "AGI", "VIT", "STR", "LUK"],
-      "stat_ratios": {"int": 4, "dex": 3, "agi": 2, "vit": 1, "str": 0, "luk": 0},
-      "stat_targets": {"str": 1, "agi": 50, "vit": 30, "dex": 60, "int": 99, "luk": 1},
+      "stat_ratios": {"int": 5, "dex": 4, "agi": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 50, "vit": 30, "int": 99, "dex": 90, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "huuma_shuriken", "armor_type": "cloth"}
     },
-    "physical_ninja": {
+    "physical": {
       "name": "Physical Ninja",
-      "description": "Physical combat ninja",
+      "description": "Melee ninja with physical skills",
       "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
-      "stat_ratios": {"str": 4, "agi": 3, "dex": 2, "vit": 1, "int": 0, "luk": 0},
-      "stat_targets": {"str": 99, "agi": 80, "vit": 30, "dex": 50, "int": 1, "luk": 1},
+      "stat_ratios": {"str": 4, "agi": 4, "dex": 2, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 90, "agi": 90, "vit": 30, "int": 1, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "dagger", "armor_type": "light"}
+    },
+    "throw_build": {
+      "name": "Throw Ninja",
+      "description": "Throwing weapon specialist",
+      "stat_priority": ["DEX", "AGI", "STR", "VIT", "INT", "LUK"],
+      "stat_ratios": {"dex": 5, "agi": 4, "str": 2, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 50, "agi": 80, "vit": 30, "int": 30, "dex": 99, "luk": 1},
       "skills_priority": [],
       "equipment_preference": {"weapon_type": "huuma_shuriken", "armor_type": "light"}
     },
+    "hybrid": {
+      "name": "Hybrid Ninja",
+      "description": "Magic and physical combined",
+      "stat_priority": ["STR", "INT", "DEX", "AGI", "VIT", "LUK"],
+      "stat_ratios": {"str": 3, "int": 3, "dex": 3, "agi": 2, "vit": 0, "luk": 0},
+      "stat_targets": {"str": 70, "agi": 50, "vit": 30, "int": 80, "dex": 70, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "light"}
+    },
     "balanced": {
       "name": "Balanced Ninja",
-      "description": "Balanced ninja",
-      "stat_priority": ["DEX", "AGI", "INT", "VIT", "STR", "LUK"],
-      "stat_ratios": {"dex": 3, "agi": 3, "int": 2, "vit": 2, "str": 0, "luk": 0},
-      "stat_targets": {"str": 30, "agi": 70, "vit": 40, "dex": 80, "int": 50, "luk": 1},
+      "description": "Well-rounded ninja",
+      "stat_priority": ["AGI", "INT", "DEX", "VIT", "STR", "LUK"],
+      "stat_ratios": {"agi": 3, "int": 3, "dex": 3, "vit": 1, "str": 1, "luk": 0},
+      "stat_targets": {"str": 40, "agi": 70, "vit": 30, "int": 70, "dex": 80, "luk": 1},
       "skills_priority": [],
-      "equipment_preference": {"weapon_type": "huuma_shuriken", "armor_type": "light"}
+      "equipment_preference": {"weapon_type": "any", "armor_type": "light"}
+    }
+  },
+  "kagerou": {
+    "magic_ninja": {
+      "name": "Magic Kagerou",
+      "description": "Ninjutsu spell specialist",
+      "stat_priority": ["INT", "DEX", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "dex": 4, "agi": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 50, "vit": 30, "int": 99, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "huuma_shuriken", "armor_type": "cloth"}
+    },
+    "physical": {
+      "name": "Physical Kagerou",
+      "description": "Melee ninja with physical skills",
+      "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 4, "dex": 2, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 90, "agi": 90, "vit": 30, "int": 1, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "dagger", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Kagerou",
+      "description": "Well-rounded ninja",
+      "stat_priority": ["AGI", "INT", "DEX", "VIT", "STR", "LUK"],
+      "stat_ratios": {"agi": 3, "int": 3, "dex": 3, "vit": 1, "str": 1, "luk": 0},
+      "stat_targets": {"str": 40, "agi": 70, "vit": 30, "int": 70, "dex": 80, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "light"}
+    }
+  },
+  "shinkiro": {
+    "magic_ninja": {
+      "name": "Magic Shinkiro",
+      "description": "Ninjutsu spell specialist",
+      "stat_priority": ["INT", "DEX", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "dex": 4, "agi": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 50, "vit": 30, "int": 99, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "huuma_shuriken", "armor_type": "cloth"}
+    },
+    "physical": {
+      "name": "Physical Shinkiro",
+      "description": "Melee ninja with physical skills",
+      "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 4, "dex": 2, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 90, "agi": 90, "vit": 30, "int": 1, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "dagger", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Shinkiro",
+      "description": "Well-rounded ninja",
+      "stat_priority": ["AGI", "INT", "DEX", "VIT", "STR", "LUK"],
+      "stat_ratios": {"agi": 3, "int": 3, "dex": 3, "vit": 1, "str": 1, "luk": 0},
+      "stat_targets": {"str": 40, "agi": 70, "vit": 30, "int": 70, "dex": 80, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "light"}
+    }
+  },
+  "oboro": {
+    "magic_ninja": {
+      "name": "Magic Oboro",
+      "description": "Ninjutsu spell specialist",
+      "stat_priority": ["INT", "DEX", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "dex": 4, "agi": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 50, "vit": 30, "int": 99, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "huuma_shuriken", "armor_type": "cloth"}
+    },
+    "physical": {
+      "name": "Physical Oboro",
+      "description": "Melee ninja with physical skills",
+      "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 4, "dex": 2, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 90, "agi": 90, "vit": 30, "int": 1, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "dagger", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Oboro",
+      "description": "Well-rounded ninja",
+      "stat_priority": ["AGI", "INT", "DEX", "VIT", "STR", "LUK"],
+      "stat_ratios": {"agi": 3, "int": 3, "dex": 3, "vit": 1, "str": 1, "luk": 0},
+      "stat_targets": {"str": 40, "agi": 70, "vit": 30, "int": 70, "dex": 80, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "light"}
+    }
+  },
+  "shiranui": {
+    "magic_ninja": {
+      "name": "Magic Shiranui",
+      "description": "Ninjutsu spell specialist",
+      "stat_priority": ["INT", "DEX", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "dex": 4, "agi": 2, "vit": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 50, "vit": 30, "int": 99, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "huuma_shuriken", "armor_type": "cloth"}
+    },
+    "physical": {
+      "name": "Physical Shiranui",
+      "description": "Melee ninja with physical skills",
+      "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 4, "dex": 2, "vit": 1, "int": 0, "luk": 0},
+      "stat_targets": {"str": 90, "agi": 90, "vit": 30, "int": 1, "dex": 60, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "dagger", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Shiranui",
+      "description": "Well-rounded ninja",
+      "stat_priority": ["AGI", "INT", "DEX", "VIT", "STR", "LUK"],
+      "stat_ratios": {"agi": 3, "int": 3, "dex": 3, "vit": 1, "str": 1, "luk": 0},
+      "stat_targets": {"str": 40, "agi": 70, "vit": 30, "int": 70, "dex": 80, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "light"}
+    }
+  },
+  "summoner": {
+    "physical": {
+      "name": "Physical Summoner",
+      "description": "Physical summon specialist",
+      "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 4, "dex": 3, "vit": 2, "int": 1, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 80, "vit": 40, "int": 30, "dex": 70, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "claw", "armor_type": "light"}
+    },
+    "magic": {
+      "name": "Magic Summoner",
+      "description": "Magic summon specialist",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "dex": 4, "vit": 2, "agi": 2, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 50, "vit": 40, "int": 99, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "foxtail", "armor_type": "cloth"}
+    },
+    "healer": {
+      "name": "Healer Summoner",
+      "description": "Support and healing build",
+      "stat_priority": ["INT", "VIT", "DEX", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "vit": 4, "dex": 3, "agi": 1, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 30, "vit": 80, "int": 99, "dex": 70, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "foxtail", "armor_type": "cloth"}
+    },
+    "hybrid": {
+      "name": "Hybrid Summoner",
+      "description": "Use all summon types",
+      "stat_priority": ["STR", "INT", "DEX", "AGI", "VIT", "LUK"],
+      "stat_ratios": {"str": 3, "int": 3, "dex": 3, "agi": 2, "vit": 2, "luk": 0},
+      "stat_targets": {"str": 60, "agi": 60, "vit": 40, "int": 80, "dex": 70, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "light"}
+    },
+    "balanced": {
+      "name": "Balanced Summoner",
+      "description": "Well-rounded Summoner",
+      "stat_priority": ["INT", "DEX", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 4, "agi": 3, "vit": 2, "str": 1, "luk": 0},
+      "stat_targets": {"str": 40, "agi": 60, "vit": 50, "int": 90, "dex": 80, "luk": 20},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "light"}
+    }
+  },
+  "spirit_handler": {
+    "physical": {
+      "name": "Physical Spirit Handler",
+      "description": "Physical summon specialist",
+      "stat_priority": ["STR", "AGI", "DEX", "VIT", "INT", "LUK"],
+      "stat_ratios": {"str": 4, "agi": 4, "dex": 3, "vit": 2, "int": 1, "luk": 0},
+      "stat_targets": {"str": 80, "agi": 80, "vit": 40, "int": 30, "dex": 70, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "claw", "armor_type": "light"}
+    },
+    "magic": {
+      "name": "Magic Spirit Handler",
+      "description": "Magic summon specialist",
+      "stat_priority": ["INT", "DEX", "VIT", "AGI", "STR", "LUK"],
+      "stat_ratios": {"int": 5, "dex": 4, "vit": 2, "agi": 2, "str": 0, "luk": 0},
+      "stat_targets": {"str": 1, "agi": 50, "vit": 40, "int": 99, "dex": 90, "luk": 1},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "foxtail", "armor_type": "cloth"}
+    },
+    "balanced": {
+      "name": "Balanced Spirit Handler",
+      "description": "Well-rounded Summoner",
+      "stat_priority": ["INT", "DEX", "AGI", "VIT", "STR", "LUK"],
+      "stat_ratios": {"int": 4, "dex": 4, "agi": 3, "vit": 2, "str": 1, "luk": 0},
+      "stat_targets": {"str": 40, "agi": 60, "vit": 50, "int": 90, "dex": 80, "luk": 20},
+      "skills_priority": [],
+      "equipment_preference": {"weapon_type": "any", "armor_type": "light"}
     }
   },
   "playstyles": {

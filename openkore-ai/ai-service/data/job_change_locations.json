@@ -1,0 +1,570 @@
+{
+  "version": "2.0.0",
+  "description": "Job Change NPC Locations - Complete coverage for all job paths including extended classes",
+  "requirements": {
+    "Novice": {
+      "next_jobs": ["Swordman", "Mage", "Archer", "Acolyte", "Merchant", "Thief"],
+      "base_level": 10,
+      "job_level": 10
+    },
+    "Swordman": {
+      "next_jobs": ["Knight", "Crusader"],
+      "base_level": 40,
+      "job_level": 40
+    },
+    "Mage": {
+      "next_jobs": ["Wizard", "Sage"],
+      "base_level": 40,
+      "job_level": 40
+    },
+    "Archer": {
+      "next_jobs": ["Hunter", "Dancer", "Bard"],
+      "base_level": 40,
+      "job_level": 40
+    },
+    "Acolyte": {
+      "next_jobs": ["Priest", "Monk"],
+      "base_level": 40,
+      "job_level": 40
+    },
+    "Merchant": {
+      "next_jobs": ["Blacksmith", "Alchemist"],
+      "base_level": 40,
+      "job_level": 40
+    },
+    "Thief": {
+      "next_jobs": ["Assassin", "Rogue"],
+      "base_level": 40,
+      "job_level": 40
+    },
+    "Knight": {
+      "next_jobs": ["Rune_Knight"],
+      "base_level": 99,
+      "job_level": 50
+    },
+    "Crusader": {
+      "next_jobs": ["Royal_Guard"],
+      "base_level": 99,
+      "job_level": 50
+    },
+    "Wizard": {
+      "next_jobs": ["Warlock"],
+      "base_level": 99,
+      "job_level": 50
+    },
+    "Sage": {
+      "next_jobs": ["Sorcerer"],
+      "base_level": 99,
+      "job_level": 50
+    },
+    "Hunter": {
+      "next_jobs": ["Ranger"],
+      "base_level": 99,
+      "job_level": 50
+    },
+    "Bard": {
+      "next_jobs": ["Minstrel"],
+      "base_level": 99,
+      "job_level": 50
+    },
+    "Dancer": {
+      "next_jobs": ["Wanderer"],
+      "base_level": 99,
+      "job_level": 50
+    },
+    "Priest": {
+      "next_jobs": ["Arch_Bishop"],
+      "base_level": 99,
+      "job_level": 50
+    },
+    "Monk": {
+      "next_jobs": ["Sura"],
+      "base_level": 99,
+      "job_level": 50
+    },
+    "Blacksmith": {
+      "next_jobs": ["Mechanic"],
+      "base_level": 99,
+      "job_level": 50
+    },
+    "Alchemist": {
+      "next_jobs": ["Genetic"],
+      "base_level": 99,
+      "job_level": 50
+    },
+    "Assassin": {
+      "next_jobs": ["Guillotine_Cross"],
+      "base_level": 99,
+      "job_level": 50
+    },
+    "Rogue": {
+      "next_jobs": ["Shadow_Chaser"],
+      "base_level": 99,
+      "job_level": 50
+    },
+    "Gunslinger": {
+      "next_jobs": ["Rebellion"],
+      "base_level": 99,
+      "job_level": 70
+    },
+    "Ninja": {
+      "next_jobs": ["Kagerou", "Oboro"],
+      "base_level": 99,
+      "job_level": 70
+    },
+    "Taekwon": {
+      "next_jobs": ["Star_Gladiator", "Soul_Linker"],
+      "base_level": 40,
+      "job_level": 40
+    },
+    "Star_Gladiator": {
+      "next_jobs": ["Star_Emperor"],
+      "base_level": 99,
+      "job_level": 50
+    },
+    "Soul_Linker": {
+      "next_jobs": ["Soul_Reaper"],
+      "base_level": 99,
+      "job_level": 50
+    },
+    "Super_Novice": {
+      "next_jobs": ["Super_Novice_E"],
+      "base_level": 99,
+      "job_level": 99
+    },
+    "Summoner": {
+      "next_jobs": ["Spirit_Handler"],
+      "base_level": 200,
+      "job_level": 60
+    }
+  },
+  "locations": {
+    "Swordman": {
+      "map": "izlude_in",
+      "x": 74,
+      "y": 172,
+      "npc_pattern": "Swordman.*Guild|Guild.*Master",
+      "quest_type": "simple"
+    },
+    "Mage": {
+      "map": "geffen_in",
+      "x": 163,
+      "y": 98,
+      "npc_pattern": "Mage.*Guild|Magic.*Academy",
+      "quest_type": "simple"
+    },
+    "Archer": {
+      "map": "payon_in02",
+      "x": 64,
+      "y": 71,
+      "npc_pattern": "Archer.*Guild|Bow.*Master",
+      "quest_type": "simple"
+    },
+    "Acolyte": {
+      "map": "prt_church",
+      "x": 184,
+      "y": 41,
+      "npc_pattern": "Priest|Father|Bishop",
+      "quest_type": "simple"
+    },
+    "Merchant": {
+      "map": "alberta_in",
+      "x": 53,
+      "y": 43,
+      "npc_pattern": "Merchant.*Guild|Guild.*Master",
+      "quest_type": "simple"
+    },
+    "Thief": {
+      "map": "moc_prydb1",
+      "x": 42,
+      "y": 133,
+      "npc_pattern": "Thief.*Guild|Assassin.*Master",
+      "quest_type": "simple"
+    },
+    "Knight": {
+      "map": "prt_in",
+      "x": 88,
+      "y": 101,
+      "npc_pattern": "Knight.*Guild|Chivalry",
+      "quest_type": "test"
+    },
+    "Crusader": {
+      "map": "prt_castle",
+      "x": 45,
+      "y": 169,
+      "npc_pattern": "Crusader.*Guild|Monk.*Hunter",
+      "quest_type": "test"
+    },
+    "Wizard": {
+      "map": "gef_tower",
+      "x": 106,
+      "y": 35,
+      "npc_pattern": "Wizard|High.*Mage",
+      "quest_type": "test"
+    },
+    "Sage": {
+      "map": "yuno_in03",
+      "x": 154,
+      "y": 35,
+      "npc_pattern": "Sage.*Castle|Academy",
+      "quest_type": "test"
+    },
+    "Hunter": {
+      "map": "hu_in01",
+      "x": 386,
+      "y": 373,
+      "npc_pattern": "Hunter.*Guild|Guild.*Master",
+      "quest_type": "test"
+    },
+    "Bard": {
+      "map": "comodo",
+      "x": 226,
+      "y": 123,
+      "npc_pattern": "Bard.*Guild|Maestro",
+      "quest_type": "test",
+      "gender": "male"
+    },
+    "Dancer": {
+      "map": "comodo",
+      "x": 193,
+      "y": 151,
+      "npc_pattern": "Dancer.*Guild|Gypsy",
+      "quest_type": "test",
+      "gender": "female"
+    },
+    "Assassin": {
+      "map": "in_moc_16",
+      "x": 19,
+      "y": 33,
+      "npc_pattern": "Assassin.*Guild|Shadow.*Master",
+      "quest_type": "test"
+    },
+    "Rogue": {
+      "map": "in_rogue",
+      "x": 363,
+      "y": 123,
+      "npc_pattern": "Rogue.*Guild|Markie",
+      "quest_type": "test"
+    },
+    "Priest": {
+      "map": "prt_church",
+      "x": 16,
+      "y": 41,
+      "npc_pattern": "Bishop|High.*Priest",
+      "quest_type": "test"
+    },
+    "Monk": {
+      "map": "monk_in",
+      "x": 99,
+      "y": 58,
+      "npc_pattern": "Monk.*Monastery|Sensei",
+      "quest_type": "test"
+    },
+    "Blacksmith": {
+      "map": "ein_in01",
+      "x": 18,
+      "y": 28,
+      "npc_pattern": "Blacksmith.*Guild|Altiregen",
+      "quest_type": "test"
+    },
+    "Alchemist": {
+      "map": "alde_alche",
+      "x": 27,
+      "y": 185,
+      "npc_pattern": "Alchemist.*Guild|Darwin",
+      "quest_type": "test"
+    },
+    "Rune_Knight": {
+      "map": "prt_in",
+      "x": 162,
+      "y": 24,
+      "npc_pattern": "Rune.*Knight.*Guild|Rune.*Master",
+      "quest_type": "test"
+    },
+    "Royal_Guard": {
+      "map": "prt_castle",
+      "x": 54,
+      "y": 142,
+      "npc_pattern": "Royal.*Guard.*Guild",
+      "quest_type": "test"
+    },
+    "Warlock": {
+      "map": "gef_tower",
+      "x": 102,
+      "y": 34,
+      "npc_pattern": "Warlock.*Guild|High.*Warlock",
+      "quest_type": "test"
+    },
+    "Sorcerer": {
+      "map": "yuno_in03",
+      "x": 162,
+      "y": 133,
+      "npc_pattern": "Sorcerer.*Guild|Master.*Sorcerer",
+      "quest_type": "test"
+    },
+    "Ranger": {
+      "map": "hu_in01",
+      "x": 386,
+      "y": 305,
+      "npc_pattern": "Ranger.*Guild|Master.*Ranger",
+      "quest_type": "test"
+    },
+    "Minstrel": {
+      "map": "alberta",
+      "x": 196,
+      "y": 134,
+      "npc_pattern": "Minstrel.*Guild|Maestro",
+      "quest_type": "test",
+      "gender": "male"
+    },
+    "Wanderer": {
+      "map": "comodo",
+      "x": 226,
+      "y": 172,
+      "npc_pattern": "Wanderer.*Guild|Master.*Dancer",
+      "quest_type": "test",
+      "gender": "female"
+    },
+    "Arch_Bishop": {
+      "map": "prt_church",
+      "x": 103,
+      "y": 88,
+      "npc_pattern": "Archbishop.*Guild|Cardinal",
+      "quest_type": "test"
+    },
+    "Sura": {
+      "map": "ve_in",
+      "x": 237,
+      "y": 125,
+      "npc_pattern": "Sura.*Guild|Master.*Sura",
+      "quest_type": "test"
+    },
+    "Mechanic": {
+      "map": "jupe_ele",
+      "x": 55,
+      "y": 47,
+      "npc_pattern": "Mechanic.*Guild|Master.*Mechanic",
+      "quest_type": "test"
+    },
+    "Genetic": {
+      "map": "alde_alche",
+      "x": 35,
+      "y": 186,
+      "npc_pattern": "Genetic.*Guild|Master.*Genetic",
+      "quest_type": "test"
+    },
+    "Guillotine_Cross": {
+      "map": "ve_in02",
+      "x": 93,
+      "y": 80,
+      "npc_pattern": "Guillotine.*Cross.*Guild|Master.*Cross",
+      "quest_type": "test"
+    },
+    "Shadow_Chaser": {
+      "map": "job3_rogue01",
+      "x": 16,
+      "y": 156,
+      "npc_pattern": "Shadow.*Chaser.*Guild|Master.*Chaser",
+      "quest_type": "test"
+    },
+    "Rebellion": {
+      "map": "ein_in01",
+      "x": 18,
+      "y": 82,
+      "npc_pattern": "Rebellion.*Guild|Rebellion.*Master",
+      "quest_type": "test"
+    },
+    "Kagerou": {
+      "map": "amatsu",
+      "x": 147,
+      "y": 136,
+      "npc_pattern": "Kagerou.*Master|Shadow.*Master",
+      "quest_type": "test",
+      "gender": "male"
+    },
+    "Oboro": {
+      "map": "amatsu",
+      "x": 147,
+      "y": 136,
+      "npc_pattern": "Oboro.*Master|Shadow.*Master",
+      "quest_type": "test",
+      "gender": "female"
+    },
+    "Star_Emperor": {
+      "map": "payon",
+      "x": 174,
+      "y": 189,
+      "npc_pattern": "Star.*Emperor.*Guild|Celestial.*Master",
+      "quest_type": "test"
+    },
+    "Soul_Reaper": {
+      "map": "payon",
+      "x": 174,
+      "y": 189,
+      "npc_pattern": "Soul.*Reaper.*Guild|Spirit.*Master",
+      "quest_type": "test"
+    },
+    "Super_Novice_E": {
+      "map": "aldeba_in",
+      "x": 223,
+      "y": 167,
+      "npc_pattern": "Super.*Novice|Novice.*Master",
+      "quest_type": "simple"
+    },
+    "Spirit_Handler": {
+      "map": "lasagna",
+      "x": 280,
+      "y": 163,
+      "npc_pattern": "Spirit.*Handler|Doram.*Elder",
+      "quest_type": "special"
+    },
+    "Taekwon": {
+      "map": "payon",
+      "x": 174,
+      "y": 189,
+      "npc_pattern": "Taekwon.*Guild|Kick.*Master",
+      "quest_type": "simple"
+    },
+    "Star_Gladiator": {
+      "map": "payon",
+      "x": 174,
+      "y": 189,
+      "npc_pattern": "Star.*Gladiator|Stellar.*Master",
+      "quest_type": "test"
+    },
+    "Soul_Linker": {
+      "map": "payon",
+      "x": 174,
+      "y": 189,
+      "npc_pattern": "Soul.*Linker|Spirit.*Guide",
+      "quest_type": "test"
+    },
+    "Super_Novice": {
+      "map": "aldeba_in",
+      "x": 223,
+      "y": 167,
+      "npc_pattern": "Super.*Novice|Novice.*Guild",
+      "quest_type": "simple"
+    },
+    "Gunslinger": {
+      "map": "ein_in01",
+      "x": 18,
+      "y": 82,
+      "npc_pattern": "Gunslinger.*Guild|Gun.*Master",
+      "quest_type": "simple"
+    },
+    "Ninja": {
+      "map": "amatsu",
+      "x": 147,
+      "y": 136,
+      "npc_pattern": "Ninja.*Guild|Shadow.*Clan",
+      "quest_type": "simple"
+    },
+    "Summoner": {
+      "map": "lasagna",
+      "x": 280,
+      "y": 163,
+      "npc_pattern": "Summoner.*Elder|Doram.*Village",
+      "quest_type": "simple"
+    }
+  },
+  "progression_paths": {
+    "novice": ["1st_class"],
+    "1st_class": ["2nd_class"],
+    "2nd_class": ["3rd_class"],
+    "3rd_class": ["4th_class"],
+    "extended_1st": ["extended_3rd"],
+    "extended_3rd": ["extended_4th"],
+    "special": ["special_advanced"]
+  },
+  "job_path_mappings": {
+    "description": "Maps job_path identifiers to actual job classes for lookup",
+    "paths": {
+      "swordman_knight_rune_knight": {
+        "jobs": ["Novice", "Swordman", "Knight", "Rune_Knight", "Dragon_Knight"],
+        "type": "main_class"
+      },
+      "swordman_crusader_royal_guard": {
+        "jobs": ["Novice", "Swordman", "Crusader", "Royal_Guard", "Imperial_Guard"],
+        "type": "main_class"
+      },
+      "mage_wizard_warlock": {
+        "jobs": ["Novice", "Mage", "Wizard", "Warlock", "Arch_Mage"],
+        "type": "main_class"
+      },
+      "mage_sage_sorcerer": {
+        "jobs": ["Novice", "Mage", "Sage", "Sorcerer", "Elemental_Master"],
+        "type": "main_class"
+      },
+      "archer_hunter_ranger": {
+        "jobs": ["Novice", "Archer", "Hunter", "Ranger", "Windhawk"],
+        "type": "main_class"
+      },
+      "archer_bard_minstrel": {
+        "jobs": ["Novice", "Archer", "Bard", "Minstrel", "Troubadour"],
+        "type": "main_class",
+        "gender": "male"
+      },
+      "archer_dancer_wanderer": {
+        "jobs": ["Novice", "Archer", "Dancer", "Wanderer", "Trouvere"],
+        "type": "main_class",
+        "gender": "female"
+      },
+      "acolyte_priest_archbishop": {
+        "jobs": ["Novice", "Acolyte", "Priest", "Arch_Bishop", "Cardinal"],
+        "type": "main_class"
+      },
+      "acolyte_monk_sura": {
+        "jobs": ["Novice", "Acolyte", "Monk", "Sura", "Inquisitor"],
+        "type": "main_class"
+      },
+      "merchant_blacksmith_mechanic": {
+        "jobs": ["Novice", "Merchant", "Blacksmith", "Mechanic", "Meister"],
+        "type": "main_class"
+      },
+      "merchant_alchemist_genetic": {
+        "jobs": ["Novice", "Merchant", "Alchemist", "Genetic", "Biolo"],
+        "type": "main_class"
+      },
+      "thief_assassin_guillotine_cross": {
+        "jobs": ["Novice", "Thief", "Assassin", "Guillotine_Cross", "Shadow_Cross"],
+        "type": "main_class"
+      },
+      "thief_rogue_shadow_chaser": {
+        "jobs": ["Novice", "Thief", "Rogue", "Shadow_Chaser", "Abyss_Chaser"],
+        "type": "main_class"
+      },
+      "gunslinger_rebellion": {
+        "jobs": ["Gunslinger", "Rebellion", "Night_Watch"],
+        "type": "extended_class"
+      },
+      "ninja_kagerou": {
+        "jobs": ["Ninja", "Kagerou", "Shinkiro"],
+        "type": "extended_class",
+        "gender": "male"
+      },
+      "ninja_oboro": {
+        "jobs": ["Ninja", "Oboro", "Shiranui"],
+        "type": "extended_class",
+        "gender": "female"
+      },
+      "taekwon_star_gladiator": {
+        "jobs": ["Taekwon", "Star_Gladiator", "Star_Emperor", "Sky_Emperor"],
+        "type": "extended_class"
+      },
+      "taekwon_soul_linker": {
+        "jobs": ["Taekwon", "Soul_Linker", "Soul_Reaper", "Soul_Ascetic"],
+        "type": "extended_class"
+      },
+      "super_novice": {
+        "jobs": ["Super_Novice", "Super_Novice_E", "Hyper_Novice"],
+        "type": "special_class"
+      },
+      "summoner": {
+        "jobs": ["Summoner", "Spirit_Handler"],
+        "type": "special_class",
+        "race": "doram"
+      }
+    }
+  }
+}

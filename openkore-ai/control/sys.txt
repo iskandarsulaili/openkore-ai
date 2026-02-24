@@ -54,7 +54,7 @@ loadPlugins 2
 # Essential AI Plugins (Core functionality)
 # - eventMacro: Event-driven macro system for complex behaviors
 # - MacroHotReload: Dynamic macro reloading without restart
-# - godtier-ai: Advanced AI decision-making system
+# - godtier_ai: Advanced AI decision-making system
 # - macro: Base macro functionality
 #
 # Utility Plugins (Enhanced functionality)
@@ -75,7 +75,7 @@ loadPlugins 2
 # - LATAMTranslate: LATAM translation support
 #
 # Note: eventMacro re-enabled with fixed condition module syntax
-loadPlugins_list eventMacro,MacroHotReload,godtier-ai,macro,alertSound,raiseSkill,raiseStat,reconnect,map,breakTime,item_weight_recorder,xconf,OTP,teleToDest,AdventureAgency,LatamChecksum,LATAMTranslate
+loadPlugins_list eventMacro,MacroHotReload,godtier_ai,macro,alertSound,raiseSkill,raiseStat,reconnect,map,breakTime,item_weight_recorder,xconf,OTP,AdventureAgency,LatamChecksum,LATAMTranslate
 
 # skipPlugins_list <list>
 #   if loadPlugins is set to 3, this comma-separated list of plugin names (filename without the extension)

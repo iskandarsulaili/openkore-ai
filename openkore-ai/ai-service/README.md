@@ -5,11 +5,24 @@ The Python AI Service provides advanced AI capabilities including LLM reasoning,
 ## Architecture
 
 - **Port**: 9902
-- **Protocol**: HTTP REST API (FastAPI)
+- **Protocol**: HTTP REST API (FastAPI) - **ZERO IPC**
+- **Communication**: All HTTP-only, no socket-based IPC
 - **Language**: Python 3.11+
 - **Framework**: FastAPI + Uvicorn
 - **Database**: SQLite with WAL mode
 - **LLM Chain**: DeepSeek → OpenAI → Anthropic (failover)
+
+## Critical Architecture Note
+
+**THIS SERVICE USES 100% HTTP COMMUNICATION - NO IPC WHATSOEVER**
+
+- ✅ HTTP REST API (FastAPI on port 9902)
+- ✅ JSON request/response
+- ✅ Standard HTTP POST/GET endpoints
+- ❌ NO Unix sockets
+- ❌ NO named pipes
+- ❌ NO IPC communication
+- ❌ NO multiprocessing.Pipe
 
 ## Features
 
@@ -128,6 +141,21 @@ llm:
 
 ## Running
 
+### Quick Start (Recommended)
+
+**Windows:**
+```cmd
+cd openkore-ai\ai-service
+start_http_server.bat
+```
+
+**Linux/macOS:**
+```bash
+cd openkore-ai/ai-service
+chmod +x start_http_server.sh
+./start_http_server.sh
+```
+
 ### Development Mode
 
 ```bash
@@ -135,7 +163,10 @@ llm:
 source venv/bin/activate  # Linux/macOS
 venv\Scripts\activate     # Windows
 
-# Run with auto-reload
+# Run HTTP server with auto-reload
+python src/main.py
+
+# OR use uvicorn directly
 uvicorn src.main:app --reload --host 127.0.0.1 --port 9902
 ```
 
@@ -149,7 +180,7 @@ source venv/bin/activate
 uvicorn src.main:app --host 127.0.0.1 --port 9902 --workers 4
 ```
 
-The service will start on `http://127.0.0.1:9902`
+The HTTP service will start on `http://127.0.0.1:9902`
 
 ## API Endpoints
 

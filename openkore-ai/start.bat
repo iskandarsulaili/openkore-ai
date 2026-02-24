@@ -26,6 +26,9 @@ set "AI_SERVICE_MAIN=%AI_SERVICE_DIR%\src\main.py"
 :: Port configuration
 set "AI_ENGINE_PORT=9901"
 set "AI_SERVICE_PORT=9902"
+set "AI_SERVICE_HOST=127.0.0.1"
+set "AI_SERVICE_URL=http://127.0.0.1:9902"
+set "GODTIER_AI_SERVICE_PORT=9902"
 
 :: Process IDs (will be populated)
 set "AI_ENGINE_PID="
@@ -232,6 +235,79 @@ if !errorlevel! equ 0 (
 
 echo.
 call :log_success "All pre-flight checks passed!"
+echo.
+
+:: ============================================================================
+:: LOG CLEANUP
+:: ============================================================================
+
+call :log_step "Log Cleanup"
+call :log_info "Cleaning old log files before starting services..."
+echo.
+
+:: Define log directories to clean
+set "LOG_DIR_1=%SCRIPT_DIR%\logs"
+set "LOG_DIR_2=%SCRIPT_DIR%\ai-service\logs"
+set "LOG_DIR_3=%SCRIPT_DIR%\..\logs"
+
+:: Create directories if they don't exist
+if not exist "%LOG_DIR_1%" (
+    call :log_info "Creating directory: %LOG_DIR_1%"
+    mkdir "%LOG_DIR_1%" 2>nul
+)
+
+if not exist "%LOG_DIR_2%" (
+    call :log_info "Creating directory: %LOG_DIR_2%"
+    mkdir "%LOG_DIR_2%" 2>nul
+)
+
+if not exist "%LOG_DIR_3%" (
+    call :log_info "Creating directory: %LOG_DIR_3%"
+    mkdir "%LOG_DIR_3%" 2>nul
+)
+
+:: Clean log files in openkore-ai\logs
+set "FILES_DELETED=0"
+if exist "%LOG_DIR_1%\*.log" (
+    call :log_info "Deleting *.log files in %LOG_DIR_1%"
+    del /Q "%LOG_DIR_1%\*.log" 2>nul
+    if !errorlevel! equ 0 set "FILES_DELETED=1"
+)
+if exist "%LOG_DIR_1%\*.txt" (
+    call :log_info "Deleting *.txt files in %LOG_DIR_1%"
+    del /Q "%LOG_DIR_1%\*.txt" 2>nul
+    if !errorlevel! equ 0 set "FILES_DELETED=1"
+)
+
+:: Clean log files in openkore-ai\ai-service\logs
+if exist "%LOG_DIR_2%\*.log" (
+    call :log_info "Deleting *.log files in %LOG_DIR_2%"
+    del /Q "%LOG_DIR_2%\*.log" 2>nul
+    if !errorlevel! equ 0 set "FILES_DELETED=1"
+)
+if exist "%LOG_DIR_2%\*.txt" (
+    call :log_info "Deleting *.txt files in %LOG_DIR_2%"
+    del /Q "%LOG_DIR_2%\*.txt" 2>nul
+    if !errorlevel! equ 0 set "FILES_DELETED=1"
+)
+
+:: Clean log files in parent logs directory
+if exist "%LOG_DIR_3%\*.log" (
+    call :log_info "Deleting *.log files in %LOG_DIR_3%"
+    del /Q "%LOG_DIR_3%\*.log" 2>nul
+    if !errorlevel! equ 0 set "FILES_DELETED=1"
+)
+if exist "%LOG_DIR_3%\*.txt" (
+    call :log_info "Deleting *.txt files in %LOG_DIR_3%"
+    del /Q "%LOG_DIR_3%\*.txt" 2>nul
+    if !errorlevel! equ 0 set "FILES_DELETED=1"
+)
+
+if !FILES_DELETED! equ 1 (
+    call :log_success "Old log files cleaned successfully"
+) else (
+    call :log_info "No old log files found to clean"
+)
 echo.
 
 :: ============================================================================
@@ -572,6 +648,7 @@ echo   - AI Service: %LOGS_DIR%\ai-service.log
 echo.
 
 pause
+endlocal
 exit /b 0
 
 :: ============================================================================
@@ -601,4 +678,5 @@ if not "!AI_SERVICE_PID!"=="" (
 )
 
 pause
+endlocal
 exit /b 1
