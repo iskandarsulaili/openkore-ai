@@ -29,7 +29,7 @@
     {
       "trigger_id": "hp_low_warning",
       "name": "HP Low Warning",
-      "description": "Healing when HP drops below 50%",
+      "description": "Healing when HP drops below 75% (PRO player safety margin)",
       "layer": "REFLEX",
       "priority": 2,
       "condition": {
@@ -40,7 +40,7 @@
             "type": "simple",
             "field": "character.hp_percent",
             "operator": "<=",
-            "value": 50
+            "value": 75
           },
           {
             "type": "simple",

@@ -440,13 +440,15 @@ class NPCHandler:
                 "actual_zeny": Optional[int]
             }
         """
-        logger.info("[SELL] Starting junk item selling process...")
+        logger.info("[SELL-DEBUG] ========================================")
+        logger.info(f"[SELL-DEBUG] Starting sell_junk_items with {len(inventory)} inventory items")
+        logger.info("[SELL-DEBUG] ========================================")
         
         # Categorize items
         categorized = self.categorize_inventory_for_selling(inventory)
         
         if not categorized["sell"]:
-            logger.info("[SELL] No junk items to sell")
+            logger.info("[SELL-DEBUG] No junk items to sell")
             return {
                 "success": True,
                 "items_sold": [],
@@ -458,6 +460,8 @@ class NPCHandler:
         estimated_value = 0
         items_to_sell = []
         
+        logger.info(f"[SELL-DEBUG] Processing {len(categorized['sell'])} sellable items...")
+        
         for item in categorized["sell"]:
             item_name = item.get("name", "Unknown")
             
@@ -466,37 +470,40 @@ class NPCHandler:
                 sell_price = int(item.get("sell_price", 10))
             except (ValueError, TypeError):
                 sell_price = 10
-                logger.debug(f"[SELL] Invalid sell_price for {item_name}, using default 10z")
+                logger.debug(f"[SELL-DEBUG] Invalid sell_price for {item_name}, using default 10z")
             
             try:
                 amount = int(item.get("amount", 1))
             except (ValueError, TypeError):
                 amount = 1
-                logger.warning(f"[SELL] Invalid amount for {item_name}, defaulting to 1")
+                logger.warning(f"[SELL-DEBUG] Invalid amount for {item_name}, defaulting to 1")
             
             estimated_value += sell_price * amount
             items_to_sell.append(item_name)
         
-        logger.info(f"[SELL] Planning to sell {len(items_to_sell)} item types for ~{estimated_value}z")
-        logger.info(f"[SELL] Items: {', '.join(items_to_sell[:10])}...")  # Log first 10
+        logger.info(f"[SELL-DEBUG] Planning to sell {len(items_to_sell)} item types for ~{estimated_value}z")
+        logger.info(f"[SELL-DEBUG] Items: {', '.join(items_to_sell[:10])}...")  # Log first 10
         
         # Generate sell command for OpenKore
         # CRITICAL FIX: OpenKore syntax is "sell <invIndex> [amount]"
         # invIndex is the inventory slot number (0, 1, 2, ...), NOT the item name
         sell_commands = []
+        logger.info("[SELL-DEBUG] Generating sell commands...")
+        
         for item in categorized["sell"]:
             item_name = item.get("name", "Unknown")
+            item_id = item.get("id", "0")
             
             # CRITICAL FIX: Get invIndex (inventory slot number) for correct sell syntax
             try:
                 inv_index = int(item.get("invIndex", -1))
             except (ValueError, TypeError):
                 inv_index = -1
-                logger.error(f"[SELL] Missing or invalid invIndex for {item_name}, cannot sell")
+                logger.error(f"[SELL-DEBUG] ❌ Missing or invalid invIndex for {item_name} (ID:{item_id}), cannot sell")
                 continue
             
             if inv_index < 0:
-                logger.error(f"[SELL] Invalid invIndex {inv_index} for {item_name}, skipping")
+                logger.error(f"[SELL-DEBUG] ❌ Invalid invIndex {inv_index} for {item_name} (ID:{item_id}), SKIPPING")
                 continue
             
             # CRITICAL FIX: Convert string amount to int (OpenKore sends strings)
@@ -504,11 +511,21 @@ class NPCHandler:
                 amount = int(item.get("amount", 1))
             except (ValueError, TypeError):
                 amount = 1
-                logger.warning(f"[SELL] Invalid amount for {item_name} in sell_commands, defaulting to 1")
+                logger.warning(f"[SELL-DEBUG] Invalid amount for {item_name} in sell_commands, defaulting to 1")
             
             # Correct OpenKore sell syntax: sell <invIndex> [amount]
-            sell_commands.append(f"sell {inv_index} {amount}")
-            logger.info(f"[SELL] Generated command: sell {inv_index} {amount} (item: {item_name})")
+            sell_cmd = f"sell {inv_index} {amount}"
+            sell_commands.append(sell_cmd)
+            logger.info(f"[SELL-DEBUG] ✓ Generated command: '{sell_cmd}' for {item_name} (ID:{item_id}) at invIndex={inv_index}, qty={amount}")
+        
+        logger.info(f"[SELL-DEBUG] ========================================")
+        logger.info(f"[SELL-DEBUG] Total sell commands generated: {len(sell_commands)}")
+        logger.info(f"[SELL-DEBUG] Estimated zeny gain: {estimated_value}z")
+        logger.info(f"[SELL-DEBUG] ========================================")
+        
+        if not sell_commands:
+            logger.error("[SELL-DEBUG] ⚠️ WARNING: No sell commands generated despite having sellable items!")
+            logger.error("[SELL-DEBUG] This indicates invIndex collection failure!")
         
         # Get tool dealer location from config (never hardcoded)
         tool_dealer_location = None
@@ -527,6 +544,61 @@ class NPCHandler:
             "instruction": "Execute these commands at Tool Dealer NPC",
             "npc_location": tool_dealer_location
         }
+
+
+def find_nearest_npc(npc_type: str, current_map: str, current_pos: Dict) -> Optional[Dict]:
+    """
+    GOD-TIER IMPROVEMENT #8: Find nearest NPC of given type from current position
+    
+    Args:
+        npc_type: Type of NPC to find (e.g., 'tool_dealer', 'potion_seller')
+        current_map: Current map name
+        current_pos: Current position dict with 'x' and 'y' keys
+        
+    Returns:
+        NPC info dict with map, x, y, name, priority or None if not found
+    """
+    # Load NPC locations from JSON database
+    npc_locations_path = Path(__file__).parent.parent.parent / "data" / "npc_locations.json"
+    
+    if not npc_locations_path.exists():
+        logger.error(f"[NPC] NPC locations database not found: {npc_locations_path}")
+        return None
+    
+    try:
+        with open(npc_locations_path, 'r', encoding='utf-8') as f:
+            npc_database = json.load(f)
+    except Exception as e:
+        logger.error(f"[NPC] Failed to load NPC locations: {e}")
+        return None
+    
+    npcs_of_type = npc_database.get(npc_type, [])
+    
+    if not npcs_of_type:
+        logger.error(f"[NPC] No NPCs of type '{npc_type}' found in database")
+        return None
+    
+    # Calculate distances
+    distances = []
+    for npc in npcs_of_type:
+        # Simple map distance calculation
+        # Same map = distance based on coordinates
+        # Different map = add penalty (1000 cells)
+        if npc['map'] == current_map:
+            dx = npc['x'] - current_pos.get('x', 0)
+            dy = npc['y'] - current_pos.get('y', 0)
+            dist = (dx ** 2 + dy ** 2) ** 0.5  # Euclidean distance
+        else:
+            dist = 1000 + npc.get('priority', 999) * 100  # Cross-map penalty + priority
+        
+        distances.append((dist, npc))
+    
+    # Sort by distance, return closest
+    distances.sort(key=lambda x: x[0])
+    nearest = distances[0][1]
+    
+    logger.info(f"[NPC] Nearest {npc_type}: {nearest['name']} at {nearest['map']} ({nearest['x']},{nearest['y']}) - ~{distances[0][0]:.1f} cells away")
+    return nearest
 
 
 # Global instance (loaded lazily)

@@ -32,7 +32,7 @@ sub load_http_port_from_config {
 }
 
 my $ai_service_url = "http://127.0.0.1:" . load_http_port_from_config();
-my $http_tiny = HTTP::Tiny->new(timeout => 5);  # Fast timeout for combat
+my $http_tiny = HTTP::Tiny->new(timeout => 10);  # PHASE 8 FIX #2: Increased timeout for CrewAI operations
 my $threat_cache = {};
 my $last_target_id = undef;
 

@@ -82,22 +82,34 @@ class KnowledgeUpdateTool(BaseTool):
         self.kb = knowledge_base
     
     def _run(self, fix_result: Dict, confidence_adjustment: float = 0.1) -> Dict[str, Any]:
-        """Update knowledge base based on fix result"""
+        """Update knowledge base based on fix result (handles both dict and CrewOutput)"""
         try:
-            issue_type = fix_result.get('issue_type')
-            solution = fix_result.get('solution')
-            success = fix_result.get('success', False)
+            # PHASE 8 FIX #3: Handle both dict and CrewOutput from CrewAI
+            issue_type = getattr(fix_result, 'issue_type', None) or (fix_result.get('issue_type') if isinstance(fix_result, dict) else None)
+            solution = getattr(fix_result, 'solution', None) or (fix_result.get('solution') if isinstance(fix_result, dict) else None)
+            success = getattr(fix_result, 'success', None)
+            if success is None:
+                success = fix_result.get('success', False) if isinstance(fix_result, dict) else False
+            
+            confidence = getattr(fix_result, 'confidence', None)
+            if confidence is None:
+                confidence = fix_result.get('confidence', 0.5) if isinstance(fix_result, dict) else 0.5
             
             # Update confidence for this solution pattern
             if success:
-                new_confidence = min(1.0, fix_result.get('confidence', 0.5) + confidence_adjustment)
+                new_confidence = min(1.0, confidence + confidence_adjustment)
             else:
-                new_confidence = max(0.0, fix_result.get('confidence', 0.5) - confidence_adjustment * 2)
+                new_confidence = max(0.0, confidence - confidence_adjustment * 2)
+            
+            # Extract action from solution (handle both dict and object)
+            solution_action = None
+            if solution:
+                solution_action = getattr(solution, 'action', None) or (solution.get('action') if isinstance(solution, dict) else None)
             
             # Store in knowledge base
             self.kb.update_solution_confidence(
                 issue_type=issue_type,
-                solution_action=solution.get('action'),
+                solution_action=solution_action,
                 new_confidence=new_confidence,
                 outcome=success
             )

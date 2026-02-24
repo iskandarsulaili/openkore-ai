@@ -54,6 +54,67 @@ my $plugin_initialized = 0;
 our $hunting_active = 0;
 our $last_hunt_map = "";
 
+# ============================================================================
+# GAP #1: TASK RESUMPTION SYSTEM (God-Tier Improvement #1)
+# ============================================================================
+# Interrupted task stack - enables recovery from HP/emergency interruptions
+our @interrupted_task_stack = ();  # Stack of interrupted tasks
+our $current_primary_task = undef;  # Currently executing task
+
+# ============================================================================
+# GAP #7: PER-FAILURE-TYPE TRACKING (God-Tier Improvement #7)
+# ============================================================================
+# Replace simple counter with detailed tracking for adaptive strategies
+our %sell_failures = (
+    navigation_timeout => 0,
+    npc_not_found => 0,
+    no_items => 0,
+    commands_failed => 0,
+    inventory_not_ready => 0,
+    total => 0,
+);
+our $last_sell_attempt_time = 0;
+
+# ============================================================================
+# GAP #2: ALTERNATIVE NPC LOCATIONS (God-Tier Improvement #2)
+# ============================================================================
+# Try alternative NPCs after 3 failures at primary location
+our @alternative_sell_npcs = (
+    {name => "Tool Dealer", map => "prontera", x => 134, y => 88, priority => 1},
+    {name => "Tool Dealer", map => "alberta", x => 99, y => 154, priority => 2},  # CRITICAL FIX: Changed from 98 to 99 (98,154 not walkable)
+    {name => "Tool Dealer", map => "izlude", x => 164, y => 138, priority => 3},
+    {name => "Tool Dealer", map => "payon", x => 159, y => 96, priority => 4},
+    {name => "Tool Dealer", map => "geffen", x => 193, y => 152, priority => 5},
+);
+our $current_npc_index = 0;
+
+# ============================================================================
+# GAP #6: HIERARCHICAL STATE MACHINE (God-Tier Improvement #6)
+# ============================================================================
+# Support complex states with sub-states for resumable operations
+our $bot_state = {
+    primary => 'IDLE',  # IDLE, COMBAT, SELLING, HEALING, TRAVELING
+    sub_state => undef,  # For complex states (e.g., SELLING => NAVIGATING, EXECUTING)
+    interrupted_by => undef,  # Track what caused interruption
+};
+our $saved_attackAuto = 2;
+our $saved_routeRandomWalk = 1;
+
+# ============================================================================
+# GAP #3: SELL OPERATION SUBSTEPS (God-Tier Improvement #3)
+# ============================================================================
+# Break sell into resumable checkpoints
+our $sell_substep = 'IDLE';  # IDLE, PLANNING, NAVIGATING, ARRIVED, EXECUTING, FINALIZING, COMPLETED
+our @sell_commands_pending = ();  # Commands to execute
+our $sell_target_npc = undef;  # Current NPC target
+
+# ============================================================================
+# GAP #9: EVENT CALLBACK SYSTEM (God-Tier Improvement #9)
+# ============================================================================
+# Replace polling with event-driven architecture
+our %event_callbacks = ();  # Registered callbacks for game events
+our $previous_zeny = 0;  # Track zeny changes
+
 BEGIN {
     # ==========================================================================
     # FIX 3: FORCE HTTP::Tiny (GUARANTEED WORKING - Core Perl since 5.14)
@@ -416,6 +477,416 @@ sub try_alternative_action {
     return convert_alternative_to_decision($alternative, $original_action, $game_state);
 }
 
+# ============================================================================
+# GOD-TIER IMPROVEMENTS: HELPER FUNCTIONS
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# GAP #1: TASK RESUMPTION SYSTEM - Functions to manage interrupted tasks
+# ----------------------------------------------------------------------------
+
+sub push_interrupted_task {
+    my ($task_data) = @_;
+    return unless defined $task_data && ref($task_data) eq 'HASH';
+    
+    # GOD-TIER FIX #4: DE-DUPLICATION - Don't push if same task already on stack
+    # Prevents duplicate tasks if bot gets interrupted multiple times during same operation
+    if (@interrupted_task_stack > 0) {
+        my $last_task = $interrupted_task_stack[-1];
+        if ($last_task->{action} eq $task_data->{action}) {
+            message "[TASK-STACK] Task already on stack, not duplicating: $task_data->{action}\n", "info";
+            return;
+        }
+    }
+    
+    push @interrupted_task_stack, {
+        action => $task_data->{action},
+        params => $task_data->{params},
+        progress => $task_data->{progress} || $bot_state->{sub_state} || 'unknown',
+        timestamp => time,
+        interrupted_by => $bot_state->{interrupted_by} || 'unknown',
+    };
+    
+    my $stack_size = scalar(@interrupted_task_stack);
+    message "[TASK-STACK] Pushed interrupted task: $task_data->{action} (progress: $task_data->{progress}) [Stack size: $stack_size]\n", "info";
+}
+
+sub pop_interrupted_task {
+    if (@interrupted_task_stack > 0) {
+        my $task = pop @interrupted_task_stack;
+        my $stack_size = scalar(@interrupted_task_stack);
+        message "[TASK-STACK] Resuming interrupted task: $task->{action} from progress: $task->{progress} [Stack size: $stack_size]\n", "info";
+        return $task;
+    }
+    return undef;
+}
+
+sub has_interrupted_tasks {
+    return scalar(@interrupted_task_stack) > 0;
+}
+
+sub clear_interrupted_tasks {
+    my $count = scalar(@interrupted_task_stack);
+    @interrupted_task_stack = ();
+    message "[TASK-STACK] Cleared $count interrupted tasks\n", "info" if $count > 0;
+}
+
+# ----------------------------------------------------------------------------
+# GAP #6: HIERARCHICAL STATE MACHINE - State management functions
+# ----------------------------------------------------------------------------
+
+sub set_state {
+    my ($primary, $sub_state) = @_;
+    my $old_primary = $bot_state->{primary};
+    my $old_sub = $bot_state->{sub_state} || 'none';
+    
+    $sub_state = defined($sub_state) ? $sub_state : 'none';
+    
+    message "[STATE] Transition: $old_primary/$old_sub → $primary/$sub_state\n", "info";
+    
+    $bot_state->{primary} = $primary;
+    $bot_state->{sub_state} = $sub_state eq 'none' ? undef : $sub_state;
+    $bot_state->{state_changed_at} = time;
+}
+
+sub interrupt_state {
+    my ($new_primary, $reason) = @_;
+    
+    # Save what was interrupted
+    $bot_state->{interrupted_by} = $reason;
+    
+    my $old_primary = $bot_state->{primary};
+    my $old_sub = $bot_state->{sub_state} || 'none';
+    message "[STATE] Interrupted $old_primary/$old_sub due to $reason\n", "warning";
+    
+    # Push to interrupted stack if there's an active task
+    if ($current_primary_task && $old_primary ne 'IDLE') {
+        push_interrupted_task({
+            action => $current_primary_task->{action},
+            params => $current_primary_task->{params},
+            progress => $old_sub,
+        });
+    }
+    
+    set_state($new_primary, undef);
+}
+
+sub get_state {
+    return $bot_state->{primary};
+}
+
+sub get_full_state {
+    return {
+        primary => $bot_state->{primary},
+        sub_state => $bot_state->{sub_state},
+        interrupted_by => $bot_state->{interrupted_by},
+    };
+}
+
+# ----------------------------------------------------------------------------
+# GAP #7: PER-FAILURE-TYPE TRACKING - Detailed sell failure management
+# ----------------------------------------------------------------------------
+
+sub record_sell_failure {
+    my ($type, $details) = @_;
+    $type ||= 'unknown';
+    $details ||= '';
+    
+    $sell_failures{$type}++;
+    $sell_failures{total}++;
+    $last_sell_attempt_time = time;
+    
+    message "[SELL-FAILURES] Recorded '$type' failure (total: $sell_failures{total})\n", "warning";
+    message "[SELL-FAILURES] Breakdown: nav_timeout=$sell_failures{navigation_timeout}, " .
+            "npc_missing=$sell_failures{npc_not_found}, commands_fail=$sell_failures{commands_failed}, " .
+            "no_items=$sell_failures{no_items}, inv_not_ready=$sell_failures{inventory_not_ready}\n", "info";
+    
+    # Adaptive strategy based on failure type
+    if ($sell_failures{navigation_timeout} >= 3) {
+        message "[SELL-ADAPTIVE] Too many navigation timeouts, will try closer NPC next time\n", "info";
+    }
+    elsif ($sell_failures{npc_not_found} >= 2) {
+        message "[SELL-ADAPTIVE] NPC not found repeatedly, will try alternative NPC next time\n", "info";
+    }
+    elsif ($sell_failures{commands_failed} >= 2) {
+        message "[SELL-ADAPTIVE] Commands failing, may need to adjust sell logic\n", "info";
+    }
+    
+    return $sell_failures{total};
+}
+
+sub reset_sell_failures {
+    my $total_before = $sell_failures{total};
+    %sell_failures = (
+        navigation_timeout => 0,
+        npc_not_found => 0,
+        no_items => 0,
+        commands_failed => 0,
+        inventory_not_ready => 0,
+        total => 0,
+    );
+    message "[SELL-FAILURES] Counters reset after successful sell (was $total_before failures)\n", "success";
+}
+
+sub get_adaptive_sell_strategy {
+    # Return strategy based on failure patterns
+    if ($sell_failures{navigation_timeout} >= 3) {
+        return 'try_same_map_npc';
+    }
+    elsif ($sell_failures{npc_not_found} >= 2) {
+        return 'try_alternative_npc';
+    }
+    elsif ($sell_failures{commands_failed} >= 2) {
+        return 'use_simpler_commands';
+    }
+    elsif ($sell_failures{total} >= 5) {
+        return 'defer_sell_for_5_minutes';
+    }
+    return 'standard_approach';
+}
+
+# ----------------------------------------------------------------------------
+# GAP #2: ALTERNATIVE NPC SELECTION - Smart NPC switching
+# ----------------------------------------------------------------------------
+
+sub get_next_sell_npc {
+    my ($current_map, $prefer_same_map) = @_;
+    $current_map ||= $field ? $field->baseName : 'unknown';
+    
+    # CRITICAL FIX: Try dynamic NPC discovery first (avoid hardcoded coordinates)
+    message "[SELL-NPC] Attempting dynamic NPC discovery from OpenKore database...\n", "info";
+    my $dynamic_npc = find_tool_dealer_npc($current_map, $prefer_same_map);
+    if ($dynamic_npc) {
+        message "[SELL-NPC] Found Tool Dealer via dynamic discovery: $dynamic_npc->{name} at $dynamic_npc->{map} ($dynamic_npc->{x},$dynamic_npc->{y})\n", "success";
+        return $dynamic_npc;
+    }
+    
+    # Fallback to hardcoded list if dynamic discovery fails
+    message "[SELL-NPC] Dynamic discovery failed, using fallback list...\n", "warning";
+    
+    # If prefer same map, try to find NPC on current map first
+    if ($prefer_same_map) {
+        foreach my $npc (@alternative_sell_npcs) {
+            if ($npc->{map} eq $current_map) {
+                message "[SELL-NPC] Found same-map NPC: $npc->{name} at $npc->{map} ($npc->{x},$npc->{y})\n", "success";
+                return $npc;
+            }
+        }
+    }
+    
+    # Otherwise, use round-robin with priority
+    $current_npc_index = ($current_npc_index + 1) % scalar(@alternative_sell_npcs);
+    my $npc = $alternative_sell_npcs[$current_npc_index];
+    
+    message "[SELL-NPC] Selected NPC #$current_npc_index: $npc->{name} at $npc->{map} ($npc->{x},$npc->{y})\n", "info";
+    return $npc;
+}
+
+# ----------------------------------------------------------------------------
+# CRITICAL FIX: Dynamic NPC Discovery (replaces hardcoded coordinates)
+# ----------------------------------------------------------------------------
+sub find_tool_dealer_npc {
+    my ($current_map, $prefer_same_map) = @_;
+    
+    # Check if we have access to NPC list
+    return undef unless %npcs;
+    
+    my @found_dealers;
+    
+    # Search for Tool Dealer NPCs in current map
+    foreach my $npc_id (@npcsID) {
+        next unless $npc_id;
+        my $npc = $npcs{$npc_id};
+        next unless $npc;
+        
+        # Match Tool Dealer, Merchant, or Vending NPCs
+        if ($npc->{name} =~ /(Tool Dealer|Merchant|Vending)/i) {
+            my $npc_map = $field ? $field->baseName : '';
+            
+            push @found_dealers, {
+                name => $npc->{name},
+                map => $npc_map,
+                x => $npc->{pos}{x},
+                y => $npc->{pos}{y},
+                distance => distance($char->{pos_to}, $npc->{pos}),
+                priority => ($prefer_same_map && $npc_map eq $current_map) ? 10 : 5
+            };
+        }
+    }
+    
+    # Sort by priority (prefer same map) then distance
+    @found_dealers = sort {
+        $b->{priority} <=> $a->{priority} ||
+        $a->{distance} <=> $b->{distance}
+    } @found_dealers;
+    
+    # Return closest Tool Dealer
+    if (@found_dealers) {
+        my $best = $found_dealers[0];
+        message "[SELL-NPC] Dynamic discovery found $best->{name} at distance $best->{distance}\n", "info";
+        return $best;
+    }
+    
+    return undef;
+}
+
+# ----------------------------------------------------------------------------
+# GAP #9: EVENT CALLBACK SYSTEM - Event-driven architecture
+# ----------------------------------------------------------------------------
+
+sub register_event_callback {
+    my ($event_name, $callback) = @_;
+    return unless $event_name && ref($callback) eq 'CODE';
+    
+    $event_callbacks{$event_name} = $callback;
+    debug "[EVENT-CALLBACK] Registered callback for event: $event_name\n", "ai";
+}
+
+sub trigger_event {
+    my ($event_name, $data) = @_;
+    $data ||= {};
+    
+    if (exists $event_callbacks{$event_name}) {
+        debug "[EVENT-CALLBACK] Triggering event: $event_name\n", "ai";
+        eval {
+            $event_callbacks{$event_name}->($data);
+        };
+        if ($@) {
+            error "[EVENT-CALLBACK] Error in callback for $event_name: $@\n";
+        }
+        delete $event_callbacks{$event_name};  # One-time callback
+    }
+}
+
+sub has_pending_callback {
+    my ($event_name) = @_;
+    return exists $event_callbacks{$event_name};
+}
+
+# ----------------------------------------------------------------------------
+# GAP #3: RESUMABLE SELL OPERATION - Substep execution
+# ----------------------------------------------------------------------------
+
+sub execute_sell_step {
+    my ($step, $context) = @_;
+    $step ||= $sell_substep;
+    $context ||= {};
+    
+    message "[SELL-STEP] Executing step: $step\n", "info";
+    
+    if ($step eq 'PLANNING' || $step eq 'IDLE') {
+        # Step 1: Categorize items and prepare commands
+        $sell_substep = 'PLANNING';
+        set_state('SELLING', 'PLANNING');
+        
+        # Check inventory readiness
+        unless (inventory_ready()) {
+            record_sell_failure('inventory_not_ready', 'Character inventory not available');
+            $sell_substep = 'IDLE';
+            return {status => 'failed', reason => 'inventory_not_ready'};
+        }
+        
+        # This would call AI service to categorize items
+        # For now, mark as ready to navigate
+        $sell_substep = 'NAVIGATING';
+        return {status => 'continue', next_step => 'NAVIGATING'};
+    }
+    elsif ($step eq 'NAVIGATING') {
+        # Step 2: Navigate to NPC
+        $sell_substep = 'NAVIGATING';
+        set_state('SELLING', 'NAVIGATING');
+        
+        # Get target NPC
+        my $strategy = get_adaptive_sell_strategy();
+        my $prefer_same_map = ($strategy eq 'try_same_map_npc');
+        my $npc = get_next_sell_npc($field->baseName, $prefer_same_map);
+        
+        $sell_target_npc = $npc;
+        
+        # Navigate to NPC
+        message "[SELL-STEP] Navigating to $npc->{name} at $npc->{map} ($npc->{x},$npc->{y})\n", "info";
+        Commands::run("move $npc->{map} $npc->{x} $npc->{y}");
+        
+        # Register callback for arrival
+        register_event_callback('navigation_complete', sub {
+            message "[SELL-STEP] Arrived at NPC location\n", "success";
+            $sell_substep = 'ARRIVED';
+        });
+        
+        return {status => 'continue', next_step => 'ARRIVED'};
+    }
+    elsif ($step eq 'ARRIVED') {
+        # Step 3: Open NPC dialog
+        $sell_substep = 'ARRIVED';
+        set_state('SELLING', 'AT_NPC');
+        
+        message "[SELL-STEP] Talking to NPC to open shop\n", "info";
+        Commands::run("talk 0");
+        sleep(1);
+        
+        $sell_substep = 'EXECUTING';
+        return {status => 'continue', next_step => 'EXECUTING'};
+    }
+    elsif ($step eq 'EXECUTING') {
+        # Step 4: Execute sell commands
+        $sell_substep = 'EXECUTING';
+        set_state('SELLING', 'EXECUTING');
+        
+        if (@sell_commands_pending > 0) {
+            my $cmd_count = scalar(@sell_commands_pending);
+            message "[SELL-STEP] Executing $cmd_count sell commands\n", "info";
+            
+            foreach my $cmd (@sell_commands_pending) {
+                Commands::run($cmd);
+                sleep(0.3);
+            }
+            
+            $sell_substep = 'FINALIZING';
+            return {status => 'continue', next_step => 'FINALIZING'};
+        } else {
+            message "[SELL-STEP] No commands to execute\n", "warning";
+            $sell_substep = 'IDLE';
+            return {status => 'failed', reason => 'no_commands'};
+        }
+    }
+    elsif ($step eq 'FINALIZING') {
+        # Step 5: Finalize transaction
+        $sell_substep = 'FINALIZING';
+        set_state('SELLING', 'FINALIZING');
+        
+        message "[SELL-STEP] Finalizing with 'sell done'\n", "info";
+        Commands::run("sell done");
+        sleep(2);
+        
+        # Register callback for zeny change
+        register_event_callback('zeny_changed', sub {
+            my ($data) = @_;
+            my $gained = $data->{amount} || 0;
+            if ($gained > 0) {
+                message "[SELL-STEP] Sell successful! Gained ${gained}z\n", "success";
+                reset_sell_failures();
+            }
+        });
+        
+        $sell_substep = 'COMPLETED';
+        return {status => 'completed', next_step => 'IDLE'};
+    }
+    elsif ($step eq 'COMPLETED') {
+        # Step 6: Cleanup and return to previous state
+        $sell_substep = 'IDLE';
+        @sell_commands_pending = ();
+        $sell_target_npc = undef;
+        set_state('IDLE', undef);
+        
+        return {status => 'success'};
+    }
+    
+    # Unknown step
+    error "[SELL-STEP] Unknown step: $step\n";
+    return {status => 'error', reason => 'unknown_step'};
+}
+
+
 # Convert alternative strategy to actual decision
 sub convert_alternative_to_decision {
     my ($alternative, $original_action, $game_state) = @_;
@@ -555,6 +1026,61 @@ sub make_local_decision {
         params => {},
         reason => 'Local fallback: no urgent action needed'
     };
+}
+
+# PHASE 8 FIX #1: Implement getBestTarget function for local combat fallback
+# Called when AI-Service times out, provides OpenKore native monster targeting
+sub getBestTarget_godtier {
+    # Return undef if not in game or no character
+    return undef unless $conState == Network::IN_GAME && defined $char;
+    return undef unless defined $monstersList;
+    
+    # First priority: Attack monster that hit us (defensive)
+    my @aggressive_monsters = grep {
+        $_ &&
+        $_->{dmgToYou} &&
+        $_->{dmgToYou} > 0 &&
+        !$_->{dead}
+    } @{$monstersList->getItems()};
+    
+    if (@aggressive_monsters) {
+        # Return the one that hit us most recently/hardest
+        my $target = $aggressive_monsters[0];
+        debug "[GodTierAI] [FALLBACK] Targeting aggressive monster: " . $target->name() . "\n", "ai";
+        return $target;
+    }
+    
+    # Second priority: Attack nearest monster within range
+    my @nearby_monsters = grep {
+        $_ &&
+        !$_->{dead} &&
+        defined $_->{pos_to}
+    } @{$monstersList->getItems()};
+    
+    if (@nearby_monsters) {
+        my $nearest;
+        my $min_dist = 999;
+        
+        foreach my $mon (@nearby_monsters) {
+            next unless defined $mon->{pos_to};
+            next unless defined $char->{pos_to};
+            
+            my $dist = distance($char->{pos_to}, $mon->{pos_to});
+            if ($dist < $min_dist) {
+                $min_dist = $dist;
+                $nearest = $mon;
+            }
+        }
+        
+        if ($nearest) {
+            debug "[GodTierAI] [FALLBACK] Targeting nearest monster: " . $nearest->name() . " (dist: $min_dist)\n", "ai";
+            return $nearest;
+        }
+    }
+    
+    # No suitable target found
+    debug "[GodTierAI] [FALLBACK] No suitable monsters found\n", "ai";
+    return undef;
 }
 
 # Simple stat allocation based on job class
@@ -932,11 +1458,11 @@ sub on_load {
     # Initialize HTTP client (ONLY HTTP::Tiny)
     unless (defined $http_tiny) {
         $http_tiny = HTTP::Tiny->new(
-            timeout => 5,
+            timeout => 10,
             agent => 'GodTierAI/2.0',
             verify_SSL => 0
         );
-        message "[GodTierAI] HTTP::Tiny client initialized (timeout: 5s)", "success";
+        message "[GodTierAI] HTTP::Tiny client initialized (timeout: 10s)", "success";
     }
 
     
@@ -1257,6 +1783,7 @@ sub collect_game_state {
         
         # Process collected items
         my $inv_count = 0;
+        my $slot_index = 0;  # CRITICAL FIX: Track actual inventory slot number
         foreach my $item (@items) {
             last if $inv_count++ >= 20;  # CIRCUIT BREAKER: Max 20 items
             next unless $item;
@@ -1271,9 +1798,10 @@ sub collect_game_state {
                 type => $item->{type} || 'misc',
                 # Add equipped status for better AI decision making
                 equipped => ($item->{equipped}) ? JSON::true : JSON::false,
-                # CRITICAL FIX: Add invIndex for sell command (OpenKore requires inventory slot number)
-                invIndex => int($item->{index} || 0),  # FIXED: OpenKore uses {index} not {invIndex}
+                # CRITICAL FIX: Use loop counter for invIndex (item object doesn't have index property)
+                invIndex => $slot_index,  # FIXED: Use actual slot counter instead of non-existent $item->{index}
             };
+            $slot_index++;  # Increment after each item
         }
         
         my $collected_count = scalar(@{$state{inventory}});
@@ -1721,6 +2249,57 @@ sub execute_action {
             warning "[GodTierAI] [ACTION] Failed to sit - likely missing Basic Skill Lv3\n";
             send_action_feedback('rest', 'failed', 'basic_skill_not_learned', 'Character does not have Basic Skill Lv3 to sit');
         }
+    } elsif ($type eq 'emergency_flee' || $type eq 'emergency_heal' || $type eq 'use_item') {
+        # GOD-TIER IMPROVEMENT #1: Save current task before handling emergency
+        message "[EMERGENCY] HP critical - attempting to heal\n", "warning";
+        
+        # SAVE current task if one is active (enables resumption after heal)
+        if ($current_primary_task && $bot_state->{primary} ne 'IDLE') {
+            message "[EMERGENCY] Interrupting current task: $current_primary_task->{action}\n", "warning";
+            interrupt_state('HEALING', 'hp_critical');
+            push_interrupted_task({
+                action => $current_primary_task->{action},
+                params => $current_primary_task->{params},
+                progress => $bot_state->{sub_state} || 'unknown',
+            });
+        }
+        
+        # Set healing state
+        set_state('HEALING', 'EMERGENCY');
+        
+        # Try to use healing items in priority order
+        my @healing_items = (
+            {id => 507, name => "Red Herb"},      # Heals 18-28 HP
+            {id => 501, name => "Red Potion"},    # Heals 45-65 HP
+            {id => 502, name => "Orange Potion"}, # Heals 105-145 HP
+            {id => 506, name => "Green Herb"},    # Heals 9-18 HP
+        );
+        
+        my $healed = 0;
+        for my $heal_item (@healing_items) {
+            my $item = $char->inventory->getByNameID($heal_item->{id});
+            # CRITICAL FIX: Verify item exists with valid invIndex before using
+            # Bug: getByNameID() can return stale cached data with phantom count
+            # Fix: Check defined() and invIndex to ensure real-time inventory accuracy
+            if (defined $item && $item->{amount} > 0 && defined $item->{invIndex}) {
+                message "[EMERGENCY] Using $heal_item->{name} (ID:$heal_item->{id}), have $item->{amount} remaining\n", "success";
+                Commands::run("is $heal_item->{id}");
+                $healed = 1;
+                send_action_feedback($type, 'success', "used_$heal_item->{name}");
+                last;
+            }
+        }
+        
+        if (!$healed) {
+            warning "[EMERGENCY] No healing items available in inventory\n";
+            send_action_feedback($type, 'failed', 'no_healing_items_available');
+        }
+        
+        # GOD-TIER IMPROVEMENT #1: Resume interrupted task after healing
+        if ($healed && has_interrupted_tasks()) {
+            message "[EMERGENCY] Healing complete, will resume interrupted task on next cycle\n", "info";
+            set_state('IDLE', undef);  # Reset to idle, let AI cycle resume task
+        }
     } elsif ($type eq 'idle_recover') {
         # MEMORY CRASH FIX: Removed AI::queue("wait") and AI::args() which caused
         # orphaned queue entries leading to "Out of memory in perl:util:safesysrealloc"
@@ -1825,13 +2404,55 @@ sub execute_action {
         message "[GodTierAI] [SELL] === STARTING SELL OPERATION ===\n", "info";
         message "[GodTierAI] [SELL] Reason: $reason, Priority: $priority\n", "info";
         
-        # CRITICAL FIX: Safety check - ensure character and inventory exist
+        # ====================================================================
+        # GOD-TIER FIX #1: TASK RESUMPTION - Set current primary task
+        # ====================================================================
+        # CRITICAL: This enables emergency handler to save task to interrupted stack
+        # Without this, HP triggers during sell permanently lose the sell operation
+        $current_primary_task = {
+            action => 'sell_items',
+            params => $params,
+        };
+        message "[SELL] Task registered for resumption support (action: sell_items)\n", "info";
+        
+        # GOD-TIER IMPROVEMENT #2 & #7: Check adaptive strategy based on failure types
+        my $strategy = get_adaptive_sell_strategy();
+        if ($strategy eq 'defer_sell_for_5_minutes') {
+            message "[SELL] Too many recent failures ($sell_failures{total}), deferring sell for 5 minutes\n", "warning";
+            send_action_feedback('sell_items', 'failed', 'too_many_recent_failures');
+            return;
+        }
+        
+        message "[SELL] Using adaptive strategy: $strategy\n", "info";
+        
+        # GOD-TIER IMPROVEMENT #7: Track inventory readiness failure
         unless (inventory_ready()) {
             error "[GodTierAI] [SELL] ERROR: Character inventory not initialized, cannot sell items\n";
+            record_sell_failure('inventory_not_ready', 'Character inventory not available');
             send_action_feedback('sell_items', 'failed', 'inventory_not_ready',
                 'Character inventory not available');
             return;
         }
+        
+        # CRITICAL FIX #1: Save combat state before selling navigation
+        my $was_hunting = $hunting_active;
+        my $previous_attackAuto = $config{attackAuto} || 0;
+        my $previous_routeRandomWalk = $config{route_randomWalk} || 0;
+        
+        # Disable combat mode for safe navigation
+        if ($hunting_active || $config{attackAuto} > 0) {
+            message "[SELL] Disabling combat mode for safe navigation\n", "info";
+            message "[SELL] Previous state: attackAuto=$previous_attackAuto, routeRandomWalk=$previous_routeRandomWalk, hunting=$was_hunting\n", "info";
+            Commands::run("conf attackAuto 0");
+            Commands::run("conf route_randomWalk 0");
+            $hunting_active = 0;
+            set_state('SELLING', 'PREPARING');
+            sleep 1;  # Give config change time to apply
+        }
+        
+        # Clear any active combat tasks
+        AI::clear('attack', 'items_take', 'items_gather');
+        message "[SELL] Cleared combat AI queue\n", "info";
         
         # CRITICAL FIX: Capture zeny BEFORE selling for verification
         my $zeny_before = $char->{zeny} || 0;
@@ -1840,6 +2461,7 @@ sub execute_action {
         # Get inventory for analysis (CIRCUIT BREAKER: Limit items to prevent memory explosion)
         my @inventory_items;
         my $sell_item_count = 0;
+        my $sell_slot_index = 0;  # CRITICAL FIX: Track actual inventory slot number
         # CRITICAL FIX: Use proper inventory() method call instead of hash accessor
         foreach my $item (@{$char->inventory->getItems()}) {
             last if $sell_item_count++ >= 50;  # CIRCUIT BREAKER: Max 50 items for sell analysis
@@ -1849,8 +2471,9 @@ sub execute_action {
                 amount => $item->{amount},
                 type => $item->{type},
                 id => $item->{nameID},
-                invIndex => int($item->{index} || 0)  # FIXED: Add int() wrapper + default + correct property {index}
+                invIndex => $sell_slot_index  # FIXED: Use actual slot counter instead of non-existent $item->{index}
             };
+            $sell_slot_index++;  # Increment after each item
         }
         
         message "[GodTierAI] [SELL] Collected " . scalar(@inventory_items) . " items from inventory\n", "info";
@@ -1894,12 +2517,108 @@ sub execute_action {
                     $cmd_num++;
                 }
                 
-                # Navigate to Tool Dealer
-                message "[GodTierAI] [SELL] Navigating to Tool Dealer...\n", "info";
-                Commands::run("move prontera 134 88");
+                # GOD-TIER IMPROVEMENT #2: Use adaptive NPC selection
+                my $prefer_same_map = ($strategy eq 'try_same_map_npc');
+                my $npc = get_next_sell_npc($field->baseName, $prefer_same_map);
                 
-                # Wait for navigation
-                sleep(2);
+                # Store commands for resumable operation (GAP #3)
+                @sell_commands_pending = @{$result->{sell_commands}};
+                $sell_target_npc = $npc;
+                
+                # Navigate to selected NPC
+                message "[GodTierAI] [SELL] Navigating to $npc->{name} at $npc->{map} ($npc->{x},$npc->{y})...\n", "info";
+                set_state('SELLING', 'NAVIGATING');
+                Commands::run("move $npc->{map} $npc->{x} $npc->{y}");
+                
+                # CRITICAL FIX: Wait for arrival with IDLE DISCONNECT PREVENTION
+                # Reduced timeout from 120s to 30s and added keep-alive mechanism
+                message "[GodTierAI] [SELL] Waiting for arrival at NPC (30s timeout with keep-alive)...\n", "info";
+                my $wait_start = time;
+                my $last_activity = time;
+                my $arrived = 0;
+                
+                while ((time - $wait_start) < 30) {  # Reduced from 120s to 30s
+                    # CRITICAL: Idle disconnect prevention - send keep-alive every 15 seconds
+                    if (time - $last_activity > 15) {
+                        message "[KEEP-ALIVE] Sending activity to prevent disconnect...\n", "info";
+                        if ($char->{sitting}) {
+                            Commands::run("stand");
+                        } else {
+                            Commands::run("sit");
+                        }
+                        $last_activity = time;
+                    }
+                    
+                    # Check if character stopped moving (pos_to is undef when not moving)
+                    unless ($char->{pos_to}) {
+                        message "[GodTierAI] [SELL] Character stopped moving, checking position...\n", "info";
+                        $arrived = 1;
+                        last;
+                    }
+                    sleep(1);  # Check every second instead of 0.3s
+                }
+                
+                unless ($arrived) {
+                    error "[GodTierAI] [SELL] Failed to arrive at NPC within timeout\n";
+                    
+                    # BUG FIX #1: ALWAYS restore combat mode after sell attempt (unconditional)
+                    message "[SELL] Restoring combat mode after timeout\n", "info";
+                    message "[SELL] Restoring attackAuto: 0 → $previous_attackAuto\n", "info";
+                    Commands::run("conf attackAuto $previous_attackAuto");
+                    Commands::run("conf route_randomWalk $previous_routeRandomWalk");
+                    $hunting_active = $was_hunting;
+                    set_state('IDLE', undef);
+                    sleep 0.5;  # Give config time to apply
+                    
+                    # GOD-TIER FIX #2: TASK RESUMPTION - Clear task on failure
+                    $current_primary_task = undef;
+                    message "[SELL] Task cleared (navigation timeout failure)\n", "info";
+                    
+                    # GOD-TIER IMPROVEMENT #7: Track failure type
+                    record_sell_failure('navigation_timeout', 'Could not reach NPC within 30 seconds');
+                    
+                    # CRITICAL FIX: Check if we should abandon sell operation after repeated failures
+                    if ($sell_failures{total} >= 7) {
+                        error "[SELL-ABANDON] *** CRITICAL: 7+ consecutive sell failures detected! ***\n";
+                        error "[SELL-ABANDON] Total failures: $sell_failures{total}\n";
+                        error "[SELL-ABANDON] Breakdown: nav_timeout=$sell_failures{navigation_timeout}, " .
+                              "npc_missing=$sell_failures{npc_not_found}, commands_fail=$sell_failures{commands_failed}\n";
+                        error "[SELL-ABANDON] ABANDONING sell operation and resuming combat/farming!\n";
+                        
+                        # Clear all sell state
+                        $sell_substep = 'IDLE';
+                        @sell_commands_pending = ();
+                        $sell_target_npc = undef;
+                        
+                        # Force resume attack mode
+                        message "[SELL-ABANDON] Forcing resume attack mode...\n", "warning";
+                        Commands::run("conf attackAuto 2");
+                        Commands::run("conf route_randomWalk 1");
+                        $saved_attackAuto = 2;
+                        $saved_routeRandomWalk = 1;
+                        $hunting_active = 1;
+                        set_state('IDLE', undef);
+                        
+                        # Reset failure counter (give it another chance later)
+                        reset_sell_failures();
+                        
+                        send_action_feedback('sell_items', 'abandoned', 'too_many_failures',
+                            "Abandoned sell operation after $sell_failures{total} consecutive failures. Resuming farming.");
+                        return;
+                    }
+                    
+                    send_action_feedback('sell_items', 'failed', 'navigation_timeout',
+                        'Could not reach NPC within 30 seconds (may need NPC coordinate fix)');
+                    return;
+                }
+                
+                # Additional wait to ensure character fully stopped
+                sleep(1);
+                
+                # CRITICAL FIX: Talk to NPC to open shop window
+                message "[GodTierAI] [SELL] Talking to Tool Dealer to open shop...\n", "info";
+                Commands::run("talk 0");  # Talk to nearest NPC
+                sleep(1);  # Wait for shop window to open
                 
                 # Execute sell commands with verification
                 message "[GodTierAI] [SELL] Executing sell commands...\n", "info";
@@ -1908,14 +2627,18 @@ sub execute_action {
                     message "[GodTierAI] [SELL] Executing: $sell_cmd\n", "info";
                     Commands::run($sell_cmd);
                     $commands_executed++;
-                    sleep(0.5);  # Small delay between sells
+                    sleep(0.3);  # Small delay between sells
                 }
                 
-                message "[GodTierAI] [SELL] Executed $commands_executed sell commands\n", "success";
+                # CRITICAL FIX: Execute "sell done" to finalize transaction
+                message "[GodTierAI] [SELL] Finalizing transaction with 'sell done'...\n", "info";
+                Commands::run("sell done");
                 
-                # CRITICAL FIX: Wait for server to update zeny, then verify
-                message "[GodTierAI] [SELL] Waiting 2s for server to update zeny...\n", "info";
-                sleep(2);
+                message "[GodTierAI] [SELL] Executed $commands_executed sell commands + finalized\n", "success";
+                
+                # CRITICAL FIX: Increase wait time from 2s to 5s for server to update zeny
+                message "[GodTierAI] [SELL] Waiting 5s for server to update zeny...\n", "info";
+                sleep(5);
                 
                 my $zeny_after = $char->{zeny} || 0;
                 my $zeny_gained = $zeny_after - $zeny_before;
@@ -1926,6 +2649,12 @@ sub execute_action {
                 # Verify sells actually worked
                 if ($zeny_gained > 0) {
                     message "[GodTierAI] [SELL] SUCCESS: Items sold, gained ${zeny_gained}z\n", "success";
+                    
+                    # GOD-TIER IMPROVEMENT #7: Reset all failure counters on success
+                    reset_sell_failures();
+                    @sell_commands_pending = ();
+                    $sell_target_npc = undef;
+                    
                     send_action_feedback('sell_items', 'success', 'items_sold',
                         "Sold items for ${zeny_gained}z");
                 } elsif ($zeny_gained == 0 && $commands_executed > 0) {
@@ -1934,6 +2663,9 @@ sub execute_action {
                     error "[GodTierAI] [SELL] Possible causes: Wrong command syntax, not at NPC, inventory mismatch\n";
                     send_action_feedback('sell_items', 'failed', 'sell_commands_failed',
                         "Executed $commands_executed sell commands but gained 0z - syntax error likely");
+                    
+                    # GOD-TIER IMPROVEMENT #7: Track detailed failure type
+                    record_sell_failure('commands_failed', "Executed $commands_executed commands but gained 0z");
                     
                     # ADAPTIVE: Track this failure for intelligent recovery
                     track_failure('sell_items', 'commands_executed_but_no_zeny_gained');
@@ -1953,6 +2685,10 @@ sub execute_action {
                 send_action_feedback('sell_items', 'failed', 'no_items_to_sell',
                     'Cannot sell - all items protected (need alternative zeny strategy)');
                 
+                # GOD-TIER IMPROVEMENT #7: Track detailed failure type
+                record_sell_failure('no_items', 'All items protected, cannot sell');
+                $last_sell_attempt_time = time;
+                
                 # ADAPTIVE: Track this failure for intelligent recovery
                 track_failure('sell_items', 'no_sellable_items_zero_zeny');
             }
@@ -1961,9 +2697,24 @@ sub execute_action {
             send_action_feedback('sell_items', 'failed', 'ai_service_request_failed',
                 "AI-Service error: $response->{status} $response->{reason}");
             
+            # GOD-TIER IMPROVEMENT #7: Track detailed failure type
+            record_sell_failure('ai_service_error', "HTTP $response->{status}: $response->{reason}");
+            $last_sell_attempt_time = time;
+            
             # ADAPTIVE: Track this failure
             track_failure('sell_items', "ai_service_http_error_$response->{status}");
         }
+        
+        # BUG FIX #1: ALWAYS restore combat mode after sell operation (unconditional)
+        message "[SELL] Restoring combat mode after successful sell\n", "info";
+        Commands::run("conf attackAuto $previous_attackAuto");
+        Commands::run("conf route_randomWalk $previous_routeRandomWalk");
+        $hunting_active = $was_hunting;
+        set_state('COMBAT', undef);
+        
+        # GOD-TIER FIX #3: TASK RESUMPTION - Clear task on completion
+        $current_primary_task = undef;
+        message "[SELL] Task completed and cleared\n", "info";
     } elsif ($type eq 'idle') {
         # CRITICAL FIX #3: New action handler for idle (natural HP/SP regeneration)
         my $reason = $params->{reason} || 'unknown';
@@ -1988,8 +2739,8 @@ sub execute_action {
         
         message "[GodTierAI] [ACTION] Attacking nearest monster - Reason: $reason\n", "info";
         
-        # Find nearest monster using OpenKore's built-in function
-        my $monster = getBestTarget();
+        # PHASE 8 FIX #1: Use OpenKore's native monster selection
+        my $monster = getBestTarget_godtier();
         if ($monster) {
             message "[GodTierAI] [ACTION] Target: " . $monster->name() . " (ID: " . $monster->{binID} . ")\n", "info";
             Commands::run("a " . $monster->{binID});  # FIX: Use 'a' command instead of 'attack'
@@ -2007,14 +2758,15 @@ sub execute_action {
         message "[GodTierAI] [ACTION] Returning to town - Reason: $reason\n", "info";
         
         # Check if we have Butterfly Wing or Fly Wing
+        # CRITICAL FIX: Verify item has valid invIndex to prevent phantom inventory count
         my $butterfly_wing = $char->inventory()->getByName("Butterfly Wing");
         my $fly_wing = $char->inventory()->getByName("Fly Wing");
         
-        if ($butterfly_wing) {
+        if (defined $butterfly_wing && defined $butterfly_wing->{invIndex}) {
             message "[GodTierAI] [ACTION] Using Butterfly Wing to return to save point\n", "info";
             Commands::run("is Butterfly Wing");
             send_action_feedback('return_to_town', 'success', 'used_butterfly_wing');
-        } elsif ($fly_wing) {
+        } elsif (defined $fly_wing && defined $fly_wing->{invIndex}) {
             message "[GodTierAI] [ACTION] Using Fly Wing to teleport (will need to walk to town)\n", "info";
             Commands::run("is Fly Wing");
             # Note: Fly Wing only random teleports, may need to walk from there
@@ -2543,6 +3295,94 @@ sub execute_action {
         send_action_feedback('buy_supplies', 'success', 'supplies_purchased',
             "Bought " . scalar(@{$items}) . " item types");
     }
+    elsif ($type eq 'emergency_flee' || $type eq 'emergency_heal') {
+        # GOD-TIER IMPROVEMENT #1: Save current task before handling emergency
+        message "[EMERGENCY] HP critical - attempting to heal\n", "warning";
+        
+        # SAVE current task if one is active (enables resumption after heal)
+        if ($current_primary_task && $bot_state->{primary} ne 'IDLE') {
+            message "[EMERGENCY] Interrupting current task: $current_primary_task->{action}\n", "warning";
+            interrupt_state('HEALING', 'hp_critical');
+            push_interrupted_task({
+                action => $current_primary_task->{action},
+                params => $current_primary_task->{params},
+                progress => $bot_state->{sub_state} || 'unknown',
+            });
+        }
+        
+        # Set healing state
+        set_state('HEALING', 'EMERGENCY');
+        
+        # Try to use healing items in priority order
+        my @healing_items = (
+            {id => 507, name => "Red Herb"},      # Heals 18-28 HP
+            {id => 501, name => "Red Potion"},    # Heals 45-65 HP
+            {id => 506, name => "Green Herb"},    # Heals 9-18 HP
+            {id => 502, name => "Orange Potion"}, # Heals 105-145 HP
+        );
+        
+        my $healed = 0;
+        for my $heal_item (@healing_items) {
+            # Check if we have this item in inventory
+            # CRITICAL FIX: Verify invIndex to ensure real-time inventory accuracy
+            my $item = $char->inventory->getByNameID($heal_item->{id});
+            if (defined $item && $item->{amount} > 0 && defined $item->{invIndex}) {
+                message "[EMERGENCY] Using $heal_item->{name} (ID:$heal_item->{id})\n", "success";
+                Commands::run("is $heal_item->{id}");
+                $healed = 1;
+                last;  # Exit after using first available healing item
+            }
+        }
+        
+        if (!$healed) {
+            message "[EMERGENCY] No healing items available, attempting to flee\n", "warning";
+            # If no healing items, try to flee to safe location
+            if ($params->{safe_location}) {
+                my $safe_map = $params->{safe_location}->{map};
+                my $safe_x = $params->{safe_location}->{x};
+                my $safe_y = $params->{safe_location}->{y};
+                Commands::run("move $safe_map $safe_x $safe_y");
+            } else {
+                # Try to return to town
+                # CRITICAL FIX: Verify invIndex to prevent phantom inventory count
+                my $butterfly_wing = $char->inventory()->getByName("Butterfly Wing");
+                if (defined $butterfly_wing && defined $butterfly_wing->{invIndex}) {
+                    message "[EMERGENCY] Using Butterfly Wing to flee to town\n", "warning";
+                    Commands::run("is Butterfly Wing");
+                } else {
+                    message "[EMERGENCY] No escape items, standing ground\n", "warning";
+                }
+            }
+        }
+        
+        # Send success feedback
+        send_action_feedback($type, 'success', $healed ? 'used_healing_item' : 'attempted_flee');
+        
+        # GOD-TIER IMPROVEMENT #1: Resume interrupted task after healing
+        if (has_interrupted_tasks()) {
+            message "[EMERGENCY] Emergency handled, will resume interrupted task on next cycle\n", "info";
+            set_state('IDLE', undef);  # Reset to idle, let AI cycle resume task
+        }
+    }
+    elsif ($type eq 'use_item') {
+        # CRITICAL FIX #2: Handle use_item action (more explicit than emergency_flee)
+        my $item_id = $params->{item_id};
+        my $item_name = $params->{item_name} || "Item";
+        my $reason = $params->{reason} || "unknown";
+        
+        message "[USE_ITEM] Using $item_name (ID:$item_id) - Reason: $reason\n", "info";
+        
+        # Check if item exists in inventory
+        # CRITICAL FIX: Verify invIndex to ensure real-time inventory accuracy
+        my $item = $char->inventory->getByNameID($item_id);
+        if (defined $item && $item->{amount} > 0 && defined $item->{invIndex}) {
+            Commands::run("is $item_id");
+            send_action_feedback('use_item', 'success', "used_$item_name");
+        } else {
+            message "[USE_ITEM] $item_name not found in inventory\n", "warning";
+            send_action_feedback('use_item', 'failed', "item_not_found");
+        }
+    }
     else {
         warning "[GodTierAI] Unknown action type: $type\n";
     }
@@ -2953,6 +3793,27 @@ sub on_ai_pre {
     check_unused_points($current_time);
     
     # ========================================================================
+    # GOD-TIER IMPROVEMENT #1: CHECK FOR INTERRUPTED TASKS FIRST
+    # ========================================================================
+    # PRIORITY: Resume interrupted tasks before making new decisions
+    # This ensures economic cycles complete even under HP pressure
+    if (has_interrupted_tasks()) {
+        my $resumed_task = pop_interrupted_task();
+        message "[AI-CYCLE] Resuming interrupted task instead of new decision\n", "info";
+        message "[AI-CYCLE] Task: $resumed_task->{action}, Progress: $resumed_task->{progress}\n", "info";
+        
+        # Set current primary task
+        $current_primary_task = {
+            action => $resumed_task->{action},
+            params => $resumed_task->{params},
+        };
+        
+        # Execute the resumed task
+        execute_action($resumed_task);
+        return;  # Skip new decision this cycle
+    }
+    
+    # ========================================================================
     # STRATEGIC PLANNING LAYER - Request from AI Engine (Port 9901) if needed
     # ========================================================================
     # Strategic decisions: Quest chains, progression paths, economic strategy
@@ -3202,6 +4063,9 @@ sub on_map_change {
     
     message "[GodTierAI] Map changed to $current_map, resetting state\n", "info";
     
+    # GOD-TIER IMPROVEMENT #9: Trigger event callbacks
+    trigger_event('map_loaded', {map => $current_map});
+    
     # CRITICAL FIX #2: Wait 2 seconds for monster data to populate after map change
     # Without this delay, AI-Service sees empty monsters array and can't engage combat
     my $map_name = $current_map;
@@ -3448,6 +4312,21 @@ sub on_job_level_up {
 sub on_stat_info {
     my (undef, $args) = @_;
     return unless $char;
+    
+    # GOD-TIER IMPROVEMENT #9: Track zeny changes for sell verification
+    my $stat_type = $args->{type};
+    if ($stat_type == 20) {  # Zeny stat
+        my $new_zeny = $args->{val} || 0;
+        my $zeny_change = $new_zeny - $previous_zeny;
+        
+        if ($zeny_change != 0) {
+            $previous_zeny = $new_zeny;
+            debug "[STAT] Zeny changed: $zeny_change (now: ${new_zeny}z)\n", "ai";
+            
+            # Trigger zeny_changed event for callbacks
+            trigger_event('zeny_changed', {amount => $zeny_change, total => $new_zeny});
+        }
+    }
     
     # Track stats for performance monitoring
     # This is called frequently, so we only log important changes

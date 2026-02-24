@@ -239,6 +239,8 @@ def handler_emergency_heal(game_state: Dict, method: str = 'fastest_available', 
     """
     Emergency healing handler - finds fastest healing method
     
+    PHASE 13 FIX: Properly check inventory list structure for healing items
+    
     Args:
         game_state: Current game state
         method: Healing method preference
@@ -246,10 +248,12 @@ def handler_emergency_heal(game_state: Dict, method: str = 'fastest_available', 
     Returns:
         Action dictionary for execution
     """
-    logger.info(f"Emergency heal triggered with method: {method}")
+    logger.info(f"[TRIGGER] Emergency heal triggered with method: {method}")
     
     character = game_state.get('character', {})
-    inventory = game_state.get('inventory', {})
+    # PHASE 13 CRITICAL FIX: Access the 'items' dict from inventory structure
+    # main.py transforms inventory to: {"items": {name: amount}, "item_count": N, ...}
+    inventory = game_state.get('inventory', {}).get('items', {})
     
     # Priority order for healing
     # 1. Healing items (fastest)
@@ -257,29 +261,69 @@ def handler_emergency_heal(game_state: Dict, method: str = 'fastest_available', 
     # 3. Emergency warp/flee
     
     if method == 'fastest_available':
-        # Check for healing items
-        healing_items = [
-            'White Potion', 'Red Potion', 'Orange Potion',
-            'Yellow Potion', 'White Slim Potion'
+        # PHASE 13 FIX: Check for healing items with proper item_id mapping
+        # Priority order: Most effective healing first
+        healing_items_priority = [
+            ('Red Herb', 507),          # PHASE 13 FIX: Added Red Herb (most common early game)
+            ('White Potion', 504),      # 325-405 HP
+            ('Yellow Potion', 503),     # 175-235 HP
+            ('Red Potion', 501),        # 45-65 HP
+            ('Orange Potion', 502),     # 105-145 HP
+            ('White Slim Potion', 11518), # Alternative white potion
+            ('Apple', 512),             # Basic food healing
+            ('Meat', 517),              # Basic food healing
         ]
         
-        for item in healing_items:
-            if inventory.get('items', {}).get(item, 0) > 0:
-                return {
-                    "action": "use_item",
-                    "params": {"item_name": item},
-                    "reason": "Emergency HP critical - using fastest healing item"
-                }
+        # PHASE 13 CRITICAL FIX: Iterate through dict of {item_name: amount}
+        logger.debug(f"[EMERGENCY-HEAL] Checking inventory for healing items (inventory has {len(inventory)} items)")
+        for item_name, item_id in healing_items_priority:
+            # Iterate through actual inventory items dict
+            for inv_item_name, inv_amount in inventory.items():
+                inv_item_name_lower = inv_item_name.lower()
+                item_name_lower = item_name.lower()
+                
+                # Match by name (case-insensitive) and check amount
+                if item_name_lower in inv_item_name_lower and inv_amount > 0:
+                    logger.info(f"[EMERGENCY-HEAL] Found {inv_item_name} x{inv_amount} - using for emergency healing")
+                    return {
+                        "action": "use_item",
+                        "params": {
+                            "item_name": inv_item_name,
+                            "item_id": item_id,
+                            "amount": 1
+                        },
+                        "reason": "Emergency HP critical - using fastest healing item"
+                    }
+        
+        # No healing items found - log what we DO have
+        logger.warning(f"[EMERGENCY-HEAL] No healing items found in inventory!")
+        inv_items = [f"{name} x{amount}" for name, amount in inventory.items()]
+        logger.debug(f"[EMERGENCY-HEAL] Inventory contents: {inv_items}")
         
         # Check for healing skill
-        if character.get('skills', {}).get('AL_HEAL', {}).get('learned', False):
+        skills = character.get('skills', [])
+        has_heal_skill = False
+        
+        if isinstance(skills, list):
+            for skill in skills:
+                if isinstance(skill, dict):
+                    skill_name = skill.get('name', '')
+                    if skill_name in ['AL_HEAL', 'Heal'] and skill.get('level', 0) > 0:
+                        has_heal_skill = True
+                        break
+        elif isinstance(skills, dict):
+            has_heal_skill = skills.get('AL_HEAL', {}).get('learned', False)
+        
+        if has_heal_skill:
+            logger.info("[EMERGENCY-HEAL] Using Heal skill")
             return {
                 "action": "use_skill",
-                "params": {"skill_id": "AL_HEAL", "target": "self"},
+                "params": {"skill_id": "AL_HEAL", "skill_name": "Heal", "target": "self"},
                 "reason": "Emergency HP critical - using heal skill"
             }
         
-        # Emergency flee
+        # Emergency flee - no healing available
+        logger.error("[EMERGENCY-HEAL] NO HEALING OPTIONS AVAILABLE - emergency flee")
         return {
             "action": "emergency_flee",
             "params": {"direction": "safe_zone"},

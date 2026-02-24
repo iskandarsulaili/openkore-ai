@@ -298,7 +298,11 @@ def get_job_property(job_class: str, property_name: str, default=None):
 # PHASE 14: BACKGROUND ASYNC CREWAI SYSTEM
 # ============================================================================
 
-# Global cache for background CrewAI strategic planning
+# PHASE 10 FIX #3: Async lock for CrewAI task serialization
+# Prevents race conditions when multiple requests try to start CrewAI simultaneously
+_crewai_lock = asyncio.Lock()
+
+# PHASE 9 FIX: Global cache for background CrewAI strategic planning
 # This allows CrewAI to run at full potential without blocking tactical decisions
 _crewai_cache = {
     "task": None,  # Background asyncio.Task running CrewAI
@@ -308,8 +312,9 @@ _crewai_cache = {
     "game_state_hash": None,  # Hash of game state used for cache validation
     "execution_count": 0,  # How many times CrewAI has executed
     "total_time": 0.0,  # Total execution time for metrics
-    "timeout_count": 0,  # How many times CrewAI exceeded 30s
-    "error_count": 0  # How many times CrewAI errored
+    "timeout_count": 0,  # How many times CrewAI exceeded 30s (with timeout)
+    "error_count": 0,  # How many times CrewAI errored
+    "last_attempt_time": 0.0  # PHASE 9: Last time we attempted to start CrewAI (for rate limiting)
 }
 
 def _hash_game_state(game_state: Dict) -> str:
@@ -340,64 +345,80 @@ def _hash_game_state(game_state: Dict) -> str:
 
 async def _background_crewai_planning(game_state: Dict, llm_provider):
     """
-    Run CrewAI planning in background without blocking
+    PHASE 9 FIX: Run CrewAI planning in background with proper async isolation
+    PHASE 10 FIX #3: Add async lock to prevent concurrent CrewAI tasks (race condition)
     
-    This runs at full potential (no timeout) but doesn't block tactical decisions.
-    Results are cached and used when available.
+    This truly runs in background without blocking tactical decisions.
+    Features:
+    - 30s hard timeout per execution
+    - Automatic task cancellation on new requests
+    - Cache updates when complete
+    - Full error isolation
+    - SERIALIZED EXECUTION: Only one CrewAI task at a time
     
     Args:
         game_state: Complete game state
         llm_provider: LLM instance for CrewAI
     """
-    global _crewai_cache
+    global _crewai_cache, _crewai_lock
     
-    start_time = time.time()
-    state_hash = _hash_game_state(game_state)
-    
-    try:
-        logger.info("[STRATEGIC-BG] Starting background CrewAI planning (full potential mode)...")
-        _crewai_cache["is_running"] = True
-        _crewai_cache["game_state_hash"] = state_hash
+    # PHASE 10 FIX #3: Acquire lock to ensure only one CrewAI task runs at a time
+    async with _crewai_lock:
+        start_time = time.time()
+        state_hash = _hash_game_state(game_state)
         
-        # Get strategic planner
-        planner = get_strategic_planner(llm_provider)
+        try:
+            logger.info("[STRATEGIC-BG] Starting background CrewAI planning with 30s timeout...")
+            _crewai_cache["is_running"] = True
+            _crewai_cache["game_state_hash"] = state_hash
+            _crewai_cache["last_attempt_time"] = time.time()
+            
+            # Get strategic planner (CRITICAL: This might be blocking)
+            planner = get_strategic_planner(llm_provider)
+            
+            # PHASE 9 FIX: Execute with 30s timeout to prevent runaway tasks
+            strategic_action = await asyncio.wait_for(
+                planner.plan_next_strategic_action(game_state),
+                timeout=30.0
+            )
         
-        # Execute with NO timeout - full potential mode
-        strategic_action = await planner.plan_next_strategic_action(game_state)
-        
-        execution_time = time.time() - start_time
-        
-        # Update cache with result
-        _crewai_cache["result"] = strategic_action
-        _crewai_cache["timestamp"] = datetime.now()
-        _crewai_cache["execution_count"] += 1
-        _crewai_cache["total_time"] += execution_time
-        
-        # Track if this exceeded typical timeout threshold
-        if execution_time > 30.0:
-            _crewai_cache["timeout_count"] += 1
-            logger.warning(f"[STRATEGIC-BG] CrewAI took {execution_time:.1f}s (>30s), but didn't block combat")
-        else:
+            execution_time = time.time() - start_time
+            
+            # Update cache with result
+            _crewai_cache["result"] = strategic_action
+            _crewai_cache["timestamp"] = datetime.now()
+            _crewai_cache["execution_count"] += 1
+            _crewai_cache["total_time"] += execution_time
+            
             logger.success(f"[STRATEGIC-BG] CrewAI completed in {execution_time:.1f}s")
-        
-        logger.info(f"[STRATEGIC-BG] Recommendation: {strategic_action.get('action', 'unknown')}")
-        logger.debug(f"[STRATEGIC-BG] Reasoning: {strategic_action.get('reasoning', 'N/A')[:200]}")
-        
-        # Calculate average execution time for metrics
-        avg_time = _crewai_cache["total_time"] / _crewai_cache["execution_count"]
-        logger.info(f"[STRATEGIC-BG] Metrics: {_crewai_cache['execution_count']} executions, avg {avg_time:.1f}s, {_crewai_cache['timeout_count']} >30s")
-        
-    except Exception as e:
-        execution_time = time.time() - start_time
-        _crewai_cache["error_count"] += 1
-        logger.error(f"[STRATEGIC-BG] CrewAI error after {execution_time:.1f}s: {e}")
-        logger.exception(e)
-        
-        # Don't cache errors - keep using old cache if available
-        
-    finally:
-        _crewai_cache["is_running"] = False
-        _crewai_cache["task"] = None
+            logger.info(f"[STRATEGIC-BG] Recommendation: {strategic_action.get('action', 'unknown')}")
+            logger.debug(f"[STRATEGIC-BG] Reasoning: {strategic_action.get('reasoning', 'N/A')[:200]}")
+            
+            # Calculate average execution time for metrics
+            avg_time = _crewai_cache["total_time"] / _crewai_cache["execution_count"]
+            logger.info(f"[STRATEGIC-BG] Metrics: {_crewai_cache['execution_count']} executions, avg {avg_time:.1f}s")
+            
+        except asyncio.TimeoutError:
+            execution_time = time.time() - start_time
+            _crewai_cache["timeout_count"] += 1
+            logger.warning(f"[STRATEGIC-BG] CrewAI timeout after 30s, continuing with tactical decisions")
+            # Keep old cache if available
+            
+        except asyncio.CancelledError:
+            execution_time = time.time() - start_time
+            logger.info(f"[STRATEGIC-BG] CrewAI task cancelled after {execution_time:.1f}s (newer request started)")
+            raise  # Re-raise to properly handle cancellation
+            
+        except Exception as e:
+            execution_time = time.time() - start_time
+            _crewai_cache["error_count"] += 1
+            logger.error(f"[STRATEGIC-BG] CrewAI error after {execution_time:.1f}s: {e}")
+            logger.exception(e)
+            # Keep old cache if available
+            
+        finally:
+            _crewai_cache["is_running"] = False
+            _crewai_cache["task"] = None
 
 def _get_cached_strategic_action(game_state: Dict) -> Optional[Dict]:
     """
@@ -438,11 +459,11 @@ def _get_cached_strategic_action(game_state: Dict) -> Optional[Dict]:
 
 def _should_start_background_planning(game_state: Dict) -> bool:
     """
-    Determine if we should start a new background CrewAI planning task
+    PHASE 9 FIX: Determine if we should start a new background CrewAI planning task
     
     Start if:
-    - Not currently running
-    - No valid cache exists
+    - Not currently running OR enough time passed since last attempt (>10s)
+    - No valid cache exists OR cache is stale
     - Character is in a strategic state (healthy, not in combat)
     
     Returns:
@@ -450,12 +471,34 @@ def _should_start_background_planning(game_state: Dict) -> bool:
     """
     global _crewai_cache
     
-    # Already running
+    # Check if task is currently running
+    # PHASE 9 FIX: Also check if enough time passed since last attempt (prevents spam)
     if _crewai_cache["is_running"]:
-        return False
+        last_attempt = _crewai_cache.get("last_attempt_time", 0)
+        time_since_last = time.time() - last_attempt
+        
+        # If task has been running for >35s, it's probably stuck (30s timeout + 5s buffer)
+        if time_since_last > 35:
+            logger.warning(f"[STRATEGIC-BG] Task appears stuck (running {time_since_last:.1f}s), will cancel and restart")
+            # Cancel the stuck task
+            if _crewai_cache.get("task") and not _crewai_cache["task"].done():
+                _crewai_cache["task"].cancel()
+                logger.info("[STRATEGIC-BG] Cancelled stuck task")
+            _crewai_cache["is_running"] = False
+            # Continue to start new task
+        else:
+            # Task is running normally, don't start another
+            return False
     
     # Valid cache exists
     if _get_cached_strategic_action(game_state) is not None:
+        return False
+    
+    # PHASE 9 FIX: Rate limiting - don't start new tasks too frequently
+    last_attempt = _crewai_cache.get("last_attempt_time", 0)
+    time_since_last = time.time() - last_attempt
+    if time_since_last < 10:
+        # Less than 10s since last attempt, wait longer
         return False
     
     # Check if character is in strategic planning state
@@ -1626,6 +1669,8 @@ def has_required_skill(skills_list: List[Dict], skill_name: str, min_level: int 
     Check if character has required skill at minimum level
     Handles both display names (Basic Skill) and skill handles (NV_BASIC)
     
+    PHASE 13 FIX: Enhanced validation with better error handling and logging
+    
     Args:
         skills_list: List of character skills from game state
         skill_name: Name of skill to check (e.g., "Basic Skill" or "NV_BASIC")
@@ -1634,21 +1679,53 @@ def has_required_skill(skills_list: List[Dict], skill_name: str, min_level: int 
     Returns:
         True if character has skill at or above min_level
     """
+    # PHASE 13 FIX: Enhanced validation - check for None and empty list
+    if skills_list is None:
+        logger.warning(f"[SKILL-CHECK] skills_list is None when checking for {skill_name}")
+        return False
+    
     if not isinstance(skills_list, list):
+        logger.warning(f"[SKILL-CHECK] skills_list is not a list (type: {type(skills_list)}) when checking for {skill_name}")
+        return False
+    
+    if len(skills_list) == 0:
+        logger.warning(f"[SKILL-CHECK] skills_list is empty when checking for {skill_name}")
         return False
     
     # Get list of acceptable names (both display name and handle)
     acceptable_names = SKILL_ALIASES.get(skill_name, [skill_name])
     
+    # PHASE 13 FIX: Also check reverse mapping (if they pass NV_BASIC, also check Basic Skill)
+    # This handles cases where game state sends different formats at different times
+    if skill_name not in SKILL_ALIASES:
+        # Find if this is a handle that maps to a display name
+        for display_name, aliases in SKILL_ALIASES.items():
+            if skill_name in aliases:
+                acceptable_names = aliases
+                break
+    
+    logger.debug(f"[SKILL-CHECK] Checking for '{skill_name}' (acceptable names: {acceptable_names}, min_level: {min_level})")
+    
     for skill in skills_list:
         if not isinstance(skill, dict):
             continue
+        
         skill_current_name = skill.get("name", "")
-        if skill_current_name in acceptable_names and skill.get("level", 0) >= min_level:
-            logger.debug(f"[SKILL-CHECK] Found {skill_name} as '{skill_current_name}' level {skill.get('level')}")
-            return True
+        skill_level = skill.get("level", 0)
+        
+        # PHASE 13 FIX: More detailed logging for Basic Skill specifically
+        if skill_current_name in acceptable_names:
+            if skill_level >= min_level:
+                logger.info(f"[SKILL-CHECK] ✓ Found {skill_name} as '{skill_current_name}' level {skill_level} (required: {min_level})")
+                return True
+            else:
+                logger.warning(f"[SKILL-CHECK] ✗ Found {skill_name} as '{skill_current_name}' but level {skill_level} < {min_level} (insufficient)")
+                return False
     
-    logger.debug(f"[SKILL-CHECK] {skill_name} not found in {[s.get('name') for s in skills_list if isinstance(s, dict)]}")
+    # PHASE 13 FIX: Enhanced logging when skill not found
+    available_skills = [f"{s.get('name')} Lv{s.get('level', 0)}" for s in skills_list if isinstance(s, dict) and s.get('name')]
+    logger.warning(f"[SKILL-CHECK] ✗ {skill_name} not found in skills list!")
+    logger.warning(f"[SKILL-CHECK] Available skills: {available_skills}")
     return False
 
 def get_skill_alternatives(missing_skill: str, game_state: Dict) -> Dict:
@@ -1746,28 +1823,45 @@ def get_failure_window():
 
 def record_action_failure(action: str, reason: str = ""):
     """
-    Record that an action failed execution (THREAD-SAFE)
+    Record that an action failed execution (THREAD-SAFE with STATE PERSISTENCE)
+    
+    CRITICAL FIX: Store failure counters in state_manager to persist between API calls
     
     Args:
-        action: The action that failed (e.g., "rest", "use_item")
+        action: The action that failed (e.g., "rest", "use_item", "sell_items")
         reason: Why it failed (for logging)
     """
-    with action_failure_lock:
+    # CRITICAL FIX: Use state_manager for persistent counter (survives API calls)
+    if trigger_coordinator and hasattr(trigger_coordinator, 'state_manager') and trigger_coordinator.state_manager:
+        state_mgr = trigger_coordinator.state_manager
+        
+        # Get current failure count from persistent state
+        failure_key = f"action_failure_count_{action}"
+        failure_timestamps_key = f"action_failure_timestamps_{action}"
+        
         current_time = time.time()
-        action_failure_tracker[action].append({
+        
+        # Get existing timestamps from state
+        timestamps = state_mgr.get(failure_timestamps_key, [])
+        
+        # Add new failure timestamp
+        timestamps.append({
             "timestamp": current_time,
             "reason": reason
         })
         
         # Clean old failures outside the window
-        action_failure_tracker[action] = [
-            f for f in action_failure_tracker[action]
+        timestamps = [
+            f for f in timestamps
             if current_time - f["timestamp"] < get_failure_window()
         ]
         
-        failure_count = len(action_failure_tracker[action])
+        # Persist updated timestamps and count
+        failure_count = len(timestamps)
+        state_mgr.set(failure_timestamps_key, timestamps)
+        state_mgr.set(failure_key, failure_count)
         
-        # ENHANCED LOGGING: Always log failures
+        # ENHANCED LOGGING: Always log failures with PERSISTENT count
         logger.warning(
             f"[ADAPTIVE-FAILURE] Action '{action}' failed (count: {failure_count}/{get_failure_threshold()}): {reason}"
         )
@@ -1775,17 +1869,54 @@ def record_action_failure(action: str, reason: str = ""):
         if failure_count >= get_failure_threshold():
             logger.error(
                 f"[ADAPTIVE-THRESHOLD] Action '{action}' EXCEEDED threshold! {failure_count} failures in last {get_failure_window()}s. "
-                f"Recent reasons: {[f['reason'] for f in action_failure_tracker[action][-3:]]}"
+                f"Recent reasons: {[f['reason'] for f in timestamps[-3:]]}"
             )
             
             # CRITICAL FIX #2: Auto-blacklist after threshold exceeded
             blacklist_action(action, duration=BLACKLIST_DURATION)
             
             # Clear failure tracking for this action
-            action_failure_tracker[action] = []
+            state_mgr.set(failure_timestamps_key, [])
+            state_mgr.set(failure_key, 0)
             
             # Trigger strategic rethink
             logger.warning(f"[ADAPTIVE-STRATEGY] Triggering strategy rethink due to repeated '{action}' failures")
+    else:
+        # FALLBACK: Use in-memory tracker if state_manager not available
+        with action_failure_lock:
+            current_time = time.time()
+            action_failure_tracker[action].append({
+                "timestamp": current_time,
+                "reason": reason
+            })
+            
+            # Clean old failures outside the window
+            action_failure_tracker[action] = [
+                f for f in action_failure_tracker[action]
+                if current_time - f["timestamp"] < get_failure_window()
+            ]
+            
+            failure_count = len(action_failure_tracker[action])
+            
+            # ENHANCED LOGGING: Always log failures
+            logger.warning(
+                f"[ADAPTIVE-FAILURE] Action '{action}' failed (count: {failure_count}/{get_failure_threshold()}): {reason} [FALLBACK MODE]"
+            )
+            
+            if failure_count >= get_failure_threshold():
+                logger.error(
+                    f"[ADAPTIVE-THRESHOLD] Action '{action}' EXCEEDED threshold! {failure_count} failures in last {get_failure_window()}s. "
+                    f"Recent reasons: {[f['reason'] for f in action_failure_tracker[action][-3:]]}"
+                )
+                
+                # CRITICAL FIX #2: Auto-blacklist after threshold exceeded
+                blacklist_action(action, duration=BLACKLIST_DURATION)
+                
+                # Clear failure tracking for this action
+                action_failure_tracker[action] = []
+                
+                # Trigger strategic rethink
+                logger.warning(f"[ADAPTIVE-STRATEGY] Triggering strategy rethink due to repeated '{action}' failures")
 
 def is_action_failing_repeatedly(action: str) -> bool:
     """
@@ -1828,7 +1959,12 @@ def get_alternative_action(failed_action: str, game_state: Dict[str, Any], inven
         logger.error("[ADAPTIVE-ALTERNATIVE] 'rest' action failing repeatedly (likely no Basic Skill Lv3 or blacklisted)")
         
         # Alternative 1: Use healing item if available
-        healing_items = ["Red Herb", "Apple", "Meat", "Red Potion", "Orange Potion"]
+        # PHASE 13 FIX: Use table_loader for item names instead of hardcoding (NEVER HARDCODE!)
+        healing_items_from_table = table_loader.get_healing_items()
+        healing_items = [item[0] for item in healing_items_from_table[:8]]  # Get top 8 healing items
+        
+        logger.debug(f"[ADAPTIVE-ALTERNATIVE] Checking for healing items: {healing_items}")
+        
         for item_name in healing_items:
             has_item = any(
                 item.get("name") == item_name and item.get("amount", 0) > 0
@@ -1836,7 +1972,7 @@ def get_alternative_action(failed_action: str, game_state: Dict[str, Any], inven
             )
             if has_item and f"use_{item_name}" not in alternative_actions_attempted[failed_action]:
                 alternative_actions_attempted[failed_action].add(f"use_{item_name}")
-                logger.warning(f"[ADAPTIVE-ALTERNATIVE]  Alternative 1: Use {item_name} instead of resting")
+                logger.warning(f"[ADAPTIVE-ALTERNATIVE] Alternative 1: Use {item_name} instead of resting")
                 return {
                     "action": "use_item",
                     "params": {
@@ -2360,10 +2496,7 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
                                 priority=next_action.get("priority", 5)
                             )
                             
-                            console_logger.log(
-                                LayerType.TACTICAL,
-                                f" Sequential Plan: {next_action['action']} (step {plan.current_step}/{len(plan.steps)})"
-                            )
+                            logger.info(f"[TACTICAL] Sequential Plan: {next_action['action']} (step {plan.current_step}/{len(plan.steps)})")
                             
                             return {
                                 "action": next_action["action"],
@@ -2380,10 +2513,7 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
                 if queued_action and queued_action.get("status") == "pending":
                     logger.info(f"[QUEUE] Executing queued action: {queued_action['action_type']}")
                     
-                    console_logger.log(
-                        LayerType.TACTICAL,
-                        f" Queued Action: {queued_action['action_type']}"
-                    )
+                    logger.info(f"[TACTICAL] Queued Action: {queued_action['action_type']}")
                     
                     return {
                         "action": queued_action["action_type"],
@@ -2438,10 +2568,7 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
                 trigger_action = await trigger_coordinator.process_game_state(enriched_game_state)
                 
                 if trigger_action:
-                    console_logger.log(
-                        LayerType.REFLEX,
-                        f" Trigger System Action: {trigger_action.get('action', 'unknown')}"
-                    )
+                    logger.info(f"[REFLEX] Trigger System Action: {trigger_action.get('action', 'unknown')}")
                     logger.info(f"[DECIDE] Trigger system returned action: {trigger_action}")
                     
                     # Return trigger action with metadata
@@ -2468,15 +2595,14 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
         if hp_percent < hp_reflex_threshold:
             logger.warning(f"[DECIDE] CRITICAL HP: {hp_percent:.1f}% - Emergency healing required!")
             
-            # Check for healing items IN INVENTORY (priority order)
-            healing_items = [
-                ("White Potion", 400),  # Heals ~400 HP
-                ("Yellow Potion", 200), # Heals ~200 HP
-                ("Orange Potion", 100), # Heals ~100 HP
-                ("Red Potion", 45),     # Heals ~45 HP
-                ("Apple", 16),          # Heals ~16 HP
-                ("Meat", 15)            # Heals ~15 HP
-            ]
+            # PHASE 13 FIX: Use table_loader for healing items instead of hardcoding (NEVER HARDCODE!)
+            # Check for healing items IN INVENTORY (priority order from table_loader)
+            healing_items_from_table = table_loader.get_healing_items()
+            
+            # Build list with item names (already sorted by effectiveness in table_loader)
+            healing_items = [(item[0], item[2]) for item in healing_items_from_table[:10]]  # Top 10 healing items
+            
+            logger.debug(f"[DECIDE-REFLEX] Checking for healing items: {[name for name, _ in healing_items]}")
             
             for item_name, heal_amount in healing_items:
                 # Check if item exists in inventory with amount > 0
@@ -2936,83 +3062,103 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
             ZENY_LOW = thresholds_config["zeny_thresholds"]["low"]
             ZENY_COMFORTABLE = thresholds_config["zeny_thresholds"]["comfortable"]
         
-        # Check if we should sell items first
+        # CRITICAL FIX: Smarter sell decision logic (Priority 4)
+        # Don't recommend sell if zeny=0 AND inventory<70% AND weight<80%
+        # Typical novice RO gameplay: farm first, then sell when inventory is actually full
         if current_zeny < ZENY_LOW:
-            logger.warning(f"[DECIDE] Low zeny ({current_zeny}z) - should consider selling items")
+            logger.warning(f"[DECIDE] Low zeny ({current_zeny}z) - evaluating sell necessity")
             
-            # CRITICAL FIX: Check if sell_items is blacklisted (failed 3+ times)
-            if is_action_blacklisted("sell_items"):
-                remaining = get_blacklist_time_remaining("sell_items")
-                logger.error(f"[ADAPTIVE] sell_items is BLACKLISTED ({remaining}s remaining) - cannot earn zeny via selling")
-                logger.warning(f"[ADAPTIVE] Using alternative zeny strategy: hunt monsters for drops")
+            # Calculate inventory and weight percentages
+            current_weight = int(character_data.get("weight", 0) or 0)
+            max_weight = int(character_data.get("max_weight", 1) or 1)
+            weight_percent = (current_weight / max_weight * 100) if max_weight > 0 else 0
+            
+            inventory_count = len(inventory)
+            inventory_percent = (inventory_count / 100 * 100) if inventory_count > 0 else 0  # Assume 100 max slots
+            
+            # SMART LOGIC: If zeny=0 and inventory not full, farm first instead of selling
+            if current_zeny == 0 and inventory_percent < 70 and weight_percent < 80:
+                logger.info(f"[DECIDE] SMART: Zeny=0z but inventory only {inventory_percent:.1f}% full, weight {weight_percent:.1f}%")
+                logger.info(f"[DECIDE] SMART: Should farm first to collect more items before selling trip")
+                logger.info(f"[DECIDE] SMART: Skipping sell recommendation - will farm until inventory 70%+ or weight 80%+")
+                # Don't recommend sell - fall through to combat/farming logic below
+            else:
+                # Inventory/weight is high enough to justify sell trip OR zeny is critically low
+                logger.info(f"[DECIDE] Inventory {inventory_percent:.1f}%, weight {weight_percent:.1f}% - evaluating sell necessity")
                 
-                # Alternative: Hunt monsters for drops and zeny (if HP/SP allow)
-                if hp_percent > 70 and sp_percent > 50:
-                    return {
-                        "action": "hunt_monsters",
-                        "params": {
-                            "reason": "sell_failed_hunt_for_drops_and_zeny",
-                            "priority": "high",
-                            "target_count": 10
-                        },
-                        "layer": "ADAPTIVE_STRATEGIC"
-                    }
-                else:
-                    # Low HP/SP - rest first before hunting
-                    return {
-                        "action": "rest",
-                        "params": {
-                            "reason": "low_resources_before_hunting",
-                            "priority": "medium"
-                        },
-                        "layer": "TACTICAL"
-                    }
-            
-            # Count sellable items (protect quest items from table loader)
-            quest_items = table_loader.get_quest_items()
-            
-            # CRITICAL FIX: Use NPC handler's categorization (respects vendor trash logic)
-            categorized = npc_handler.categorize_inventory_for_selling(
-                inventory,
-                quest_items=quest_items,
-                is_card_func=table_loader.is_card
-            )
-            sellable_count = len(categorized["sell"])
-            
-            if sellable_count > 0 and current_zeny < ZENY_CRITICAL:
-                logger.warning(f"[DECIDE] CRITICAL: Only {current_zeny}z left, {sellable_count} sellable items")
-                return {
-                    "action": "sell_items",
-                    "params": {
-                        "reason": "critical_zeny_shortage",
-                        "priority": "high"
-                    },
-                    "layer": "STRATEGIC"
-                }
-            elif sellable_count == 0 and current_zeny < ZENY_CRITICAL:
-                # NO sellable items but critical zeny shortage - MUST hunt for drops
-                logger.error(f"[DECIDE] CRITICAL: {current_zeny}z, NO items to sell - MUST hunt monsters")
+                # CRITICAL FIX: Check if sell_items is blacklisted (failed 3+ times)
+                if is_action_blacklisted("sell_items"):
+                    remaining = get_blacklist_time_remaining("sell_items")
+                    logger.error(f"[ADAPTIVE] sell_items is BLACKLISTED ({remaining}s remaining) - cannot earn zeny via selling")
+                    logger.warning(f"[ADAPTIVE] Using alternative zeny strategy: hunt monsters for drops")
+                    
+                    # Alternative: Hunt monsters for drops and zeny (if HP/SP allow)
+                    if hp_percent > 70 and sp_percent > 50:
+                        return {
+                            "action": "hunt_monsters",
+                            "params": {
+                                "reason": "sell_failed_hunt_for_drops_and_zeny",
+                                "priority": "high",
+                                "target_count": 10
+                            },
+                            "layer": "ADAPTIVE_STRATEGIC"
+                        }
+                    else:
+                        # Low HP/SP - rest first before hunting
+                        return {
+                            "action": "rest",
+                            "params": {
+                                "reason": "low_resources_before_hunting",
+                                "priority": "medium"
+                            },
+                            "layer": "TACTICAL"
+                        }
                 
-                if hp_percent > 60 and sp_percent > 40:
+                # Count sellable items (protect quest items from table loader)
+                quest_items = table_loader.get_quest_items()
+                
+                # CRITICAL FIX: Use NPC handler's categorization (respects vendor trash logic)
+                categorized = npc_handler.categorize_inventory_for_selling(
+                    inventory,
+                    quest_items=quest_items,
+                    is_card_func=table_loader.is_card
+                )
+                sellable_count = len(categorized["sell"])
+                
+                if sellable_count > 0 and current_zeny < ZENY_CRITICAL:
+                    logger.warning(f"[DECIDE] CRITICAL: Only {current_zeny}z left, {sellable_count} sellable items")
                     return {
-                        "action": "hunt_monsters",
+                        "action": "sell_items",
                         "params": {
-                            "reason": "no_items_to_sell_critical_zeny",
-                            "priority": "critical",
-                            "target_count": 15  # Hunt more to get drops to sell
+                            "reason": "critical_zeny_shortage",
+                            "priority": "high"
                         },
                         "layer": "STRATEGIC"
                     }
-                else:
-                    # Too low to hunt safely - rest first
-                    return {
-                        "action": "rest",
-                        "params": {
-                            "reason": "low_resources_need_rest_before_emergency_hunt",
-                            "priority": "high"
-                        },
-                        "layer": "TACTICAL"
-                    }
+                elif sellable_count == 0 and current_zeny < ZENY_CRITICAL:
+                    # NO sellable items but critical zeny shortage - MUST hunt for drops
+                    logger.error(f"[DECIDE] CRITICAL: {current_zeny}z, NO items to sell - MUST hunt monsters")
+                    
+                    if hp_percent > 60 and sp_percent > 40:
+                        return {
+                            "action": "hunt_monsters",
+                            "params": {
+                                "reason": "no_items_to_sell_critical_zeny",
+                                "priority": "critical",
+                                "target_count": 15  # Hunt more to get drops to sell
+                            },
+                            "layer": "STRATEGIC"
+                        }
+                    else:
+                        # Too low to hunt safely - rest first
+                        return {
+                            "action": "rest",
+                            "params": {
+                                "reason": "low_resources_need_rest_before_emergency_hunt",
+                                "priority": "high"
+                            },
+                            "layer": "TACTICAL"
+                        }
         
         # Check if we need to restock consumables
         try:
@@ -3146,19 +3292,29 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
         if ENABLE_CREWAI_STRATEGIC and hp_percent > 80 and sp_percent > 50:
             # Check if LLM provider is available
             if any(p.available for p in llm_chain.providers):
-                # Start background planning if conditions are met
+                # PHASE 9 FIX: Start background planning if conditions are met
                 if _should_start_background_planning(game_state):
                     logger.info("[STRATEGIC-BG] Starting background CrewAI planning task...")
+                    
+                    # PHASE 9 FIX: Cancel any existing task before starting new one
+                    if _crewai_cache.get("task") and not _crewai_cache["task"].done():
+                        logger.warning("[STRATEGIC-BG] Cancelling previous task to start new one")
+                        _crewai_cache["task"].cancel()
+                        try:
+                            await asyncio.wait_for(_crewai_cache["task"], timeout=0.1)
+                        except (asyncio.CancelledError, asyncio.TimeoutError):
+                            pass  # Expected
                     
                     # Get CrewAI-compatible LLM instance
                     crewai_llm = llm_chain.get_crewai_llm()
                     
-                    # Create background task (non-blocking)
+                    # PHASE 9 FIX: Create background task with proper fire-and-forget isolation
+                    # The key is to NOT await this task - just create it and continue
                     _crewai_cache["task"] = asyncio.create_task(
                         _background_crewai_planning(game_state, crewai_llm)
                     )
                     
-                    logger.debug("[STRATEGIC-BG] Background task created, proceeding to tactical/combat")
+                    logger.debug("[STRATEGIC-BG] Background task created (ID: {id(_crewai_cache['task'])}), proceeding immediately to tactical/combat")
                 
                 # Check if we have a cached strategic recommendation
                 cached_action = _get_cached_strategic_action(game_state)
@@ -3166,6 +3322,47 @@ async def decide_action(request: Request, request_body: Dict[str, Any] = Body(..
                 if cached_action:
                     # Validate cached action before using
                     action_type = cached_action.get("action")
+                    
+                    # PHASE 10 FIX #4: Economic Decision Override Logic
+                    # Override sell_items recommendation when bot should farm first
+                    if action_type == "sell_items":
+                        # Calculate inventory and weight percentages
+                        current_weight = int(character_data.get("weight", 0) or 0)
+                        max_weight = int(character_data.get("max_weight", 1) or 1)
+                        weight_percent = (current_weight / max_weight * 100) if max_weight > 0 else 0
+                        
+                        inventory_count = len(inventory)
+                        inventory_percent = (inventory_count / 100 * 100) if inventory_count > 0 else 0
+                        
+                        # OVERRIDE: If 0z crisis but inventory not full, farm first instead
+                        if current_zeny == 0 and inventory_percent < 70 and weight_percent < 80:
+                            logger.info(f"[ECONOMIC-OVERRIDE] Overriding cached sell_items → attack_nearest (0z crisis)")
+                            logger.info(f"[ECONOMIC-OVERRIDE] Reason: Must farm first - inventory {inventory_percent:.1f}%, weight {weight_percent:.1f}%")
+                            
+                            # Check if we have monsters nearby to attack
+                            monsters = game_state.get("monsters", [])
+                            if isinstance(monsters, list) and len(monsters) > 0:
+                                cached_action = {
+                                    'action': 'attack_nearest',
+                                    'params': {
+                                        'reason': 'economic_override_0z_farm_first',
+                                        'priority': 'high'
+                                    },
+                                    'tier_used': 'economic_override',
+                                    'reasoning': 'Must farm first to collect items - 0 zeny crisis'
+                                }
+                            else:
+                                # No monsters nearby, move to farming map
+                                cached_action = {
+                                    'action': 'move_to_map',
+                                    'params': {
+                                        'map': 'prt_fild08',
+                                        'reason': 'economic_override_find_monsters_to_farm',
+                                        'priority': 'high'
+                                    },
+                                    'tier_used': 'economic_override',
+                                    'reasoning': 'Must find monsters to farm - 0 zeny crisis'
+                                }
                     
                     # Validate that action is still applicable
                     if action_type == "allocate_stats":

@@ -520,12 +520,12 @@ class TableLoader:
         """
         items = self.load_items()
         
-        # Known healing item patterns (Portuguese names from ROla server)
+        # Known healing item patterns (English names - server-agnostic)
         healing_patterns = [
-            "Poção",  # Potions
-            "Erva",   # Herbs
+            "Potion",  # All potions (Red, Orange, Yellow, White)
+            "Herb",    # All herbs (Red, Yellow, White)
             "Mastela",
-            "Geleia Real",  # Royal Jelly
+            "Royal Jelly",
         ]
         
         healing_items = []
@@ -550,10 +550,10 @@ class TableLoader:
         """
         items = self.load_items()
         
-        # Known SP recovery patterns
+        # Known SP recovery patterns (English names - server-agnostic)
         sp_patterns = [
-            "Poção Azul",  # Blue Potions
-            "Poção Verde",  # Green Potions  
+            "Blue Potion",   # Blue Potions
+            "Green Potion",  # Green Potions
         ]
         
         sp_items = []
@@ -578,8 +578,8 @@ class TableLoader:
         
         # Known escape item IDs (these are standard across servers)
         escape_item_ids = [
-            602,  # Butterfly Wing (Asa de Borboleta)
-            601,  # Fly Wing (Asa de Mosca)
+            602,  # Butterfly Wing
+            601,  # Fly Wing
         ]
         
         escape_items = []
